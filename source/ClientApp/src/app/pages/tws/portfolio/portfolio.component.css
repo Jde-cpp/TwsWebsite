@@ -1,0 +1,38 @@
+table
+{
+	width: 100%;
+}
+
+.negativeValue
+{
+	background: rgba(255, 0, 0, 0.5);
+}
+
+.pnlField
+{
+	flex:  0 0 30px;
+	padding-right:10px;
+}
+
+.pnlFieldValue
+{
+}
+
+.numberField
+{
+	flex: 0 0 45px;
+	padding-right:10px;
+	justify-content: flex-end;
+}
+
+.numberFieldValue
+{
+	
+}
+
+.symbolField
+{
+	flex: 0 0 75px;
+}
+
+

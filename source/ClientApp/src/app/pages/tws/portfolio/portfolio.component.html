@@ -1,0 +1,124 @@
+<!--<h1>Portfolio</h1>
+<p>This displays Portfolio.</p>-->
+
+<!-- 
+<mat-button-toggle-group multiple #accountButtons>
+	<mat-button-toggle [checked]="!this.selectedAccounts || this.selectedAccounts.length==this.allAccounts.length" value="">All</mat-button-toggle>
+	<mat-button-toggle *ngFor="let account of allAccounts" [checked]="this.selectedAccounts && this.selectedAccounts.includes({{account}})" value="{{account}}">{{account}}</mat-button-toggle>
+</mat-button-toggle-group>
+
+<mat-toolbar>
+	<i class="material-icons" [innerHTML]="connected ? 'power' : 'power_off'"></i>
+	<button class="mdc-icon-button material-icons" (click)="settings()">settings</button>
+	<mat-form-field>
+	  <mat-select placeholder="Applications" [formControl]="applications" name="food" multiple>
+		 <mat-option *ngFor="let application of application" [value]="food.value">
+			{{food.viewValue}}
+		 </mat-option>
+	  </mat-select>
+	</mat-form-field>
+</mat-toolbar>
+<! -- <div class="table" >  style="overflow: auto;" -->
+
+<!--<table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+	<ng-container matColumnDef="position">
+		<th mat-header-cell *matHeaderCellDef> No. </th>
+		<td mat-cell *matCellDef="let element"> {{element.position}} </td>
+	</ng-container>
+
+	<ng-container matColumnDef="name">
+		<th mat-header-cell *matHeaderCellDef> Name </th>
+		<td mat-cell *matCellDef="let element"> {{element.name}} </td>
+	</ng-container>
+
+	<ng-container matColumnDef="weight">
+		<th mat-header-cell *matHeaderCellDef> Weight </th>
+		<td mat-cell *matCellDef="let element"> {{element.weight}} </td>
+	</ng-container>
+
+	<ng-container matColumnDef="symbol">
+		<th mat-header-cell *matHeaderCellDef> Symbol </th>
+		<td mat-cell *matCellDef="let element"> {{element.symbol}} </td>
+	</ng-container>
+
+	<tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+	<tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>-->
+
+
+<!--
+<table mat-table [dataSource]="holdings" class="mat-elevation-z8">
+  <ng-container matColumnDef="profit">
+	 <mat-header-cell [style.flex]="'0 0 65px'" *matHeaderCellDef>P&L</mat-header-cell>
+	 <mat-cell style="text-align: left" [style.flex]="'0 0 65px'" mat-cell *matCellDef="let element"> {{element.UnrealizedPNL}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="symbol">
+	 <mat-header-cell *matHeaderCellDef> Symbol </mat-header-cell>
+	 <mat-cell mat-cell *matCellDef="let element">{{element.Contract.Symbol}}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="position">
+	 <mat-header-cell *matHeaderCellDef> POS </mat-header-cell>
+	 <mat-cell mat-cell *matCellDef="let element"> {{element.Position}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="marketValue">
+	 <mat-header-cell *matHeaderCellDef> MKT VAL </mat-header-cell>
+	 <mat-cell mat-cell *matCellDef="let element"> {{element.MarketValue}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="averagePrice">
+	 <mat-header-cell *matHeaderCellDef> AVG PX </mat-header-cell>
+	 <mat-cell mat-cell *matCellDef="let element"> {{element.AverageCost}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="last">
+	 <mat-header-cell *matHeaderCellDef> Last </mat-header-cell>
+	 <mat-cell mat-cell *matCellDef="let element"> {{element.MarketPrice}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="change">
+	 <mat-header-cell *matHeaderCellDef> Change </mat-header-cell>
+	 <mat-cell mat-cell *matCellDef="let element"> {{element.change}} </mat-cell>
+  </ng-container>
+
+  <th mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></th>
+  <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>
+	-->
+
+<mat-table #mainTable [dataSource]="holdings" class="mat-elevation-z8">
+	<ng-container matColumnDef="profit">
+		<mat-header-cell class="numberField" *matHeaderCellDef> P&L </mat-header-cell>
+		<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.pnl<0" *matCellDef="let element"> {{element.pnl | number:'1.0-0'}} </mat-cell> <!--  justify-content: flex-end;text-align: right  [style.flex]="'0 0 65px'"-->
+	</ng-container>
+  <ng-container matColumnDef="symbol">
+	 <mat-header-cell class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
+	 <mat-cell class="symbolField" *matCellDef="let element">{{element.contract.Symbol}}</mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="position">
+	 <mat-header-cell class="numberField"  *matHeaderCellDef> POS </mat-header-cell>
+	 <mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.position<0" *matCellDef="let element"> {{element.position | number }} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="marketValue">
+	 <mat-header-cell class="numberField" *matHeaderCellDef> Market </mat-header-cell>
+	 <mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.marketValue | number:'1.0-0'}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="averagePrice">
+	 <mat-header-cell class="numberField" *matHeaderCellDef> AVG PX </mat-header-cell>
+	 <mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.averageCost | number:'1.2-2'}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="last">
+	 <mat-header-cell class="numberField" *matHeaderCellDef> Last </mat-header-cell>
+	 <mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.price | number:'1.2-2'}} </mat-cell>
+  </ng-container>
+  <ng-container matColumnDef="change">
+	 <mat-header-cell class="numberField" *matHeaderCellDef> Change </mat-header-cell>
+	 <mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.change<0" *matCellDef="let element"> {{element.change | number:'1.2-2'}} </mat-cell>
+  </ng-container>
+	<ng-container matColumnDef="menu" stickyEnd>
+		<mat-header-cell *matHeaderCellDef></mat-header-cell>
+		<mat-menu #appMenu="matMenu">
+		  <button mat-menu-item>Settings</button>
+		  <button mat-menu-item  (click)="trade($event)" >Help</button>
+		</mat-menu><!---->
+		<mat-cell *matCellDef="let element"><button mat-icon-button [matMenuTriggerFor]="appMenu"><mat-icon>menu</mat-icon> </button></mat-cell>
+	</ng-container>
+  <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+  <mat-row mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+</mat-table>

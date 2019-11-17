@@ -1,0 +1,28 @@
+<!--<h1>Snapshot</h1>
+<p>This displays a security Snapshot.</p>-->
+<mat-toolbar color=accent>
+	<mat-toolbar-row style="height: 100%">
+		<mat-form-field color="primary" appearance="outline">
+			<mat-label>Symbol</mat-label>
+			<input matInput onclick="this.select();" [ngModel]="symbol" (keyup.enter)="setSymbol($event.target.value)" (blur)="setSymbol($event.target.value)" >
+		 </mat-form-field>
+		<span>{{primaryName}}</span>
+		<mat-chip-list *ngFor="let m of previousSymbols | slice:1" style="padding-left:10px">
+  			<mat-chip (click)="setSymbol(m)">{{m}}</mat-chip>
+		</mat-chip-list>
+	</mat-toolbar-row>
+</mat-toolbar>
+<mat-toolbar>
+	<mat-toolbar-row>
+		<table>
+			<thead><tr><td>Last</td><td>Change</td><td>Range</td><td>Volume</td><td>Short</td><td>Inventory</td></tr></thead>
+			<tbody><tr>
+				<td [class.negativeValue]="holding?.change<0" [class.positiveValue]="holding?.change>0">{{holding?.price | number:'1.2-2'}}</td>
+				<td [class.negativeValue]="holding?.change<0" [class.positiveValue]="holding?.change>0">{{holding?.change| number:'1.2-2'}}</td>
+				<td>{{holding?.low| number:'1.2-2'}} - {{holding?.high | number:'1.2-2'}}</td>
+				<td>{{holding?.volume/10000 | number:'1.2-2':'en-US'}}M</td><td>[[holding.short}}</td>
+				<td>{{holding?.shortableAvailable/1000 | number:'1.0-0'}}K</td>
+			</tr></tbody>
+		</table>
+	</mat-toolbar-row>
+</mat-toolbar>

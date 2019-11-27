@@ -49,10 +49,10 @@ export interface ITicker
 export type ErrorCallback = (error: Results.IError)=>any;
 export type JsonCallback<T> = ( reqId: number, result:T ) => any;
 type EndCallback = (reqId: number) => any;
-type AccountUpdateMultiCallback = (accountUpdate: Results.IAccountUpdateMulti)=>any;
 type AccountUpdateCallback = (accountUpdate: Results.IAccountUpdate) => any;
+type AccountUpdateMultiCallback = (accountUpdate: Results.IAccountUpdateMulti)=>any;
+type AccountUpdateType = [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>];
 //type HistoricalCallback = (reqId:number, bars: Results.IBar[]) => any;
-type PortfolioUpdateCallback = (accountUpdate: Results.IPortfolioUpdate) => any;
 type ContractDetailsCallback = (details: Results.IContractDetails)=>any;
 type OptionSummaryCallback = (optionValues: Results.IOptionValues) => any;
 class Connection
@@ -108,18 +108,22 @@ class Connection
 			else if( message.AccountUpdate )
 			{
 				const accountNumber = message.AccountUpdate.Account;
-				const callback = this.accountUpdateCallbacks.get( accountNumber );
-				if( callback )
-					callback( message.AccountUpdate );
+				if( this.accountUpdateCallbacks.has(accountNumber) )
+				{
+					for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
+						callback[0].next( message.AccountUpdate );
+				}
 				else
 					console.error( `no callbacks for accountUpdate accountNumber='${accountNumber}'` );//todo stop request.
 			}
 			else if( message.PortfolioUpdate )
 			{
 				const accountNumber = message.PortfolioUpdate.AccountNumber;
-				const callback = this.portfolioUpdateCallbacks.get( accountNumber );
-				if( callback )
-					callback( message.PortfolioUpdate );
+				if( this.accountUpdateCallbacks.has(accountNumber) )
+				{
+					for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
+						callback[1].next( message.PortfolioUpdate );
+				}
 				else
 					console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
 			}
@@ -347,15 +351,49 @@ class Connection
 		this.accountUpdateMultiCallbacks.set( id, [callback,endCallback] );
 	}
 
-	reqAccountUpdates( number: string, accountCallback: AccountUpdateCallback, portfolioCallback: PortfolioUpdateCallback ):void
+	reqAccountUpdates( number: string ):AccountUpdateType
 	{
 		var param = new Requests.RequestAccountUpdates( {"Subscribe": true, "AccountNumber": number} );
 		var msg = new Requests.RequestUnion(); msg.AccountUpdates = param;
+		let callback:[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>] = [new Subject<Results.IAccountUpdate>(),new Subject<Results.IPortfolioUpdate>()];
+		var callbacks:Array<AccountUpdateType>;
+		if( this.accountUpdateCallbacks.has(number) )
+			callbacks = this.accountUpdateCallbacks.get( number );
+		else
+			this.accountUpdateCallbacks.set( number, callbacks=new Array<[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>() );	
+		callbacks.push( callback );
 		this.send( msg );
-		this.portfolioUpdateCallbacks.set( number, portfolioCallback );
-		this.accountUpdateCallbacks.set( number, accountCallback );
+		return callback;
 	}
-	
+	accountUpdateUnsubscribe( requests:Map<string,AccountUpdateType> )
+	{
+		var unsubscribe = [];
+		for( const [number,callback] of requests )
+		{
+			if( !this.accountUpdateCallbacks.has(number) ){ console.log( `accountUpdateCallbacks does not have '${number}'` ); 
+				continue; }
+			let callbacks = this.accountUpdateCallbacks.get( number );
+			let index = callbacks.indexOf( <[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>callback );
+			if( index==-1 ){ console.log( `accountUpdateCallbacks does not have '${number}'` ); 
+				continue; }
+			callbacks.splice( index,1 );
+			if( callbacks.length==0 )
+				unsubscribe.push( number );
+		}
+		if( unsubscribe.length )
+		{
+			var transmission = new Requests.RequestTransmission(); 
+			for( const number of unsubscribe )
+			{
+				var param = new Requests.RequestAccountUpdates( {"Subscribe": false, "AccountNumber": number} );
+				var msg = new Requests.RequestUnion(); msg.AccountUpdates = param;
+				transmission.Messages.push( msg );
+			}
+			var writer = Requests.RequestTransmission.encode( transmission );
+			this.socket.next( writer.finish() );
+			console.log( `accountUnsubscribe from '${unsubscribe.join()}'` );
+		}
+	}
 	flexExecutions( account:string, date:Date ):Observable<Results.Flex>
 	{
 
@@ -374,8 +412,8 @@ class Connection
 	private sessionId:number|Long|null;
 
 	private reqManagedAcctsPromise:Deferred<Array<string>>;
-	private accountUpdateCallbacks = new Map<string,AccountUpdateCallback>();
-	private portfolioUpdateCallbacks = new Map <string, PortfolioUpdateCallback>();
+	//private portfolioUpdateCallbacks = new Map<string,PortfolioUpdateCallback>();
+	private accountUpdateCallbacks = new Map <string, Array<[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>>();
 	private accountUpdateMultiCallbacks = new Map<number, [AccountUpdateCallback, EndCallback]>();
 	private marketDataCallbacks = new Map<number, ITicker>();
 	private historicalCallbacks = new Map<number, Subject<Results.IBar>>();
@@ -399,8 +437,8 @@ export class TwsService
 
 	reqContractDetails( contract:IB.Contract ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetails(contract); }
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetailsMulti(contractIds); }
-
-	reqAccountUpdates( accountNumber: string, accountCallback: AccountUpdateCallback, portfolioCallback: PortfolioUpdateCallback ):void{ this.connection.reqAccountUpdates(accountNumber, accountCallback, portfolioCallback); }
+	reqAccountUpdates( accountNumber: string ):AccountUpdateType{ return this.connection.reqAccountUpdates( accountNumber ); }
+	accountUpdateUnsubscribe( requests:Map<string,AccountUpdateType> ){ this.connection.accountUpdateUnsubscribe(requests); };
 	reqMktData( contractId:number, callback:ITicker, ticks?:Requests.ETickList[], snapshot=true ):number{ return this.connection.reqMktData(contractId, callback, ticks, snapshot); }
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Results.IBar>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
 	optionSummary( contractId:number, isCall:boolean, callback:OptionSummaryCallback, date:Date, error?:ErrorCallback ):number{ return this.connection.optionSummary(contractId, isCall, callback, date, error); }

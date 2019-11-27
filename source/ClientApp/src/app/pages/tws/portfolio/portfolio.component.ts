@@ -1,7 +1,6 @@
-import { HostListener, Component, AfterViewInit, ViewChild, Inject } from '@angular/core';
-//import { CommonModule  } from '@angular/common';
+import { OnDestroy, Component, AfterViewInit, ViewChild, Inject } from '@angular/core';
 import { MatTable } from '@angular/material/table';
-//import { LoggingService } from '../../../services/logging.service';
+import { Observable } from 'rxjs';//,of
 import { TwsService, ITicker } from '../../../services/tws/tws.service';
 import { IProfile } from '../../../services/profile/IProfile';
 
@@ -54,7 +53,7 @@ class Settings
 }
 
 @Component({selector: 'portfolio',styleUrls: ['portfolio.component.css'],templateUrl: './portfolio.component.html'})
-export class PortfolioComponent implements AfterViewInit, ITicker
+export class PortfolioComponent implements AfterViewInit, ITicker, OnDestroy
 {
 	constructor( private twsService : TwsService, @Inject('IProfile') private profileService: IProfile )
 	{}
@@ -67,6 +66,13 @@ export class PortfolioComponent implements AfterViewInit, ITicker
 			error: e =>{ console.log(e); this.onSettingsLoaded(); }
 		});
 	}
+
+	ngOnDestroy() 
+	{
+		this.twsService.accountUpdateUnsubscribe( this.requests );
+//		this.profileService.put<Settings>( LogsComponent.profileKey, this.settings );
+	}
+
 	onSettingsLoaded()
 	{
 		this.twsService.reqManagedAccts().then( (numbers)=>
@@ -74,7 +80,12 @@ export class PortfolioComponent implements AfterViewInit, ITicker
 			this.allAccounts = numbers;
 			this.selectedAccounts = this.settings.selectedAccounts.length ? this.settings.selectedAccounts.filter( value => this.allAccounts.includes(value) ) : this.allAccounts.slice();
 			for( var accountNumber of this.selectedAccounts )
-				this.twsService.reqAccountUpdates( accountNumber, this.onAccountUpdate, this.onPortfolioUpdate );
+			{
+				var callbacks = this.twsService.reqAccountUpdates( accountNumber );
+				this.requests.set( accountNumber, callbacks );
+				callbacks[0].subscribe( {next:accountUpdate =>{this.onAccountUpdate(accountUpdate);}, error:  e=>{console.error(e);}} );
+				callbacks[1].subscribe( {next:portfolioUpdate =>{this.onPortfolioUpdate(portfolioUpdate);}, error:  e=>{console.error(e);}} );
+			}
 		});
 	}
 	onAccountUpdate( accountUpdate: Results.IAccountUpdate ):void
@@ -160,7 +171,7 @@ export class PortfolioComponent implements AfterViewInit, ITicker
 	connected = false;
 	selectedAccounts: string[];
 	allAccounts: string[];
-
+	requests = new Map <string, [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>]>();
 	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'last', 'change', 'menu' ];
 
 	@ViewChild('mainTable',{static: false}) _table:MatTable<Holding>;

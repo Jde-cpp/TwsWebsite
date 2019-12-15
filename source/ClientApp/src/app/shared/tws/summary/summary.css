@@ -1,0 +1,41 @@
+
+.sectionDivider
+{
+	border-right-color: gray; 
+	border-right-width: 4px; 
+	border-right-style: solid;
+}
+th.group
+{
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+	border-bottom-color: gray;
+}
+th.topLeft
+{
+	border-top-left-radius: 15px;
+}
+
+td.mainCell
+{
+	border-bottom-color: gray; 
+	border-bottom-width: 2px; 
+	border-bottom-style: solid;
+}
+
+td.mainLeft
+{
+	border-bottom-left-radius: 15px; 
+	border-left-color: gray; 
+	border-left-width: 2px; 
+	border-left-style: solid;
+}
+
+td.mainRight
+{
+	border-bottom-right-radius: 15px; 
+	border-right-color: gray; 
+	border-right-width: 2px; 
+	border-right-style: solid;
+}
+

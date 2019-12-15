@@ -2,6 +2,7 @@ import { Sort,MatTable } from '@angular/material';
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { Subject } from 'rxjs';
+import {IData} from 'src/app/shared/tws/summary/summary'
 
 export class Trade
 {
@@ -86,7 +87,7 @@ export class TradeResult
 	offsetTrades:Trade[]=[];
 }
 
-export class DataSource
+export class DataSource implements IData
 {
 	constructor( flex:Results.Flex, sortOptions:Sort )
 	{
@@ -188,4 +189,5 @@ export class DataSource
 	positiveGain:number=0;
 	negativeGain:number=0;
 	return_:number=0;
+	get isGain():boolean{ return this.return_>=0.0;}
 }

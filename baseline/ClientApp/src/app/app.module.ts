@@ -18,6 +18,8 @@ import {ThemePickerModule} from './shared/material-site/theme-picker';
 import {ComponentPageTitle} from './pages/material-site/page-title/page-title';
 import {StyleManager} from './shared/material-site/style-manager';
 
+import {SummaryComponent} from './shared/tws/summary/summary';
+
 import {routes} from './routes';
 import { AppComponent } from './app.component';
 
@@ -31,7 +33,8 @@ import {CookieProfile} from './services/profile/cookieProfile.service'
 @NgModule({
   declarations: [
 	 AppComponent,
-	 PortfolioComponent,SnapshotComponent,TradeComponent
+	 PortfolioComponent,SnapshotComponent,TradeComponent,
+	 SummaryComponent
   ],
   imports: [
 	 BrowserModule, RouterModule.forRoot(routes), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,

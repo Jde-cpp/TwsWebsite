@@ -1,16 +1,16 @@
 <ng-container *ngIf="data">
-	<mat-toolbar style="height:100px">
-		<div style="align-content: center; margin: auto;">
-			<div style="display: inline-block;margin-left:10px; width:75px">
+	<mat-toolbar style="height:120px">
+		<div style="align-content: center; margin: auto">
+			<!-- <div style="display: inline-block;margin-left:10px; width:85px">
 				<mat-form-field style="width:65px">
 					<input matInput type="number" min=1 max=365 placeholder="Days" onclick="this.select();" [ngModel]="dayCount" (keyup.enter)="dayCount=$event.target.value" (blur)="dayCount=$event.target.value" />
 				</mat-form-field>
-			</div>
-			<div style="display: inline-block">
-				<div style="margin-left:50px">
+			</div> -->
+			<!-- <div style="display: inline-block">
+				< !-- <div style="margin-left:50px">
 					<button mat-icon-button><mat-icon class="iconButton" (click)="addDay( -1 )">keyboard_arrow_left</mat-icon></button>
 					<button mat-icon-button><mat-icon class="iconButton" (click)="addDay( 1 )">keyboard_arrow_right</mat-icon></button>
-				</div>
+				</div> -- >
 				<div>
 					<mat-form-field>
 						<input matInput [matDatepicker]="dateId" placeholder="Date" [(value)]="_end.value">
@@ -18,26 +18,29 @@
 						<mat-datepicker #dateId></mat-datepicker>
 					</mat-form-field>
 				</div>
-			</div>
-			<table style="display: inline-block;width:500px">
-				<thead>
-					<tr><th class="group" colspan="3">Count</th><td></td><th class="group" colspan="3">Income</th><th></th></tr>
-					<tr><th>Σ</th><th><mat-icon>add</mat-icon></th><th><mat-icon>remove</mat-icon></th><td></td><th>Σ</th><th><mat-icon>add</mat-icon></th><th><mat-icon>remove</mat-icon></th><th>%</th></tr>
+			</div>  ;border-radius: 15px;border-collapse:separate;border:solid red 1px;-->
+			<tws-summary [data]="data"></tws-summary>
+			<!-- <table style="display: inline-block;border-spacing: 0px;">
+				<!-- <thead style="background: linear-gradient(to right, rgba(0,255,0,.75) 0%,rgba(0,255,0,1) 50%,rgba(0,255,0,.75) 100%);"> -->
+						                         <!-- linear-gradient(to right, rgba(0,255,0,.75) 0%,rgba(0,255,0,,1) 50%,rgba(0,255,0,,.75) 100%)" -- > 
+				<thead [ngStyle]="{'background': backgroundColor}"  >  < !--[style.background]="backgroundColor" 
+					<tr><th style="border-top-left-radius: 15px;" class="group" colspan="3">Count</th><th class="group" style="border-bottom: none;" colspan="3">Income</th><th style="border-top-right-radius: 15px;"></th></tr>
+					<tr><th>Σ</th><th><mat-icon>add</mat-icon></th><th><mat-icon>remove</mat-icon></th><th>Σ</th><th><mat-icon>add</mat-icon></th><th><mat-icon>remove</mat-icon></th><th>%</th></tr>
 				</thead>
-				<tbody><tr>
-					<td class="numberCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.count | number:'1.0-0'}}</td>
-					<td class="numberCell">{{data.positiveCount | number:'1.0-0'}}</td>
-					<td class="numberCell">{{data.negativeCount | number:'1.0-0'}}</td>
-					<td></td>
-					<td class="numberCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.gain | number:'1.0-0'}}</td>
-					<td class="numberCell">{{data.positiveGain | number:'1.0-0'}}</td>
-					<td class="numberCell">{{data.negativeGain | number:'1.0-0'}}</td>
-					<td class="numberCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.return_ | number:'1.2-2'}}</td>
+				<tbody><tr >
+					<td class="mainCell mainLeft numberCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.count | number:'1.0-0'}}</td>
+					<td class="numberCell mainCell">{{data.positiveCount | number:'1.0-0'}}</td>
+					<td class="numberCell mainCell">{{data.negativeCount | number:'1.0-0'}}</td>
+					
+					<td class="numberCell mainCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.gain | number:'1.0-0'}}</td>
+					<td class="numberCell mainCell">{{data.positiveGain | number:'1.0-0'}}</td>
+					<td class="numberCell mainCell">{{data.negativeGain | number:'1.0-0'}}</td>
+					<td class="numberCell mainCell mainRight" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.return_ | number:'1.2-2'}}</td>
 				</tr></tbody>
-			</table>
+			</table> -->
 		</div>
 	</mat-toolbar>
-	<div style="align-content: center; margin: auto;  text-align: center;">
+	<div style="align-content: center; margin: auto;  text-align: center; background-color: black">
 		<mat-table style="display: inline-block;width:1200px" #mainTable matSort [dataSource]="data" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
 			<ng-container matColumnDef="symbol">
 				<mat-header-cell mat-sort-header class="symbolCell" *matHeaderCellDef> Symbol </mat-header-cell>

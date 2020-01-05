@@ -1,15 +1,15 @@
 <table *ngIf="data" style="display: inline-block;border-spacing: 0px;">
 	<thead [ngStyle]="{'background': backgroundColor}">
 		<tr><th class="group sectionDivider topLeft" colspan="3">Count</th><th class="group sectionDivider" colspan="3">Income</th><th style="border-top-right-radius: 15px;"></th></tr>
-		<tr><th>Σ</th><th><mat-icon>add</mat-icon></th><th class="sectionDivider"><mat-icon>remove</mat-icon></th><th>Σ</th><th><mat-icon>add</mat-icon></th><th class="sectionDivider"><mat-icon>remove</mat-icon></th><th>%</th></tr>
+		<tr><th class="subSectionDivider">Σ</th><th class="subSectionDivider"><mat-icon>add</mat-icon></th><th class="sectionDivider"><mat-icon>remove</mat-icon></th><th class="subSectionDivider">Σ</th><th class="subSectionDivider"><mat-icon>add</mat-icon></th><th class="sectionDivider"><mat-icon>remove</mat-icon></th><th>%</th></tr>
 	</thead>
 	<tbody><tr >
-		<td class="mainCell mainLeft numberCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.count | number:'1.0-0'}}</td>
-		<td class="numberCell mainCell">{{data.positiveCount | number:'1.0-0'}}</td>
+		<td class="mainCell mainLeft numberCell subSectionDivider" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.count | number:'1.0-0'}}</td>
+		<td class="numberCell mainCell subSectionDivider">{{data.positiveCount | number:'1.0-0'}}</td>
 		<td class="numberCell mainCell sectionDivider">{{data.negativeCount | number:'1.0-0'}}</td>
-		
-		<td class="numberCell mainCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.gain | number:'1.0-0'}}</td>
-		<td class="numberCell mainCell">{{data.positiveGain | number:'1.0-0'}}</td>
+
+		<td class="numberCell mainCell subSectionDivider" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.gain | number:'1.0-0'}}</td>
+		<td class="numberCell mainCell subSectionDivider">{{data.positiveGain | number:'1.0-0'}}</td>
 		<td class="numberCell mainCell sectionDivider">{{data.negativeGain | number:'1.0-0'}}</td>
 		<td class="numberCell mainCell mainRight" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.return_ | number:'1.2-2'}}</td>
 	</tr></tbody>

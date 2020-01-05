@@ -193,6 +193,7 @@ class Connection
 		else
 			console.error( `no callbacks for '${what}' reqId='${id}'` );//todo stop request.
 	}
+
 	handleHistoricalData( data:Results.IHistoricalData )
 	{
 		const id = data.RequestId;
@@ -214,14 +215,20 @@ class Connection
 			x.error( error );
 		return isPresent;
 	}
+	handleConnectionError( err )
+	{
+		for( let [_, callback] of this.flexCallbacks.entries() )
+		{
+			callback.error( "Connection to Tws Websocket failed." );
+			callback.complete();
+		}
+		this.flexCallbacks.clear();
+	}
 	handleError( error:Results.IError )
 	{
 		const id = error.RequestId;
-//		var errorCallback;
 		if( !Connection.errorIfPresent(id, this.contractCallbacks, error) )
-		{
 			console.error( `error code='${error.Code}' message='${error.Message}'` );//todo stop request.
-		}
 	}
 
 	handlePositionMultiEnd( reqId:number )
@@ -232,7 +239,7 @@ class Connection
 			if( callback[1] )
 				callback[1]( reqId );
 		}
-		else 
+		else
 			console.error( "unknown accountUpdateCallbacks request:  "+reqId );
 	}
 	complete( map, reqId:number )
@@ -246,16 +253,17 @@ class Connection
 		else
 			console.error( "unknown complete request:  "+reqId );
 	}
-	
+
 	addMessage( msg ):void
 	{
 		//this.loggingService.log( msg );
-		//this.loggingService. 
+		//this.loggingService.
 	}
 	error( err ):void
 	{
 		this.sessionId = null;
 		console.error( err );
+		this.handleConnectionError( err );
 	}
 	socketComplete():void
 	{
@@ -291,7 +299,7 @@ class Connection
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Results.IBar>
 	{
 		var id = this.getRequestId();
-		var param = new Requests.RequestHistoricalData( {"RequestId": id, "Contract": contract, "Days":days, "BarSize":barSize, "Display":display, "UseRth":useRth, "KeepUpToDate":keepUpToDate, "Date": {"seconds": date.getTime() / 1000, "nanos": null}} );
+		var param = new Requests.RequestHistoricalData( {"RequestId": id, "Contract": contract, "Days":days, "BarSize":barSize, "Display":display, "UseRth":useRth, "KeepUpToDate":keepUpToDate, "Date": date.getTime() / 1000} );
 		var msg = new Requests.RequestUnion(); msg.HistoricalData = param;
 		this.send( msg );
 		var callback = new Subject<Results.IBar>();
@@ -326,14 +334,13 @@ class Connection
 	optionSummary( contractId:number, isCall:boolean, callback:OptionSummaryCallback, date:Date, error?:ErrorCallback ):number
 	{
 		var id = this.getRequestId();
-		var timestamp = {"seconds": date ? date.getTime() / 1000 : 0, "nanos": null };
-		var msg = new Requests.RequestUnion(); msg.Options = new Requests.RequestOptions( {"RequestId": id, "ContractId": contractId, "IsCall": isCall ? 1 : 0, "Date": timestamp } );
+		var msg = new Requests.RequestUnion(); msg.Options = new Requests.RequestOptions( {"RequestId": id, "ContractId": contractId, "IsCall": isCall ? 1 : 0, "Date": date ? date.getTime() / 1000 : 0} );
 		this.optionSummaryCallbacks.set( id, [callback,error] );
 		this.send( msg );
 		return id;
 	}
 	request<T>( requestType:Requests.ERequests ):Promise<T>
-	{ 
+	{
 		const id = this.getRequestId();
 
 		let deferred = new Deferred<T>();
@@ -360,7 +367,7 @@ class Connection
 		if( this.accountUpdateCallbacks.has(number) )
 			callbacks = this.accountUpdateCallbacks.get( number );
 		else
-			this.accountUpdateCallbacks.set( number, callbacks=new Array<[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>() );	
+			this.accountUpdateCallbacks.set( number, callbacks=new Array<[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>() );
 		callbacks.push( callback );
 		this.send( msg );
 		return callback;
@@ -370,11 +377,11 @@ class Connection
 		var unsubscribe = [];
 		for( const [number,callback] of requests )
 		{
-			if( !this.accountUpdateCallbacks.has(number) ){ console.log( `accountUpdateCallbacks does not have '${number}'` ); 
+			if( !this.accountUpdateCallbacks.has(number) ){ console.log( `accountUpdateCallbacks does not have '${number}'` );
 				continue; }
 			let callbacks = this.accountUpdateCallbacks.get( number );
 			let index = callbacks.indexOf( <[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>callback );
-			if( index==-1 ){ console.log( `accountUpdateCallbacks does not have '${number}'` ); 
+			if( index==-1 ){ console.log( `accountUpdateCallbacks does not have '${number}'` );
 				continue; }
 			callbacks.splice( index,1 );
 			if( callbacks.length==0 )
@@ -382,7 +389,7 @@ class Connection
 		}
 		if( unsubscribe.length )
 		{
-			var transmission = new Requests.RequestTransmission(); 
+			var transmission = new Requests.RequestTransmission();
 			for( const number of unsubscribe )
 			{
 				var param = new Requests.RequestAccountUpdates( {"Subscribe": false, "AccountNumber": number} );
@@ -396,7 +403,6 @@ class Connection
 	}
 	flexExecutions( account:string, date:Date ):Observable<Results.Flex>
 	{
-
 		const id = this.getRequestId();
 		const param = new Requests.FlexExecutions( {"RequestId":id, "AccountNumber": account, "Date": date.getTime() / 1000} );
 		let msg = new Requests.RequestUnion(); msg.FlexExecutions = param;

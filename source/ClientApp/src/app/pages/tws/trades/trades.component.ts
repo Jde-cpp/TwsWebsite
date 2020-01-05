@@ -6,11 +6,12 @@ import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import {DataSource} from './DataSource'
 import { FormControl } from '@angular/forms';
 import { ComponentPageTitle } from '../../material-site/page-title/page-title';
+import {IErrorService} from '../../../services/error/IErrorService'
 
 @Component( {selector: 'trades', styleUrls: ['trades.component.css'], templateUrl: './trades.component.html'} )
 export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 {
-	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile )
+	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
 	ngOnInit()
@@ -26,7 +27,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngAfterViewInit():void
 	{
-		this.profileService.get<Settings>( TradeComponent.profileKey ).subscribe( 
+		this.profileService.get<Settings>( TradeComponent.profileKey ).subscribe(
 		{
 			next: value =>
 			{
@@ -39,10 +40,10 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	load()
 	{
-		this.tws.flexExecutions( "act", MarketUtilities.previousTradingDay() ).subscribe( 
+		this.tws.flexExecutions( "act", MarketUtilities.previousTradingDay() ).subscribe(
 		{
 			next:	flex =>{ this.data = new DataSource( flex, this.settings.sort ); },
-			error:  e=>{console.error(e);}
+			error:  e=>{console.error(e); this.cnsle.error(e,null); }
 		});
 	}
 	sortData(sort:Sort)
@@ -52,7 +53,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	private get end():Date{ return new Date( this._end.value );} private set end(value:Date){this._end.setValue(value);} private _end = new FormControl();
 	private get dayCount():number{ return this._dayCount; } private set dayCount(value:number)
-	{ 
+	{
 		if( this._dayCount!=value )
 		{
 			this._dayCount = +value;

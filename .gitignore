@@ -68,3 +68,5 @@ source/ClientApp/src/app/services/profile
 source/ClientApp/src/app/shared/material-site/*
 source/ClientApp/src/app/proto/*
 
+baseline/ClientApp/src/app/proto/*.js
+baseline/ClientApp/src/app/proto/*.ts

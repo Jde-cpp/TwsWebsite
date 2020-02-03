@@ -1,44 +1,29 @@
 <ng-container *ngIf="data">
 	<mat-toolbar style="height:120px">
-		<div style="align-content: center; margin: auto">
-			<!-- <div style="display: inline-block;margin-left:10px; width:85px">
-				<mat-form-field style="width:65px">
-					<input matInput type="number" min=1 max=365 placeholder="Days" onclick="this.select();" [ngModel]="dayCount" (keyup.enter)="dayCount=$event.target.value" (blur)="dayCount=$event.target.value" />
-				</mat-form-field>
-			</div> -->
-			<!-- <div style="display: inline-block">
-				< !-- <div style="margin-left:50px">
-					<button mat-icon-button><mat-icon class="iconButton" (click)="addDay( -1 )">keyboard_arrow_left</mat-icon></button>
-					<button mat-icon-button><mat-icon class="iconButton" (click)="addDay( 1 )">keyboard_arrow_right</mat-icon></button>
-				</div> -- >
-				<div>
+		<div style="align-content: center; margin: auto;">
+			<div style="display: inline-block;vertical-align: top;">
+				<div style="display: inline-block">
 					<mat-form-field>
-						<input matInput [matDatepicker]="dateId" placeholder="Date" [(value)]="_end.value">
+						<input matInput [matDatepicker]="startDateId" placeholder="Start Date" [(formControl)]="_start">
+						<mat-datepicker-toggle matSuffix [for]="startDateId"></mat-datepicker-toggle>
+						<mat-datepicker #startDateId></mat-datepicker>
+					</mat-form-field>
+					<mat-form-field>
+						<input matInput [matDatepicker]="dateId" placeholder="End Date" [(formControl)]="_end">
 						<mat-datepicker-toggle matSuffix [for]="dateId"></mat-datepicker-toggle>
 						<mat-datepicker #dateId></mat-datepicker>
 					</mat-form-field>
+					<button mat-icon-button primary><mat-icon class="iconButton" (click)="load()">cloud_download</mat-icon></button>
 				</div>
-			</div>  ;border-radius: 15px;border-collapse:separate;border:solid red 1px;-->
-			<tws-summary [data]="data"></tws-summary>
-			<!-- <table style="display: inline-block;border-spacing: 0px;">
-				<!-- <thead style="background: linear-gradient(to right, rgba(0,255,0,.75) 0%,rgba(0,255,0,1) 50%,rgba(0,255,0,.75) 100%);"> -->
-						                         <!-- linear-gradient(to right, rgba(0,255,0,.75) 0%,rgba(0,255,0,,1) 50%,rgba(0,255,0,,.75) 100%)" -- > 
-				<thead [ngStyle]="{'background': backgroundColor}"  >  < !--[style.background]="backgroundColor" 
-					<tr><th style="border-top-left-radius: 15px;" class="group" colspan="3">Count</th><th class="group" style="border-bottom: none;" colspan="3">Income</th><th style="border-top-right-radius: 15px;"></th></tr>
-					<tr><th>Σ</th><th><mat-icon>add</mat-icon></th><th><mat-icon>remove</mat-icon></th><th>Σ</th><th><mat-icon>add</mat-icon></th><th><mat-icon>remove</mat-icon></th><th>%</th></tr>
-				</thead>
-				<tbody><tr >
-					<td class="mainCell mainLeft numberCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.count | number:'1.0-0'}}</td>
-					<td class="numberCell mainCell">{{data.positiveCount | number:'1.0-0'}}</td>
-					<td class="numberCell mainCell">{{data.negativeCount | number:'1.0-0'}}</td>
-					
-					<td class="numberCell mainCell" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.gain | number:'1.0-0'}}</td>
-					<td class="numberCell mainCell">{{data.positiveGain | number:'1.0-0'}}</td>
-					<td class="numberCell mainCell">{{data.negativeGain | number:'1.0-0'}}</td>
-					<td class="numberCell mainCell mainRight" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.return_ | number:'1.2-2'}}</td>
-				</tr></tbody>
-			</table> -->
+				<div>
+					<mat-checkbox [(ngModel)]="groupBySymbol">Group by Symbol</mat-checkbox>
+				</div>
+			</div>
+			<tws-summary *ngIf="data" [data]="data" style="margin-left:10px"></tws-summary>
 		</div>
+		<!-- <div style="align-content: center; margin: auto">
+			<tws-summary [data]="data"></tws-summary>
+		</div> -->
 	</mat-toolbar>
 	<div style="align-content: center; margin: auto;  text-align: center; background-color: black">
 		<mat-table style="display: inline-block;width:1200px" #mainTable matSort [dataSource]="data" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
@@ -85,6 +70,10 @@
 			<ng-container matColumnDef="closeShortPrediction">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> CShort </mat-header-cell>
 				<mat-cell class="numberBCell" *matCellDef="let element">{{element.closeShortPrediction==0 ? null : (element.closeShortPrediction-1)*-100 | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="commissions">
+				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Commissions </mat-header-cell>
+				<mat-cell class="numberBCell" *matCellDef="let element">{{element.commissions | number:'1.2-2'}}</mat-cell>
 			</ng-container>
 			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
 			<mat-row mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>

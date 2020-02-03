@@ -4,7 +4,7 @@
 		<tr><th class="subSectionDivider">Σ</th><th class="subSectionDivider"><mat-icon>add</mat-icon></th><th class="sectionDivider"><mat-icon>remove</mat-icon></th><th class="subSectionDivider">Σ</th><th class="subSectionDivider"><mat-icon>add</mat-icon></th><th class="sectionDivider"><mat-icon>remove</mat-icon></th><th>%</th></tr>
 	</thead>
 	<tbody><tr >
-		<td class="mainCell mainLeft numberCell subSectionDivider" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.count | number:'1.0-0'}}</td>
+		<td class="mainCell mainLeft numberCell subSectionDivider" [class.negativeValue]="data.return<0" [class.positiveValue]="data.return>0">{{data.tradeCount | number:'1.0-0'}}</td>
 		<td class="numberCell mainCell subSectionDivider">{{data.positiveCount | number:'1.0-0'}}</td>
 		<td class="numberCell mainCell sectionDivider">{{data.negativeCount | number:'1.0-0'}}</td>
 

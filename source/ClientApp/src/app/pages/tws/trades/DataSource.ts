@@ -14,13 +14,6 @@ export class Trade
 		this.quantity = params.quantity ? params.quantity : 0;
 		this.price = params.price ? params.price : 0;
 		this.commission = params.commission ? params.commission : 0;
-
-		// this.id= params.id ? base.Id;
-		// this.orderId = base.OrderId;
-		// this.date = new Date( base.Date*1000 );
-		// this.quantity = base.Quantity;
-		// this.price = base.Price;
-		// this.commission = base.Commission;
 	}
 	static fromTws( tws:Results.ITrade ):Trade{ return new Trade( {id:tws.Id, orderId:tws.OrderId,date:new Date(tws.Date*1000),quantity:tws.Quantity,price:tws.Price,commission:tws.Commission} ); }
 	id: number;
@@ -75,11 +68,11 @@ export class TradeResult
 	get cost():number{ let sum=0; let trades = this.isLong ? this.openTrades : this.offsetTrades; trades.forEach( value=>{sum+=value.price*value.quantity+value.commission;} ); return sum; }
 	get proceeds(){ let sum=0; let trades = this.isLong ? this.offsetTrades : this.openTrades; trades.forEach( value=>{sum+=value.price*-value.quantity+value.commission;} ); return sum; }
 
-	get salesCommissions(){ let sum=0; let trades = this.isLong ? this.offsetTrades : this.openTrades; trades.forEach( value=>{sum+=value.commission;} ); return sum; } 
-	get purchaseCommissions(){ let sum=0; let trades = this.isLong ? this.openTrades : this.offsetTrades; trades.forEach( value=>{sum+=value.commission;} ); return sum; } 
-	//get commissions(){ let sum=0; this.openTrades.forEach( value=>{sum+=value.commission;} ); this.offsetTrades.forEach( value=>{sum+=value.commission;} ); return sum; } 
+	get salesCommissions(){ let sum=0; let trades = this.isLong ? this.offsetTrades : this.openTrades; trades.forEach( value=>{sum+=value.commission;} ); return sum; }
+	get purchaseCommissions(){ let sum=0; let trades = this.isLong ? this.openTrades : this.offsetTrades; trades.forEach( value=>{sum+=value.commission;} ); return sum; }
+	get commissions(){ return this.salesCommissions+this.purchaseCommissions; }
 	get return_():number{ return this.proceeds/this.cost; }
-	
+
 
 	private get first():Trade{ return this.openTrades[0]; }
 	private get last():Trade{ return this.offsetTrades.length ? this.offsetTrades[this.offsetTrades.length-1] : null; }
@@ -93,7 +86,7 @@ export class DataSource implements IData
 	{
 		var contractTrades = new Map<number,TradeResult>();
 		let proceeds = 0; let cost = 0;
-		for( let trade of flex.Trades )
+		for( let trade of flex.trades )
 		{
 			const contractId = trade.Conid;
 			let open = contractTrades.get( contractId );
@@ -148,7 +141,7 @@ export class DataSource implements IData
 		{
 			this.observable.next( this.values );
 			//for( let value of this.values )
-				
+
 		}
 	}
 	sort( options:Sort )
@@ -158,7 +151,7 @@ export class DataSource implements IData
 
 		const values = this.values.slice();
 		const multiplier = options.direction === 'asc' ? 1 : -1;
-		this.values = values.sort((a, b) => 
+		this.values = values.sort((a, b) =>
 		{
 			let lessThan = false;
 			if( options.active=='symbol' ) lessThan = a.symbol<b.symbol;
@@ -172,6 +165,7 @@ export class DataSource implements IData
 			else if( options.active=='return_' ) lessThan = a.return_<b.return_;
 			else if( options.active=='openPrice' ) lessThan = a.openPrice<b.openPrice;
 			else if( options.active=='closePrice' ) lessThan = a.closePrice<b.closePrice;
+			else if( options.active=='commissions' ) lessThan = a.commissions<b.commissions;
 			else
 				throw `unknown sort'${options.active}'`;
 			return (lessThan ? -1 : 1)*multiplier;
@@ -183,6 +177,7 @@ export class DataSource implements IData
 	get length():number{ return this.values ? this.values.length : 0; }
 	contracts = new Map<number,Results.IContractDetails>();
 	get count():number{return this.values.length;}
+	get tradeCount():number{return this.count;}
 	positiveCount:number=0;
 	negativeCount:number=0;
 	get gain():number{return this.positiveGain-this.negativeGain;}

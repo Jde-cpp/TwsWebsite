@@ -6,11 +6,11 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 
 export interface ITicker
 {
-	onGenericTick( reqId:number, type:Results.ETickType, value:number ):void;
-	onPriceTick( reqId:number, type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void;
-	onSizeTick( reqId:number, type:Results.ETickType, size:number ):void;
-	onStringTick( reqId:number, type:Results.ETickType, value:string ):void;
-	onEndTick(reqId:number):void;
+	onGenericTick( type:Results.ETickType, value:number ):void;
+	onPriceTick( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void;
+	onSizeTick( type:Results.ETickType, size:number ):void;
+	onStringTick( type:Results.ETickType, value:string ):void;
+	onEndTick():void;
 }
 
 export class Tick implements ITicker
@@ -19,14 +19,14 @@ export class Tick implements ITicker
 	{
 		//this.reqId = reqId;
 	}
-	onGenericTick( reqId:number, type:Results.ETickType, value:number ):void
+	onGenericTick( type:Results.ETickType, value:number ):void
 	{
 		if( type==49 )
 			this.halted = value!=0;
 		else
-			console.log( `onGenericTick( '${reqId}', '${type.toString()}', '${value}')` );
+			console.log( `onGenericTick( '${Results.ETickType[type]}', '${value}')` );
 	}
-	onPriceTick( reqId:number, type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
+	onPriceTick( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
 	{
 		if( type==Results.ETickType.ClosePrice )
 			this.close = price;
@@ -43,9 +43,9 @@ export class Tick implements ITicker
 		else if( type==Results.ETickType.OpenTick )
 			this.open = price;
 		else if( type!=Results.ETickType.MARK_PRICE)
-			console.log( `onPriceTick( '${reqId}', '${type.toString()}', '${price}') - not handled` );		
+			console.log( `onPriceTick( '${type.toString()}', '${price}') - not handled` );
 	}
-	onSizeTick( reqId:number, type:Results.ETickType, size:number ):void
+	onSizeTick( type:Results.ETickType, size:number ):void
 	{
 		if( type==Results.ETickType.SHORTABLE_SHARES )
 			this.shortableAvailable = size;
@@ -58,21 +58,20 @@ export class Tick implements ITicker
 		else if( type==Results.ETickType.Volume )
 			this.volume = size;
 		else
-			console.log( `onSizeTick( '${reqId}', '${type.toString()}', '${size}')` );
+			console.log( `onSizeTick( '${type.toString()}', '${size}')` );
 	}
-	onStringTick( reqId:number, type:Results.ETickType, value:string ):void
+	onStringTick( type:Results.ETickType, value:string ):void
 	{
 		if( type==45 )
 			this.lastTime = new Date( parseInt(value)*1000 );
 		else if( type!=32 && type!=33 && type!=84 )//bid/ask/last exchange
-			console.log( `onStringTick( '${reqId}', '${type.toString()}', '${value}')` );
+			console.log( `onStringTick( '${type.toString()}', '${value}')` );
 	}
-	onEndTick(reqId:number):void
+	onEndTick():void
 	{
-		console.log( `onEndTick( '${reqId}' )` );
+		//console.log( `onEndTick( '${reqId}' )` );
 	}
 
-	reqId:number;
 	ask:number; askSize:number;
 	bid:number; bidSize:number;
 	halted:boolean;

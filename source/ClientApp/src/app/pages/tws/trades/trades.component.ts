@@ -18,6 +18,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Trades" : "Trades";
 		this._end.setValue( MarketUtilities.previousTradingDay() );
+		this._start.setValue( this.end );
 	};
 
 	ngOnDestroy()
@@ -40,7 +41,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	load()
 	{
-		this.tws.flexExecutions( "act", MarketUtilities.previousTradingDay() ).subscribe(
+		this.tws.flexExecutions( "act", this.start, this.end ).subscribe(
 		{
 			next:	flex =>{ this.data = new DataSource( flex, this.settings.sort ); },
 			error:  e=>{console.error(e); this.cnsle.error(e,null); }
@@ -51,20 +52,13 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		this.data.sort( sort );
 		this.sort = sort;
 	}
-	private get end():Date{ return new Date( this._end.value );} private set end(value:Date){this._end.setValue(value);} private _end = new FormControl();
-	private get dayCount():number{ return this._dayCount; } private set dayCount(value:number)
-	{
-		if( this._dayCount!=value )
-		{
-			this._dayCount = +value;
-			this.load();
-		}
-	} private _dayCount:number=1;
+	get end():Date{ return new Date( this._end.value );} set end(value:Date){this._end.setValue(value);} _end = new FormControl();
+	get start():Date{ return this._start.value; } set start(value:Date){ this._start.setValue(value); } private _start = new FormControl();
 	private data:DataSource;
 	private static profileKey="TradeComponent";
 	settings:Settings={ sort:{active: "openTime", direction: "asc"} };
 	get sort():Sort{ return this.settings.sort; } set sort(value){this.settings.sort = value;}
-	displayedColumns:string[] = ["symbol","shares", "openTime", "closeTime", "return_", "openPrice", "closePrice"];//"openLongPrediction", "openShortPrediction", "closeLongPrediction", "closeShortPrediction",
+	displayedColumns:string[] = ["symbol","shares", "openTime", "closeTime", "return_", "openPrice", "closePrice", "commissions"];//"openLongPrediction", "openShortPrediction", "closeLongPrediction", "closeShortPrediction",
 }
 
 class Settings

@@ -7,6 +7,10 @@ table
 {
 	background: rgba(255, 0, 0, 0.5);
 }
+.positiveValue
+{
+	background: rgba(0, 255, 0, 0.5);
+}
 
 .pnlField
 {
@@ -16,6 +20,7 @@ table
 
 .pnlFieldValue
 {
+	margin: default;
 }
 
 .numberField
@@ -27,7 +32,7 @@ table
 
 .numberFieldValue
 {
-
+	margin: default;
 }
 
 .symbolField

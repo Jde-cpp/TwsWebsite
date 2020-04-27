@@ -235,7 +235,18 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	{
 		console.log( `onEndTick( '${reqId}' )` );
 	}
-	trade( event:MouseEvent ):void
+	trade( element, event:MouseEvent ):void
+	{
+/*		var button = <Button>event.currentTarget;
+		if( button && button.innerText=="Help" )
+		{
+			var iframe = '<html><head><style>body, html {width: 100%; height: 100%; margin: 0; padding: 0}</style></head><body><iframe src="https://www.w3schools.com" style="height:calc(100% - 4px);width:calc(100% - 4px)"></iframe></html></body>';
+			var win = window.open("","","width=600,height=480,toolbar=no,menubar=no,resizable=yes");
+			win.document.write(iframe);
+		}*/
+		console.log( `trade( '${event.toString()}' )` );
+	}
+	close( element, event:MouseEvent ):void
 	{
 /*		var button = <Button>event.currentTarget;
 		if( button && button.innerText=="Help" )
@@ -254,6 +265,10 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	allAccounts=new Map<string,string>(); //{ [k: string]: string };
 	get totalCash():number{ let sum=0; for( let value of this.cash.values() ) sum+=value; return sum; }
 	cash=new Map<string,number>();
+	get pnl():number{ return this.holdings.map( holding=>holding.pnl ).reduce( (total,pnl)=>total+pnl, 0 ); }
+	get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+mv, 0 ); }
+	get value():number{ return this.holdings.map( holding=>holding.marketValue ).reduce( (total,mv)=>total+mv, 0 ); }
+	get dailyReturn():number{ return this.pnl/this.valuePrevious; }
 	mktDataSubscriptions = new Map<number,TickObservable>();
 	requests = new Map <string, [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>]>();
 	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'volume', 'last', 'change', 'menu' ];

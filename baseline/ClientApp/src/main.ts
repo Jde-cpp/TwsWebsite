@@ -7,7 +7,7 @@ import { environment } from './environments/environment';
 import * as protobuf from 'protobufjs/minimal';
 import * as Long from 'long';
 
-if (environment.production) 
+if (environment.production)
 {
   enableProdMode();
 }

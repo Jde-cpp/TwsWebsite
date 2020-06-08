@@ -1,16 +1,18 @@
+@import '../../../../styles/constants';
+
+:host
+{
+	display: flex;
+	flex-direction: column;
+	overflow: auto;
+}
+
+/*
 table
 {
 	width: 100%;
 }
 
-.negativeValue
-{
-	background: rgba(255, 0, 0, 0.5);
-}
-.positiveValue
-{
-	background: rgba(0, 255, 0, 0.5);
-}
 
 .pnlField
 {
@@ -19,18 +21,6 @@ table
 }
 
 .pnlFieldValue
-{
-	margin: default;
-}
-
-.numberField
-{
-	flex: 0 0 45px;
-	padding-right:10px;
-	justify-content: flex-end;
-}
-
-.numberFieldValue
 {
 	margin: default;
 }
@@ -91,6 +81,4 @@ td.mainRight
 	border-right-color: gray;
 	border-right-width: 2px;
 	border-right-style: solid;
-}
-
-
+}*/

@@ -56,7 +56,7 @@ export interface ITicker
 	onPriceTick( reqId:number, type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void;
 	onSizeTick( reqId:number, type:Results.ETickType, size:number ):void;
 	onStringTick( reqId:number, type:Results.ETickType, value:string ):void;
-	onEndTick(reqId:number):void;
+	complete(reqId:number):void;
 }
 
 
@@ -67,7 +67,6 @@ type AccountUpdateCallback = (accountUpdate: Results.IAccountUpdate) => any;
 type AccountUpdateMultiCallback = (accountUpdate: Results.IAccountUpdateMulti)=>any;
 type AccountUpdateType = [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>];
 type ContractDetailsCallback = (details: Results.IContractDetails)=>any;
-//type OptionSummaryCallback = (optionValues: Results.IOptionValues) => any;
 class Connection
 {
 	constructor( private cnsl: IErrorService )
@@ -89,35 +88,35 @@ class Connection
 		{
 			if( message.tickPrice )
 			{
-				const callback = this.marketDataCallbacks.get( message.tickPrice.RequestId );
+				const callback = this.marketDataCallbacks.get( message.tickPrice.requestId );
 				if( callback )
-					callback.price( message.tickPrice.TickType, message.tickPrice.Price, message.tickPrice.Attributes );
+					callback.price( message.tickPrice.tickType, message.tickPrice.price, message.tickPrice.attributes );
 				else
-					console.error( `no callbacks for tickPrice reqId='${message.tickPrice.RequestId}'` );//todo stop request.
+					console.error( `no callbacks for tickPrice reqId='${message.tickPrice.requestId}'` );//todo stop request.
 			}
 			else if( message.tickGeneric )
 			{
-				const callback = this.marketDataCallbacks.get( message.tickGeneric.RequestId );
+				const callback = this.marketDataCallbacks.get( message.tickGeneric.requestId );
 				if( callback )
-					callback.generic( message.tickGeneric.TickType, message.tickGeneric.Value );
+					callback.generic( message.tickGeneric.tickType, message.tickGeneric.value );
 				else
-					console.error( `no callbacks for tickGeneric reqId='${message.tickGeneric.RequestId}'` );//todo stop request.
+					console.error( `no callbacks for tickGeneric reqId='${message.tickGeneric.requestId}'` );//todo stop request.
 			}
 			else if( message.tickSize )
 			{
-				const callback = this.marketDataCallbacks.get( message.tickSize.RequestId );
+				const callback = this.marketDataCallbacks.get( message.tickSize.requestId );
 				if( callback )
-					callback.size( message.tickSize.TickType, message.tickSize.Size );
+					callback.size( message.tickSize.tickType, message.tickSize.size );
 				else
-					console.error( `no callbacks for tickSize reqId='${message.tickSize.RequestId}'` );//todo stop request.
+					console.error( `no callbacks for tickSize reqId='${message.tickSize.requestId}'` );//todo stop request.
 			}
 			else if( message.tickString )
 			{
-				const callback = this.marketDataCallbacks.get( message.tickString.RequestId );
+				const callback = this.marketDataCallbacks.get( message.tickString.requestId );
 				if( callback )
-					callback.string( message.tickString.TickType, message.tickString.Value );
+					callback.string( message.tickString.tickType, message.tickString.value );
 				else
-					console.error( `no callbacks for tickString reqId='${message.tickString.RequestId}'` );//todo stop request.
+					console.error( `no callbacks for tickString reqId='${message.tickString.requestId}'` );//todo stop request.
 			}
 			else if( message.orderStatus || message.openOrder )
 			{
@@ -161,16 +160,16 @@ class Connection
 			}
 			else if( message.accountUpdateMulti )
 			{
-				const reqId = message.accountUpdateMulti.RequestId;
+				const reqId = message.accountUpdateMulti.requestId;
 				const callback = this.accountUpdateMultiCallbacks.get( reqId );
 				if( callback )
 					callback[0]( message.accountUpdateMulti );
 				else
-					console.error( `no callbacks for accountUpdate accountNumber='${message.accountUpdateMulti.Account}', reqId='${reqId}'` );//todo stop request.
+					console.error( `no callbacks for accountUpdate accountNumber='${message.accountUpdateMulti.account}', reqId='${reqId}'` );//todo stop request.
 			}
 			else if( message.accountUpdate )
 			{
-				const accountNumber = message.accountUpdate.Account;
+				const accountNumber = message.accountUpdate.account;
 				if( this.accountUpdateCallbacks.has(accountNumber) )
 				{
 					for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
@@ -181,7 +180,7 @@ class Connection
 			}
 			else if( message.portfolioUpdate )
 			{
-				const accountNumber = message.portfolioUpdate.AccountNumber;
+				const accountNumber = message.portfolioUpdate.accountNumber;
 				if( this.accountUpdateCallbacks.has(accountNumber) )
 				{
 					for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
@@ -192,7 +191,7 @@ class Connection
 			}
 			else if( message.contractDetails )
 			{
-				const id = message.contractDetails.RequestId;
+				const id = message.contractDetails.requestId;
 				let callback = this.contractCallbacks.get( id );
 				if( callback )
 					callback.next( message.contractDetails );
@@ -200,7 +199,11 @@ class Connection
 					console.error( `no callbacks for ContractDetails reqId='${id}'` );
 			}
 			else if( message.options )
-				this.optionSummaryCallbacks.get( message.options.RequestId ).next( message.options );
+				this.optionSummaryCallbacks.get( message.options.id ).next( message.options );
+			else if( message.optionParameters )
+				this.optionParamCallbacks.get( message.optionParameters.underlyingContractId ).next( message.optionParameters );
+			else if( message.daySummary )
+				this.previousDayCallbacks.get( message.daySummary.requestId ).next( message.daySummary );
 			else if( message.historicalData )
 				this.handleHistoricalData( message.historicalData );
 			else if( message.error )
@@ -221,7 +224,10 @@ class Connection
 						console.error( `no callbacks for TickPrice reqId='${message.message.intValue}'` );
 				}
 				else if( typeId==Results.EResults.MultiEnd )
-					this.complete( this.contractCallbacks, message.message.intValue );
+				{
+					if( !this.complete(this.contractCallbacks, message.message.intValue) )
+						this.complete( this.previousDayCallbacks, message.message.intValue );
+				}
 				else
 					console.error( "unknown message id:  "+id );
 			}
@@ -232,11 +238,11 @@ class Connection
 				console.error( "message.stringResult not implemented" );
 /*				if( message.StringResult.Type==Results.EResults.HistorianData || message.StringResult.Type==Results.EResults.TwitterData )
 				{
-					const deferred = this.callbacks.get( message.StringResult.RequestId );
+					const deferred = this.callbacks.get( message.StringResult.requestId );
 					if( deferred )
 						deferred.resolveGeneric( JSON.parse(message.StringResult.Value) );
 					else
-						console.error( `no callbacks for '${message.StringResult.Type}' reqId='${message.StringResult.RequestId}'` );//todo stop request.
+						console.error( `no callbacks for '${message.StringResult.Type}' reqId='${message.StringResult.requestId}'` );//todo stop request.
 				}*/
 			}
 			else if( message.type )
@@ -265,12 +271,12 @@ class Connection
 
 	handleHistoricalData( data:Results.IHistoricalData )
 	{
-		const id = data.RequestId;
+		const id = data.requestId;
 		let callback = this.historicalCallbacks.get( id );
 		if( callback )
 		{
-			for( let bar of data.Bars )
-				callback.next( { time:new Date(bar.Time*1000), high:ProtoUtilities.toNumber(bar.High), low:ProtoUtilities.toNumber(bar.Low), open:ProtoUtilities.toNumber(bar.Open), close:ProtoUtilities.toNumber(bar.Close), wap:ProtoUtilities.toNumber(bar.Wap), volume:ProtoUtilities.toNumber(bar.Volume), count:ProtoUtilities.toNumber(bar.Count)} );
+			for( let bar of data.bars )
+				callback.next( { time:new Date(bar.time*1000), high:ProtoUtilities.toNumber(bar.high), low:ProtoUtilities.toNumber(bar.low), open:ProtoUtilities.toNumber(bar.open), close:ProtoUtilities.toNumber(bar.close), wap:ProtoUtilities.toNumber(bar.wap), volume:ProtoUtilities.toNumber(bar.volume), count:ProtoUtilities.toNumber(bar.count)} );
 			callback.complete();
 		}
 		else
@@ -295,7 +301,7 @@ class Connection
 	}
 	handleError( error:Results.IError )
 	{
-		const id = error.RequestId;
+		const id = error.requestId;
 		if( !Connection.errorIfPresent(id, this.contractCallbacks, error) )
 		{
 			if( this.orders.has(id) )
@@ -303,17 +309,23 @@ class Connection
 				if( this.orders.get(id).callback )
 					this.orders.get(id).callback.error( error );
 				else
-					this.cnsl.error( error.Message, error );
+					this.cnsl.error( error.message, error );
 			}
 			else if( this.historicalCallbacks.has(id) )
 			{
-				this.historicalCallbacks.get( id ).complete();
+				this.historicalCallbacks.get( id ).error( error );
+				//this.historicalCallbacks.get( id ).complete();
 				this.historicalCallbacks.delete( id );
+			}
+			else if( this.optionParamCallbacks.has(id) )
+			{
+				this.optionParamCallbacks.get( id ).error( error );
+				this.optionParamCallbacks.delete( id );
 			}
 			else
 			{
-				console.error( `error code='${error.Code}' message='${error.Message}'` );//todo stop request.
-				this.cnsl.error( error.Message, error );
+				console.error( `error code='${error.code}' message='${error.message}'` );//todo stop request.
+				this.cnsl.error( error.message, error );
 			}
 		}
 	}
@@ -331,14 +343,13 @@ class Connection
 	}
 	complete( map, reqId:number )
 	{
-		var callback = map.get( reqId );
-		if( callback )
+		const haveValue = map.has( reqId );
+		if( haveValue )
 		{
-			callback.complete();
+			map.get(reqId).complete();
 			map.delete( reqId );
 		}
-		else
-			console.error( "unknown complete request:  "+reqId );
+		return haveValue;
 	}
 
 	addMessage( msg ):void
@@ -359,7 +370,7 @@ class Connection
 	}
 	send<T>( request:T ):void
 	{
-		var transmission = new Requests.RequestTransmission(); transmission.Messages.push( request );
+		var transmission = new Requests.RequestTransmission(); transmission.messages.push( request );
 		var writer = Requests.RequestTransmission.encode( transmission );
 		this.socket.next( writer.finish() );//'17\0'+'1\0'
 	}
@@ -377,16 +388,16 @@ class Connection
 	{
 		var id = this.getRequestId();
 		var param = new Requests.RequestMrkDataSmart( {"id": id, "contractId": contractId, "tickList": tickList, "snapshot": snapshot } );
-		var msg = new Requests.RequestUnion(); msg.MrkDataSmart = param;
+		var msg = new Requests.RequestUnion(); msg.marketDataSmart = param;
 		this.send( msg );
 		var callback = new TickSubject();
 		this.marketDataCallbacks.set( id, callback );
 		return callback;
 	}
-	cancelMktData( subscriptions:Map<number,TickObservable> ):void
+	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void
 	{
 		let ids:number[] = [];
-		for( let subscription of subscriptions.values() )
+		for( let subscription of subscriptions )
 		{
 			let matched = [...this.marketDataCallbacks].find( ([key, val]) => val==subscription );
 			if( matched.length )
@@ -412,7 +423,7 @@ class Connection
 	{
 		var id = this.getRequestId();
 		var param = new Requests.RequestHistoricalData( {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000} );
-		var msg = new Requests.RequestUnion(); msg.HistoricalData = param;
+		var msg = new Requests.RequestUnion(); msg.historicalData = param;
 		this.send( msg );
 		var callback = new Subject<Bar>();
 		this.historicalCallbacks.set( id, callback );
@@ -437,7 +448,7 @@ class Connection
 		var id = this.getRequestId();
 		var param = new Requests.RequestContractDetails( {"id": id} );
 		for( let id of contractIds )
-			param.contracts.push( new IB.Contract({"id": id, "secType": "STK", "exchange": "SMART", "currency": "USD"}) );
+			param.contracts.push( new IB.Contract({"id": id, "securityType": "STK", "exchange": "SMART", "currency": "USD"}) );
 
 		var msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
 		this.contractCallbacks.set( id, callback );
@@ -445,10 +456,12 @@ class Connection
 		this.send( msg );
 		return callback;
 	}
-	optionSummary( contractId:number, isCall:boolean, date:Date ):Observable<Results.IOptionValues>
+	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Observable<Results.IOptionValues>
 	{
 		var id = this.getRequestId();
-		this.send( {"options": {"id": id, "contractId": contractId, "isCall": isCall ? 1 : 0, "date": date ? date.getTime() / 1000 : 0}} );
+		//var a = new Requests.RequestOptions(); a.contractId = contractId; a.id=id; a.securityType=2;	a.day2=date;
+		//this.send( {"options": a} );
+		this.send( {"options": {"id": id, "contractId": contractId, "securityType": optionType, "startExpiration": startExpiration, "endExpiration": endExpiration, "startSrike": startStrike, "endStrike": endStrike }} );
 		var callback = new Subject<Results.IOptionValues>();
 		this.optionSummaryCallbacks.set( id, callback );
 		return callback;
@@ -502,7 +515,7 @@ class Connection
 				var transmission = new Requests.RequestTransmission();
 				var param = new Requests.RequestAccountUpdates( {"subscribe": false, "accountNumber": number} );
 				var msg = new Requests.RequestUnion(); msg.accountUpdates = param;
-				transmission.Messages.push( msg );
+				transmission.messages.push( msg );
 				var writer = Requests.RequestTransmission.encode( transmission );
 				this.socket.next( writer.finish() );
 				console.log( `accountUnsubscribe from '${number}'` );
@@ -553,8 +566,21 @@ class Connection
 		this.openOrders.push( callback );
 		return callback;
 	}
-
-
+	reqOptionParams( id:number ):Observable<Results.IOptionParams>
+	{
+		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestOptionParams, "ids": [id]}}) );
+		let callback = new Subject<Results.IOptionParams>();
+		this.optionParamCallbacks.set( id, callback );
+		return callback;
+	}
+	reqPreviousDay( ids:number[] ):Observable<Results.IDaySummary>
+	{
+		const requestId = this.getRequestId();
+		this.send( new Requests.RequestUnion({"genericRequests": {"requestId": requestId, "type": Requests.ERequests.RequsetPrevOptionValues, "ids": ids}}) );
+		let callback = new Subject<Results.IDaySummary>();
+		this.previousDayCallbacks.set( requestId, callback );
+		return callback;
+	}
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
 	private socket:WebSocketSubject<protobuf.Buffer>;
 	private sessionId:number|Long|null;
@@ -570,6 +596,8 @@ class Connection
 	private optionSummaryCallbacks  = new Map<number, Subject<Results.IOptionValues>>();
 	//private callbacks = new Map<number,IDeferred>();
 	private flexCallbacks = new Map<number,Subject<Results.Flex>>();
+	private optionParamCallbacks = new Map<number, Subject<Results.IOptionParams>>();
+	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
 }
@@ -587,14 +615,16 @@ export class TwsService
 	accountUpdatesUnsubscribe( requests:Map<string,AccountUpdateType> ){ this.connection.accountUpdatesUnsubscribe(requests); };
 	accountUpdateUnsubscribe( accountId:string, request:AccountUpdateType ){ this.connection.accountUpdateUnsubscribe(accountId,request); };
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
-	cancelMktData( subscriptions:Map<number,TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
+	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Bar>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
-	optionSummary( contractId:number, isCall:boolean, date:Date ):Observable<Results.IOptionValues>{ return this.connection.optionSummary(contractId, isCall, date); }
+	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Observable<Results.IOptionValues>{ return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike); }
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
 	//request<T>( requestType:Requests.ERequests ):Promise<T>{ return this.connection.request<T>(requestType); }
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
+	reqOptionParams(underlyingId:number):Observable<Results.IOptionParams>{ return this.connection.reqOptionParams(underlyingId); }
+	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
 	static get accounts():{ [k: string]: string }{return this._accounts;} static set accounts(value:{ [k: string]: string }){this._accounts=value;} private static _accounts:{ [k: string]: string };

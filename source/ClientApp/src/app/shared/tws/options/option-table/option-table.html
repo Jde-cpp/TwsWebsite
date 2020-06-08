@@ -1,0 +1,62 @@
+<div class="example-container mat-elevation-z8" style="max-height: 582px; width: 800px; align-content: center; margin: auto;  text-align: center;">
+	<mat-table #mainTable matSort [dataSource]="pageContent" style="display: inherit;" class="mat-elevation-z8" (matSortChange)="sortData($event)">
+		<ng-container matColumnDef="expiration">
+			<mat-header-cell class="symbolField" *matHeaderCellDef> Expiration </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let element">{{element.expiration}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="strike">
+			<mat-header-cell class="symbolField" *matHeaderCellDef> Strike </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let element">{{element.strike}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="oi">
+			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> OI </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let element">{{element.oi | number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="oiChange">
+			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> oiChange </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.oiChange | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="volume">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Volume </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.volume | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="last">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Last </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.last | number:'1.2-2'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="bid_size">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Bid SZ </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bidSize | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="bid">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Bid </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bid | number:'1.2-2'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="ask">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Ask </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.ask | number:'1.2-2'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="ask_size">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Ask SZ </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.askSize | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="value">
+			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Value </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let element">{{element.value| number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="change">
+			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Change </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let element">{{element.change | number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="exposure">
+			<mat-header-cell class="symbolField" *matHeaderCellDef> Exposure </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let element">{{element.exposure| number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="previousValue">
+			<mat-header-cell *matHeaderCellDef> Previous Value </mat-header-cell>
+			<mat-cell *matCellDef="let element">{{element.previousValue| number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+		<mat-row mat-row *matRowDef="let row; columns: displayedColumns;" [class.highlight]="selectedOption==row" (click)="cellClick(row)" (dblclick)="cellDblClick(row)"></mat-row>
+	</mat-table>
+</div>

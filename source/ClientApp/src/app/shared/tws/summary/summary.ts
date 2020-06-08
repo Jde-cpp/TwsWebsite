@@ -1,5 +1,5 @@
 import {Component,EventEmitter,Input,Output} from '@angular/core';
-import {TradeResult} from './TradeResult'
+//import {TradeResult} from './TradeResult'
 
 @Component({selector: 'tws-summary', templateUrl: './summary.html', styleUrls:['./summary.css']})
 export class SummaryComponent
@@ -27,6 +27,7 @@ export interface IData
 	return_:number;
 	isGain:boolean;
 }
+/*
 export class Data implements IData
 {
 	constructor( values:TradeResult[] )
@@ -59,3 +60,4 @@ export class Data implements IData
 	return_:number;
 	get isGain():boolean{ return this.return_>=0.0;}
 }
+*/

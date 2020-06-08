@@ -1,0 +1,35 @@
+<mat-form-field>
+	<input matInput [matDatepicker]="startId" placeholder="Start Date" [value]="startDate ? startDate.value : null">
+	<mat-datepicker-toggle matSuffix [for]="startId"></mat-datepicker-toggle>
+	<mat-datepicker #startId></mat-datepicker>
+</mat-form-field>
+<mat-form-field>
+	<input matInput [matDatepicker]="endDate" placeholder="End Date">
+	<mat-datepicker-toggle matSuffix [for]="endDate"></mat-datepicker-toggle>
+	<mat-datepicker #endDate></mat-datepicker>
+</mat-form-field>
+<mat-chip-list style="padding-left:10px;">
+	<mat-chip (click)="setGrouping(5)">Month</mat-chip>
+	<mat-chip (click)="setGrouping(6)">3 Month</mat-chip>
+	<mat-chip (click)="setGrouping(16)">6 Month</mat-chip>
+	<mat-chip (click)="setGrouping(7)">YTD</mat-chip>
+	<mat-chip (click)="setGrouping(8)">1 Year</mat-chip>
+	<mat-chip (click)="setGrouping(9)">All</mat-chip>
+</mat-chip-list>
+<!-- <mat-form-field> -->
+<mat-chip-list style="padding-left:20px;">
+	<mat-chip (click)="setGrouping(5)">1 min</mat-chip>
+	<mat-chip (click)="setGrouping(6)">2 min</mat-chip>
+	<mat-chip (click)="setGrouping(16)">3 min</mat-chip>
+	<mat-chip (click)="setGrouping(7)">5 min</mat-chip>
+	<mat-chip (click)="setGrouping(8)">15 min</mat-chip>
+	<mat-chip (click)="setGrouping(9)">30 min</mat-chip>
+	<mat-chip (click)="setGrouping(10)">Hour</mat-chip>
+	<mat-chip (click)="setGrouping(11)">Day</mat-chip>
+	<mat-chip (click)="setGrouping(12)">Week</mat-chip>
+	<mat-chip (click)="setGrouping(13)">Month</mat-chip>
+	<mat-chip (click)="setGrouping(14)">3 Months</mat-chip>
+	<mat-chip (click)="setGrouping(15)">Year</mat-chip>
+</mat-chip-list>
+<!-- </mat-form-field> -->
+<div id="container"></div> -->

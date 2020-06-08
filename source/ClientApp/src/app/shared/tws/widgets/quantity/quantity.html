@@ -1,0 +1,7 @@
+<mat-form-field>
+	<input matInput placeholder="Quantity" [matAutocomplete]="autox" class="number" type="number" [step]="step" min="{{min}}" [ngModel]="value" (ngModelChange)="value=$event">
+</mat-form-field>
+<mat-autocomplete #autox="matAutocomplete">
+	<mat-option *ngFor="let option of options" [value]="option">{{option}}</mat-option>
+	<!-- autoValues(value) -->
+</mat-autocomplete>

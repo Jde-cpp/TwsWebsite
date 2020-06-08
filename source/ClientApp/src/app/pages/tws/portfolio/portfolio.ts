@@ -1,30 +1,36 @@
-import { OnDestroy, Component, AfterViewInit, ViewChild, Inject } from '@angular/core';
+import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ViewEncapsulation } from '@angular/core';
 import { MatTable } from '@angular/material/table';
+import {MatDialog} from '@angular/material/dialog';
 import { Observable } from 'rxjs';//,of
-import { TwsService, Bar } from '../../../services/tws/tws.service';
-import { IProfile } from '../../../services/profile/IProfile';
-import {TickObservable} from '../../../services/tws/ITickObserver'
-import {Holding, TermHoldingSummary} from './holding'
+import { TwsService, Bar } from 'src/app/services/tws/tws.service';
+import { IProfile } from 'src/app/services/profile/IProfile';
+import {TickObservable} from 'src/app/services/tws/ITickObserver'
+import {Holding, TermHoldingSummary, Price} from './holding'
+import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
+import {TransactDialog} from 'src/app/shared/tws/dialogs/transact/transact'
+import {DateUtilities} from 'src/app/utilities/dateUtilities'
 
-import * as ib from '../../../proto/ib';
+import * as ib from 'src/app/proto/ib';
 import IB = ib.Jde.Markets.Proto;
-import * as IbResults from '../../../proto/results';
+import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbRequests from '../../../proto/requests';
+import * as IbRequests from 'src/app/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { subscribeOn } from 'rxjs/operators';
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { RollDialog } from 'src/app/shared/tws/dialogs/roll/roll-dialog';
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
+
 
 class Settings
 {
 	selectedAccounts:string[]=[];
 }
 
-@Component({selector: 'portfolio',styleUrls: ['portfolio.component.css'],templateUrl: './portfolio.component.html'})
+@Component({selector: 'portfolio',styleUrls: ['portfolio.scss'],templateUrl: './portfolio.html'})
 export class PortfolioComponent implements AfterViewInit, OnDestroy
 {
-	constructor( private twsService : TwsService, @Inject('IProfile') private profileService: IProfile )
+	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile )
 	{}
 
 	ngAfterViewInit():void
@@ -39,26 +45,28 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	ngOnDestroy()
 	{
 		if( this.requests )
-			this.twsService.accountUpdatesUnsubscribe( this.requests );
+			this.tws.accountUpdatesUnsubscribe( this.requests );
 		if( this.mktDataSubscriptions.size )
-			this.twsService.cancelMktData( this.mktDataSubscriptions );//TickObservable[]=[];
+			this.tws.cancelMktData( this.mktDataSubscriptions.values() );//TickObservable[]=[];
 	}
 
 	onSettingsLoaded()
 	{
-		this.twsService.reqManagedAccts().subscribe( (numbers)=>
+		this.tws.reqManagedAccts().subscribe( (numbers)=>
 		{
 			this.allAccounts.clear();
 			for( let account in numbers )
 				this.allAccounts.set( account, numbers[account] );
-			this.selectedAccounts = this.settings.selectedAccounts.length ? this.settings.selectedAccounts.slice() : [ ...this.allAccounts.keys() ];
+			this.selectedAccounts = this.settings.selectedAccounts.filter( accountId=>this.allAccounts.has(accountId) );
+			if( !this.selectedAccounts.length )
+				this.selectedAccounts = [ ...this.allAccounts.keys() ];
 			for( var accountId of this.selectedAccounts )
 				this.subscribe( accountId );
 		});
 	}
 	subscribe( accountId:string )
 	{
-		var callbacks = this.twsService.reqAccountUpdates( accountId );
+		var callbacks = this.tws.reqAccountUpdates( accountId );
 		this.requests.set( accountId, callbacks );
 		callbacks[0].subscribe( {next:accountUpdate =>{this.onAccountUpdate(accountUpdate);}, error:  e=>{console.error(e);}} );
 		callbacks[1].subscribe( {next:portfolioUpdate =>{this.onPortfolioUpdate(portfolioUpdate);}, error:  e=>{console.error(e);}} );
@@ -73,7 +81,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				if( this.selectedAccounts.includes(accountId) )
 					continue;
 
-				this.twsService.accountUpdateUnsubscribe( accountId, this.requests.get(accountId) );
+				this.tws.accountUpdateUnsubscribe( accountId, this.requests.get(accountId) );
 				for( let i = 0; i < this.holdings.length; ++i )
 				{
 					if( this.holdings[i].accountNumber === accountId )
@@ -95,10 +103,10 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	}
 	onAccountUpdate( accountUpdate: Results.IAccountUpdate ):void
 	{
-		if( accountUpdate.Key=="CashBalance" )
-			this.cash.set( accountUpdate.Account, +accountUpdate.Value );
+		if( accountUpdate.key=="CashBalance" )
+			this.cash.set( accountUpdate.account, +accountUpdate.value );
 
-		console.log( `onAccountUpdate [${accountUpdate.Account}]${accountUpdate.Key}=${accountUpdate.Value}`  );
+		//console.log( `onAccountUpdate [${accountUpdate.account}]${accountUpdate.key}=${accountUpdate.value}`  );
 	}
 
 /*	onHolding( reqId:number, fnctn:(holding:Holding)=>void ):void
@@ -112,12 +120,12 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 
 	onPortfolioUpdate = ( value: Results.IPortfolioUpdate ):void =>
 	{
-		const contract = value.Contract;
-		console.log( `onPortfolioUpdate[${value.AccountNumber}]${contract.symbol}x${value.Position}=${value.MarketValue}` );
+		const contract = value.contract;
+		//console.log( `onPortfolioUpdate[${value.accountNumber}]${contract.symbol}x${value.position}=${value.marketValue}` );
 		const contractId = contract.id;
 		if( !this.holdings.some( (holding, i) =>
 		{
-			const found = holding.contract.id==value.Contract.id;
+			const found = holding.contract.id==value.contract.id;
 			if( found )
 			{
 				let summary = holding.isLong ? this.long : this.short;
@@ -127,8 +135,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			return found;
 		}) )
 		{
-			//this.twsService.reqContractDetails( contract ).subscribe( {next: contract2=>{
-			const barSize = contract.secType=="OPT" ? Requests.BarSize.Hour : Requests.BarSize.Day;
+			//this.tws.reqContractDetails( contract ).subscribe( {next: contract2=>{
+			const barSize = contract.securityType=="OPT" ? Requests.BarSize.Hour : Requests.BarSize.Day;
 
 			const holding = new Holding( value );
 			(holding.isLong ? this.long : this.short).add( holding );
@@ -138,10 +146,10 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				console.error( `this.mktDataSubscriptions.has(${contractId})` );//should never be here, because not in holdings
 			else
 			{
-				var isMarketOpen = MarketUtilities.isMarketOpen( contract.primaryExchange, contract.secType );
+				var isMarketOpen = MarketUtilities.isMarketOpen( contract.primaryExchange, contract.securityType );
 				if( isMarketOpen )
 				{
-					let subscription = this.twsService.reqMktData( contractId, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );
+					let subscription = this.tws.reqMktData( contractId, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );
 					this.mktDataSubscriptions.set( contractId, subscription );
 					subscription.subscribe2(
 					{
@@ -151,12 +159,14 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 							if( price!=-1 )
 							{
 								if( type==Results.ETickType.ClosePrice )
-									holding.current.last = price;
+									holding.last = price;
 								else if( type==Results.ETickType.BidPrice )
-									holding.current.bid = price;
+									holding.bid = price;
 								else if( type==Results.ETickType.AskPrice )
-									holding.current.ask = price;
-								else
+									holding.ask = price;
+								else if( type==Results.ETickType.LastPrice )
+									holding.last = price;
+								else if( type!=Results.ETickType.OpenTick && type!=Results.ETickType.MARK_PRICE )
 									console.log( `(${holding.contract.symbol})onPriceTick( '${type.toString()}', '${price}') - not handled` );
 							}
 						},
@@ -166,28 +176,50 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 								console.log( `(${holding.contract.symbol}) onSizeTick( '${type.toString()}', '${size}')` );
 							else if( type==Results.ETickType.Volume )
 								holding.volume = size;
-							else
+							else if( type==Results.ETickType.BidSize )
+								holding.bidSize = size;
+							else if( type==Results.ETickType.AskSize )
+								holding.askSize = size;
+							else if( type!=Results.ETickType.LastSize )
 								console.log( `(${holding.contract.symbol})onSizeTick( '${type.toString()}', '${size}') - not handled` );
 						},
 						string:( type:Results.ETickType, value:string )=>{ /*holding.onStringTick(type, value);*/ },
 						complete: ()=>{ console.log("reqMktData::complete") }
 					});
 				}
-				var dayCount = isMarketOpen ? 1 : 2;
 				const current = MarketUtilities.previousTradingDay();
-				this.twsService.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Ask, true, false ).subscribe(
+				var day = DateUtilities.toDays( current );
+				this.tws.reqPreviousDay( [contract.id] ).subscribe(
+				{
+					next: ( bar:Results.IDaySummary ) =>
+					{
+						if( isMarketOpen || bar.day==day )
+							holding.previousDay = new Price( bar );
+						else
+						{
+							holding.bid = bar.bid;
+							holding.ask = bar.ask;
+							holding.close = ProtoUtilities.toNumber( bar.close );
+						}
+					},
+					complete:()=>{},
+					error: e=>{console.error(e);}
+				});
+
+				var dayCount = isMarketOpen ? 1 : 2;
+				this.tws.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Ask, true, false ).subscribe(
 				{
 					next: ( bar:Bar ) =>{ holding[ !isMarketOpen && bar.time.getUTCDay()==current.getUTCDay() ? "current" : "previousDay" ].ask = bar.close; },
 					complete:()=>{},
 					error: e=>{console.error(e);}
 				});
-				this.twsService.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Bid, true, false ).subscribe(
+				this.tws.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Bid, true, false ).subscribe(
 				{
 					next: ( bar:Bar ) =>{ holding[ !isMarketOpen && bar.time.getUTCDay()==current.getUTCDay() ? "current" : "previousDay" ].bid =  bar.close; },
 					complete:()=>{},
 					error: e=>{console.error(e);}
 				});
-				this.twsService.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Trades, true, false ).subscribe(
+				this.tws.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Trades, true, false ).subscribe(
 				{
 					next: ( bar:Bar ) =>
 					{
@@ -195,7 +227,9 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 						if( !isMarketOpen )
 							holding.volume += bar.volume;
 						//console.log( `Trades ${new Date(bar.Time*1000)} ${bar.Volume} - ${bar.Close}` );
-						holding[ !isMarketOpen && currentDay ? "current" : "previousDay" ].last = bar.close;
+						if( isMarketOpen || !currentDay )
+							holding[ "previousDay" ].last = bar.close;
+						//holding[ !isMarketOpen && currentDay ? "current" : "previousDay" ].last = bar.close;
 					},
 					complete:()=>{},
 					error: e=>{console.error(e);}
@@ -246,6 +280,51 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}*/
 		console.log( `trade( '${event.toString()}' )` );
 	}
+	roll( holding:Holding, event:MouseEvent ):void
+	{
+		console.log( `roll( '${event.toString()}' )` );
+		const dialogRef = this.dialog.open(RollDialog,
+		{
+			width: '600px',
+			data: { holding: holding }
+		});
+		dialogRef.afterClosed().subscribe(result =>
+		{
+			// if( result && this.settings.limit!=result.limit )
+			// {
+			// 	this.settings.limit = result.limit;
+			// 	this.subscribe( this.applicationId, this.level );
+			// }
+		});
+
+	}
+	onTransactClick( buy:boolean )
+	{
+		if( this.selected.contract.securityType=="OPT" )
+		{
+			const dialogRef = this.dialog.open(OptionEntryDialog, { width: '600px', data: { option: this.selected, isBuy: buy, expirations: [], underlying: null } });
+			dialogRef.afterClosed().subscribe(result =>
+			{
+				// if( result && this.settings.limit!=result.limit )
+				// {
+				// 	this.settings.limit = result.limit;
+				// 	this.subscribe( this.applicationId, this.level );
+				// }
+			});
+		}
+		else
+		{
+			const dialogRef = this.dialog.open( TransactDialog, {width: '600px', data: {tick: this.selected, isBuy: buy, quantity: this.selected.position}} );
+			dialogRef.afterClosed().subscribe(result =>
+			{
+				// if( result && this.settings.limit!=result.limit )
+				// {
+				// 	this.settings.limit = result.limit;
+				// 	this.subscribe( this.applicationId, this.level );
+				// }
+			});
+		}
+	}
 	close( element, event:MouseEvent ):void
 	{
 /*		var button = <Button>event.currentTarget;
@@ -257,26 +336,50 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}*/
 		console.log( `trade( '${event.toString()}' )` );
 	}
+	cellClick( row:Holding )
+	{
+		this.isSingleClick = true;
+		setTimeout( ()=>
+		{
+			if( this.isSingleClick )
+			{
+				const index = 0;//+row.index;
+				this.selected = this.selected == row ? null : row;
+				//this.selectionChange.emit( this.selectedOption );
+			}
+		},250);
+	}
+	cellDblClick( row:Holding )
+	{
+		this.isSingleClick = false;
+		const index = 0;//+row.index;
+		if( this.selected!=row )
+			this.selected = row;
+//		this.dialog.open( DetailsDialog, {width: '600px', data: row} );
+	}
+
 	holdings: Holding[] = new Array<Holding>();
 	long:TermHoldingSummary=new TermHoldingSummary();
 	short:TermHoldingSummary=new TermHoldingSummary();
 	connected = false;
+	//get dailyReturn():number{ return this.pnl/this.valuePrevious; }
 	selectedAccounts: string[];
 	allAccounts=new Map<string,string>(); //{ [k: string]: string };
 	get totalCash():number{ let sum=0; for( let value of this.cash.values() ) sum+=value; return sum; }
 	cash=new Map<string,number>();
 	get pnl():number{ return this.holdings.map( holding=>holding.pnl ).reduce( (total,pnl)=>total+pnl, 0 ); }
-	get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+mv, 0 ); }
+	//get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+mv, 0 ); }
 	get value():number{ return this.holdings.map( holding=>holding.marketValue ).reduce( (total,mv)=>total+mv, 0 ); }
-	get dailyReturn():number{ return this.pnl/this.valuePrevious; }
+	private isSingleClick:boolean;
 	mktDataSubscriptions = new Map<number,TickObservable>();
 	requests = new Map <string, [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>]>();
-	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'volume', 'last', 'change', 'menu' ];
+	private selected:Holding|null=null;
+
+	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'bidSize', 'bid', 'ask', 'askSize', 'volume', 'last', 'change' ];
 
 	@ViewChild('mainTable',{static: false}) _table:MatTable<Holding>;
 	@ViewChild('accountButtons',{static: false}) accountButtons;
 	get settings(){return this._settings || (this.settings=new Settings());} set settings(value){ this._settings = value;} private _settings:Settings;
 	private static profileKey="PortfolioComponent";
 	//public objectKeys = Object.keys;
-//	private twsService : TwsService;
 }

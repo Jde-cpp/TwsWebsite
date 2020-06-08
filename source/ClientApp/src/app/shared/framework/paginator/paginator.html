@@ -1,0 +1,10 @@
+<mat-form-field *ngIf="!hidePageSize" style="margin-left: 10px;width: 60px;">
+	<input matInput style="text-align: right; " type="number" [(ngModel)]="pageSize" placeholder="Page Size">
+</mat-form-field>
+<div style="margin-left: 10px;display:inline" class="mat-paginator-range-label">{{startIndex+1}} – {{endIndex+1}} of {{length}}</div>
+<button mat-icon-button *ngIf="showFirstLastButtons" [disabled]="disabled || onFirstPage"><mat-icon class="iconButton" (click)="firstPage()">first_page</mat-icon></button>
+<button mat-icon-button [disabled]="disabled || onFirstPage"><mat-icon class="iconButton" (click)="prevPage()">chevron_left</mat-icon></button>
+<button mat-icon-button [disabled]="disabled || onFirstPage"><mat-icon class="iconButton" (click)="prevItem()">arrow_left</mat-icon></button>
+<button mat-icon-button [disabled]="disabled || onLastPage"><mat-icon class="iconButton" (click)="nextItem()">arrow_right</mat-icon></button>
+<button mat-icon-button [disabled]="disabled || onLastPage"><mat-icon class="iconButton" (click)="nextPage()">chevron_right</mat-icon></button>
+<button mat-icon-button *ngIf="showFirstLastButtons" [disabled]="disabled || onLastPage"><mat-icon class="iconButton" (click)="lastPage()">last_page</mat-icon></button>

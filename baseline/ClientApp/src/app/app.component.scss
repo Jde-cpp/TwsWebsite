@@ -1,4 +1,4 @@
-app-root 
+app-root
 {
 	display: flex;
 	flex-direction: column;
@@ -7,9 +7,10 @@ app-root
 	bottom: 0;
 	left: 0;
 	right: 0;
+	background-color: rgb(33, 33, 33);
  }
- 
- app-navbar 
+
+ app-navbar
  {
 	position: fixed;
 	top: 0;
@@ -17,26 +18,27 @@ app-root
 	right: 0;
 	z-index: 2;
  }
- 
- app-root > app-component-sidenav 
+
+ app-root > app-component-sidenav
  {
 	flex: 1;
  }
- 
+
  app-root > app-homepage,
  app-root > app-guides,
- app-root > guide-viewer {
+ app-root > guide-viewer
+ {
 	overflow-y: auto;
  }
- 
- @media (max-width: 720px) {
-	app-root {
-	  top: 92px;
-	}
- 
+
+ @media (max-width: 720px)
+ {
+	app-root{ top: 92px; }
+
 	app-root > app-homepage,
 	app-root > app-guides,
-	app-root > guide-viewer {
+	app-root > guide-viewer
+	{
 	  overflow-y: visible;
 	}
  }

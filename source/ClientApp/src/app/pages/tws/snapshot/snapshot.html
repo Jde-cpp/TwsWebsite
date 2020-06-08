@@ -6,7 +6,10 @@
 			<mat-label>Symbol</mat-label>
 			<input matInput onclick="this.select();" [ngModel]="symbol" (keyup.enter)="setSymbol($event.target.value)" (blur)="setSymbol($event.target.value)" >
 		 </mat-form-field>
-		<span>{{primaryName}}</span>
+		<div>
+			<div><span>{{primaryName}}</span></div>
+			<div><button mat-raised-button color="primary" style="margin-right:10px" (click)="onTransactClick(true)">Buy</button><button mat-raised-button color="warn" (click)="onTransactClick(false)" >Sell</button></div>
+		</div>
 		<mat-chip-list *ngFor="let m of previousSymbols | slice:1" style="padding-left:10px">
   			<mat-chip (click)="setSymbol(m)">{{m}}</mat-chip>
 		</mat-chip-list>
@@ -17,7 +20,7 @@
 		<table>
 			<thead><tr><td>Last</td><td>Change</td><td>Range</td><td>Volume</td><td>Short</td><td>Inventory</td></tr></thead>
 			<tbody><tr>
-				<td [class.negativeValue]="holding?.change<0" [class.positiveValue]="holding?.change>0">{{holding?.price | number:'1.2-2'}}</td>
+				<td [class.negativeValue]="holding?.change<0" [class.positiveValue]="holding?.change>0">{{holding?.last | number:'1.2-2'}}</td>
 				<td [class.negativeValue]="holding?.change<0" [class.positiveValue]="holding?.change>0">{{holding?.change| number:'1.2-2'}}</td>
 				<td>{{holding?.low| number:'1.2-2'}} - {{holding?.high | number:'1.2-2'}}</td>
 				<td>{{holding?.volume/10000 | number:'1.2-2':'en-US'}}M</td><td>[[holding.short}}</td>
@@ -26,3 +29,35 @@
 		</table>
 	</mat-toolbar-row>
 </mat-toolbar>
+<mat-tab-group #tabs (selectedTabChange)="onTabChange($event)" >
+	<mat-tab>
+		<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
+		<ng-template matTabContent>
+			<candlestick [contract]="contract" [(settings)]="chartSettings" [isActive]="tabs.selectedIndex==0"></candlestick>
+		</ng-template>
+	</mat-tab>
+	<mat-tab>
+		<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Options</ng-template>
+		<ng-template matTabContent>
+			<option-tab [holding]="holding" [isActive]="tabs.selectedIndex==1"></option-tab>
+		</ng-template>
+	</mat-tab>
+	<mat-tab>
+		<ng-template mat-tab-label><mat-icon>table_chart</mat-icon>Bars</ng-template>
+		<ng-template matTabContent>
+			<bar-table [contract]="contract" [isActive]="tabs.selectedIndex==2" [(settings)]="barSettings"></bar-table>
+		</ng-template>
+	</mat-tab>
+	<mat-tab>
+		<ng-template mat-tab-label><mat-icon>adb</mat-icon>Previous Runs</ng-template>
+		<ng-template matTabContent>
+			<previous-runs [contract]="contract" [isActive]="tabs.selectedIndex==3" [(settings)]="previousSettings"></previous-runs>
+		</ng-template>
+	</mat-tab>
+	<mat-tab>
+		<ng-template mat-tab-label><mat-icon>account_tree</mat-icon>Trees</ng-template>
+		<ng-template matTabContent>
+			<decision-trees [contract]="contract" [isActive]="tabs.selectedIndex==4" [(settings)]="treeSettings"></decision-trees>
+		</ng-template>
+	</mat-tab>
+</mat-tab-group>

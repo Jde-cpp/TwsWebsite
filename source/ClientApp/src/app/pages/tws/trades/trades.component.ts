@@ -1,5 +1,5 @@
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject } from '@angular/core';
-import { Sort } from '@angular/material';
+import {Sort} from '@angular/material/sort';
 import { TwsService } from 'src/app/services/tws/tws.service';
 import { IProfile } from 'src/app/services/profile/IProfile';
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';

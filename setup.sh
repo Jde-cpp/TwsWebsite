@@ -1,7 +1,7 @@
 #!/bin/bash
 dotnet=${1:-0}
 link=${2:-1}
-
+#from TwsWebsite
 baseDir=`pwd`;
 clientDir=$baseDir/source/ClientApp;
 appDir=$clientDir/src/app;

@@ -6,15 +6,16 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
+import {MatChipsModule} from '@angular/material/chips';
+import { MatNativeDateModule } from '@angular/material/core';
 import {MatFormFieldModule} from '@angular/material/form-field';
-import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatMenuModule } from '@angular/material/menu';
 //import {MatDialogModule} from '@angular/material/dialog';
+import {MatRadioModule} from '@angular/material/radio';
 import {MatTableModule} from '@angular/material/table';
 import {MatTabsModule} from '@angular/material/tabs';
-import {MatChipsModule} from '@angular/material/chips';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import {MatDatepickerModule} from '@angular/material/datepicker';
 import {MatSelectModule} from '@angular/material/select';
@@ -23,8 +24,10 @@ import {MatSortModule} from '@angular/material/sort';
 
 import {NavBarModule} from './shared/material-site/navbar';
 import {ThemePickerModule} from './shared/material-site/theme-picker';
-import {ComponentPageTitle} from './pages/material-site/page-title/page-title';
+//import {ComponentPageTitle} from './pages/material-site/page-title/page-title';
 import {StyleManager} from './shared/material-site/style-manager';
+
+import {PaginatorComponent} from './shared/framework/paginator/paginator';
 
 import{ CandlestickComponent } from './shared/tws/highcharts/candlestick';
 import{ OptionTableComponent } from './shared/tws/options/option-table/option-table';
@@ -55,12 +58,13 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
   declarations: [
 	 AppComponent,
 	 PortfolioComponent,SnapshotComponent,TradeComponent,
+	 PaginatorComponent,
 	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SummaryComponent,
 	 TransactDialog, RollDialog, OptionEntryDialog,
 	 QuantityComponent],
   imports: [
 	 BrowserModule, RouterModule.forRoot(routes), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
-	 MatAutocompleteModule,MatButtonModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatTableModule, MatTabsModule, MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule,MatSnackBarModule, MatSortModule,
+	 MatAutocompleteModule,MatButtonModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatRadioModule, MatTableModule, MatTabsModule, MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule,MatSnackBarModule, MatSortModule,
 	 NavBarModule, ThemePickerModule
   ],
   entryComponents: [TransactDialog, RollDialog, OptionEntryDialog],

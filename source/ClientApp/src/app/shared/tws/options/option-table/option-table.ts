@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnInit, ViewChild, Input, Inject, Output, EventEmitter } from '@angular/core';
+import { Component, AfterViewInit, OnInit, ViewChild, Input, Inject, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import { Observable, Subscription } from 'rxjs';
@@ -22,11 +22,9 @@ import Requests = IbRequests.Jde.Markets.Proto.Requests;
 enum OptionType{Call=1,Put=2,Combined=3}
 
 @Component({ selector: 'option-table', styleUrls: ['option-table.css'], templateUrl: './option-table.html' })
-export class OptionTableComponent implements AfterViewInit, OnInit
+export class OptionTableComponent implements OnInit, OnDestroy
 {
 	constructor( private tws : TwsService, @Inject('IErrorService') private cnsl: IErrorService )
-	{}
-	ngAfterViewInit():void
 	{}
 	ngOnInit()
 	{
@@ -162,8 +160,10 @@ export class OptionTableComponent implements AfterViewInit, OnInit
 		}
 		if( !foundSelected )
 		    this.selectedOption = null;
-		//if( this._table._data )
+		if( this._table._data )
 		    this._table.renderRows();
+		else
+		    console.log('ho data');
 	}
 
 	cellClick( row:Option )

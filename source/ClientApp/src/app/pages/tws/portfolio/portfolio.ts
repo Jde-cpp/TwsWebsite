@@ -125,7 +125,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		const contractId = contract.id;
 		if( !this.holdings.some( (holding, i) =>
 		{
-			const found = holding.contract.id==value.contract.id;
+			const found = holding.contract.id==contractId;
 			if( found )
 			{
 				let summary = holding.isLong ? this.long : this.short;
@@ -136,7 +136,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}) )
 		{
 			//this.tws.reqContractDetails( contract ).subscribe( {next: contract2=>{
-			const barSize = contract.securityType=="OPT" ? Requests.BarSize.Hour : Requests.BarSize.Day;
+			const barSize:Requests.BarSize = contract.securityType=="OPT" ? Requests.BarSize.Hour : Requests.BarSize.Day;
 
 			const holding = new Holding( value );
 			(holding.isLong ? this.long : this.short).add( holding );
@@ -151,92 +151,48 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				{
 					let subscription = this.tws.reqMktData( contractId, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );
 					this.mktDataSubscriptions.set( contractId, subscription );
-					subscription.subscribe2(
-					{
-						generic:( type:Results.ETickType, value:number )=>{ console.log( `(${holding.contract.symbol})onGenericTick( '${type.toString()}', '${value}')` ); },
-						price:( type:Results.ETickType, price:number, attributes:Results.ITickAttrib )=>
-						{
-							if( price!=-1 )
-							{
-								if( type==Results.ETickType.ClosePrice )
-									holding.last = price;
-								else if( type==Results.ETickType.BidPrice )
-									holding.bid = price;
-								else if( type==Results.ETickType.AskPrice )
-									holding.ask = price;
-								else if( type==Results.ETickType.LastPrice )
-									holding.last = price;
-								else if( type!=Results.ETickType.OpenTick && type!=Results.ETickType.MARK_PRICE )
-									console.log( `(${holding.contract.symbol})onPriceTick( '${type.toString()}', '${price}') - not handled` );
-							}
-						},
-						size:( type:Results.ETickType, size:number )=>
-						{
-							if( type==Results.ETickType.SHORTABLE_SHARES )
-								console.log( `(${holding.contract.symbol}) onSizeTick( '${type.toString()}', '${size}')` );
-							else if( type==Results.ETickType.Volume )
-								holding.volume = size;
-							else if( type==Results.ETickType.BidSize )
-								holding.bidSize = size;
-							else if( type==Results.ETickType.AskSize )
-								holding.askSize = size;
-							else if( type!=Results.ETickType.LastSize )
-								console.log( `(${holding.contract.symbol})onSizeTick( '${type.toString()}', '${size}') - not handled` );
-						},
-						string:( type:Results.ETickType, value:string )=>{ /*holding.onStringTick(type, value);*/ },
-						complete: ()=>{ console.log("reqMktData::complete") }
-					});
+					subscription.subscribe2( holding );
 				}
 				const current = MarketUtilities.previousTradingDay();
 				var day = DateUtilities.toDays( current );
-				this.tws.reqPreviousDay( [contract.id] ).subscribe(
-				{
-					next: ( bar:Results.IDaySummary ) =>
-					{
-						if( isMarketOpen || bar.day==day )
-							holding.previousDay = new Price( bar );
-						else
-						{
-							holding.bid = bar.bid;
-							holding.ask = bar.ask;
-							holding.close = ProtoUtilities.toNumber( bar.close );
-						}
-					},
-					complete:()=>{},
-					error: e=>{console.error(e);}
-				});
-
-				var dayCount = isMarketOpen ? 1 : 2;
-				this.tws.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Ask, true, false ).subscribe(
-				{
-					next: ( bar:Bar ) =>{ holding[ !isMarketOpen && bar.time.getUTCDay()==current.getUTCDay() ? "current" : "previousDay" ].ask = bar.close; },
-					complete:()=>{},
-					error: e=>{console.error(e);}
-				});
-				this.tws.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Bid, true, false ).subscribe(
-				{
-					next: ( bar:Bar ) =>{ holding[ !isMarketOpen && bar.time.getUTCDay()==current.getUTCDay() ? "current" : "previousDay" ].bid =  bar.close; },
-					complete:()=>{},
-					error: e=>{console.error(e);}
-				});
-				this.tws.reqHistoricalData( contract, current, dayCount, barSize, Requests.Display.Trades, true, false ).subscribe(
-				{
-					next: ( bar:Bar ) =>
-					{
-						const currentDay = bar.time.getUTCDay()==current.getUTCDay();
-						if( !isMarketOpen )
-							holding.volume += bar.volume;
-						//console.log( `Trades ${new Date(bar.Time*1000)} ${bar.Volume} - ${bar.Close}` );
-						if( isMarketOpen || !currentDay )
-							holding[ "previousDay" ].last = bar.close;
-						//holding[ !isMarketOpen && currentDay ? "current" : "previousDay" ].last = bar.close;
-					},
-					complete:()=>{},
-					error: e=>{console.error(e);}
-				});
+				this.loadPreviousDay( contract, isMarketOpen, holding, day );
 			}
 		}
 	};
+	loadPreviousDay( contract:IB.IContract, isMarketOpen:boolean, holding:Holding, day:number )
+	{
+		if( contract.symbol=="AXE" )
+			console.log( `AXE day=${day}` );
+		this.tws.reqPreviousDay( [contract.id] ).subscribe(
+		{
+			next: ( bar:Results.IDaySummary ) =>
+			{
+				if( contract.symbol=="ALGT" )
+					console.log( `${contract.symbol} close=${bar.close}` );
+
+				if( isMarketOpen || bar.day!=day )
+					holding.previousDay = new Price( bar );
+				else
+				{
+					holding.bid = bar.bid;
+					holding.ask = bar.ask;
+					holding.last = holding.close = ProtoUtilities.toNumber( bar.close );
+				}
+			},
+			complete:()=>
+			{
+				if( !holding.previousDay.last )
+				    console.log( `No previous day close for '${contract.symbol}'` );
+			},
+			error: e=>
+			{
+				if( e.code==322 )
+					setTimeout( ()=> this.loadPreviousDay(contract,isMarketOpen,holding,day), 5000 );
+				else
+					console.error(e);
+			}
+		});
+	}
 
 /*	onGenericTick( reqId:number, type:Results.ETickType, value:number ):void
 	{
@@ -314,7 +270,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}
 		else
 		{
-			const dialogRef = this.dialog.open( TransactDialog, {width: '600px', data: {tick: this.selected, isBuy: buy, quantity: this.selected.position}} );
+			const dialogRef = this.dialog.open( TransactDialog, {width: '600px', data: {tick: this.selected, isBuy: buy, quantity: this.selected.position, showStop: buy!=this.selected.position<0}} );
 			dialogRef.afterClosed().subscribe(result =>
 			{
 				// if( result && this.settings.limit!=result.limit )
@@ -367,9 +323,9 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	allAccounts=new Map<string,string>(); //{ [k: string]: string };
 	get totalCash():number{ let sum=0; for( let value of this.cash.values() ) sum+=value; return sum; }
 	cash=new Map<string,number>();
-	get pnl():number{ return this.holdings.map( holding=>holding.pnl ).reduce( (total,pnl)=>total+pnl, 0 ); }
-	//get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+mv, 0 ); }
-	get value():number{ return this.holdings.map( holding=>holding.marketValue ).reduce( (total,mv)=>total+mv, 0 ); }
+	get pnl():number{ return this.holdings.map( holding=>holding.pnl ).reduce( (total,pnl)=>total+(pnl || 0), 0 ); }
+	get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 ); }
+	get value():number{ return this.holdings.map( holding=>holding.marketValue ).reduce( (total,mv)=>total+mv, 0 )+this.totalCash; }
 	private isSingleClick:boolean;
 	mktDataSubscriptions = new Map<number,TickObservable>();
 	requests = new Map <string, [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>]>();

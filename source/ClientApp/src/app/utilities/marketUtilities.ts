@@ -37,10 +37,15 @@ export class MarketUtilities
 		const etString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
 		const et = new Date( etString );
 		return !MarketUtilities.isHoliday( et )
-			//&& et.getHours()>3 && et.getHours()<19;
 			&& ( secType=="STK" ? et.getHours()>3 && et.getHours()<19 : (et.getHours()==9 && et.getMinutes()>29) || (et.getHours()>9 && et.getHours()<16) );
 	}
-
+	static isPreOpening( exchange:string, secType:string )
+	{
+		const etString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+		const et = new Date( etString );
+		return !MarketUtilities.isHoliday( et )
+			&& secType=="STK" && et.getHours()>3 && ( et.getHours()<9 || (et.getHours()==9 && et.getMinutes()<30) );
+	}
 	static optionDisplayFromDays( expirationDays:number ):string
 	{
 		return MarketUtilities.optionDisplay( DateUtilities.fromDays(expirationDays) );

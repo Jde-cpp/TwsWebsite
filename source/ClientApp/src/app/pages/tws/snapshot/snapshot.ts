@@ -1,19 +1,21 @@
-import { Inject, Component, AfterViewInit, ViewChild, ElementRef, HostBinding } from '@angular/core';
-//import { CommonModule  } from '@angular/common';
+import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBinding, ChangeDetectorRef } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
-import {MatTabChangeEvent} from '@angular/material/tabs';
-import { TransactDialog } from '../../../shared/tws/dialogs/transact/transact'
+import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
-//import { LoggingService } from '../../../services/logging.service';
+import {MatTabGroup} from '@angular/material/tabs';
+import {MatTabChangeEvent} from '@angular/material/tabs';
+import { Subject } from 'rxjs';
+import {Fundamentals } from './fundamentals'
+import { TransactDialog } from '../../../shared/tws/dialogs/transact/transact'
 import { TwsService, Bar } from 'src/app/services/tws/tws.service';
 import { TickEx } from 'src/app/services/tws/Tick';
 import{ TickObservable } from 'src/app/services/tws/ITickObserver'
 import { IProfile } from 'src/app/services/profile/IProfile';
-//import {IBarSettings} from '../../shared/bar-table/bar-table'
-//import {ITradeResultSettings} from '../../shared/previous-runs/previous-runs'
-//import {ITreeSettings} from '../../shared/decision-trees/decision-trees'
 import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
 import {IErrorService} from 'src/app/services/error/IErrorService'
+import {DateUtilities} from 'src/app/utilities/dateUtilities'
+import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
@@ -21,45 +23,59 @@ import * as IbRequests from 'src/app/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
+import { NgAnalyzeModulesHost } from '@angular/compiler';
 
 
 class Settings
 {
-	previousSymbols:string[]=[];
+	assign( value:Settings )
+	{
+		this.previousSymbols.length=0;
+		for( const i of value.previousSymbols )
+			this.previousSymbols.push( i );
+		this.selectedIndex = value.selectedIndex;
+	}
+	previousSymbols:string[]=["SPY"];
 	selectedIndex:number=0;
 }
 
 class SymbolSettings
 {
+	assign( value:SymbolSettings ){this.shortInterest = value.shortInterest; this.shortInterestDate=value.shortInterestDate;}
 	chartSettings:IChartSettings = {	start: new Date(Date.now()-1000*60*60*24*7), zoomHours:24, barSize: Requests.BarSize.Minute30 };
-	//barSettings:IBarSettings = { start:null, end:null, sort:{active: "time", direction: "asc"} };
-//	tradeResultSettings:ITradeResultSettings = { sort:{active: "openTime", direction: "desc"} };
-	//previousSettings:ITradeResultSettings = { sort:{active: "openTime", direction: "desc"} };
-	//treeSettings:ITreeSettings = { sort:{active: "minute", direction: "desc"} };
+	shortInterest:number;shortInterestDate:Date;
 }
 
 @Component( {selector: 'snapshot', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html', styles: [`:host {'class': 'mat-drawer-container'}`]} )
-export class SnapshotComponent implements AfterViewInit
+export class SnapshotComponent implements OnInit, AfterViewInit
 {
 	@HostBinding('class.mat-drawer-container') public highlighted: boolean = true;
-
-	//find out how a global setting is set to determine ib server.
-	//connect to the global server here.
-	//subscribe to events here.
-	constructor( private dialog : MatDialog, private element : ElementRef, private twsService : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{
 		console.log( 'SnapshotComponent::SnapshotComponent' );
 	}
 
+	ngOnInit():void
+	{}
 	ngAfterViewInit():void
 	{
 		this.profileService.get<Settings>( SnapshotComponent.profileKey ).subscribe(
 		{
 			next: value =>
 			{
-				this.settings = value || new Settings();
-				this.tabs.selectedIndex = this.settings.selectedIndex;
-				this.setSymbol( this.settings.previousSymbols.length ? this.settings.previousSymbols[0] : "SPY" );
+				if( value )
+					this.settings = value;
+//				this.symbolTabs.selectedIndex = this.settings.selectedIndex;
+				setTimeout( ()=>
+				{
+					this.symbolTabs.selectedIndex = this.settings.selectedIndex;
+					//this.symbolTabIndex.setValue( this.settings.selectedIndex );
+//					this.change.markForCheck();
+//					this.setSymbol( this.previousSymbols[this.settings.selectedIndex] );
+				});
+
+				//this.tabGroup.selectedIndex = this.settings.selectedIndex;
+
 			},
 			error: e =>{console.log(e)}
 		});
@@ -67,65 +83,104 @@ export class SnapshotComponent implements AfterViewInit
 	ngOnDestroy()
 	{
 		if( this.subscription )
-			this.twsService.cancelMktData( new Map<number,TickObservable>( [[0,this.subscription]]).values() );
+			this.tws.cancelMktData( new Map<number,TickObservable>( [[0,this.subscription]]).values() );
 	}
 	onContractDetails = ( details: Results.IContractDetails ):void =>
 	{
 		this.details = details;
-		this.holding = new TickEx( details.contract );
-		const ticks = [Requests.ETickList.Inventory, Requests.ETickList.PlPrice];
+		const isMarketOpen = TickEx.isMarketOpen = MarketUtilities.isMarketOpen( this.contract.primaryExchange, this.contract.securityType );
+		let holding = this.holding = new TickEx( details.contract );
+		this.contractEvents.next( holding );
+		this.tws.reqFundamentals( details.contract.id ).subscribe( {next: value=>
+		{
+			this.fundamentals.values=value;
+		//	console.log( this.symbolSettings.shortInterest/this.fundamentals.sharesOutstanding );
+		}} );
 		const now = new Date();
-		if( now.getDay()==0 || now.getDay()==6 )
+		//this.setShortInterest( 16089116, new Date(2020,4,29) );
+
+		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDay() );
+		this.tws.reqPreviousDay( [this.contract.id] ).subscribe(
 		{
-			this.holding.close = null;
-			this.twsService.reqHistoricalData( this.contract, now, 2, Requests.BarSize.Day, Requests.Display.Trades, true, false ).subscribe(
+			next: ( bar:Results.IDaySummary ) =>
 			{
-				next: ( bar:Bar ) =>
+				if( isMarketOpen && bar.day>previousDay )
 				{
-					if( !this.holding.close )
-						this.holding.close = bar.close;
-					else
-					{
-						this.holding.last = bar.close;
-						//this.holding.close = bar.Close-bar.Open;
-						this.holding.low = bar.low;
-						this.holding.high = bar.high;
-						this.holding.volume = <number>bar.volume;
-					}
-					/*bars.push(bar);*/
-				},
-				complete: ()=> {},
-				error:  e=>{ console.error(e); this.cnsle.error("Could not connect to Tws.", e); }
-			});
-		}
-		//else
-		{
-			if( this.subscription )
-				this.twsService.cancelMktData( new Map<number,TickObservable>( [[0,this.subscription]]).values() );
-			this.subscription = this.twsService.reqMktData( this.contract.id, ticks, false );
-			this.subscription.subscribe2( this.holding );
-/*			{
-				generic:( type:Results.ETickType, value:number )=>{ this.holding.onGenericTick( type, value ); },
-				price:( type:Results.ETickType, price:number, attributes:Results.ITickAttrib )=>{ this.holding.onPriceTick( type, price, attributes ); },
-				size:( type:Results.ETickType, size:number )=>
+					holding.high = bar.high;
+					holding.low = bar.low;
+					holding.open = bar.open;
+				}
+				else if( isMarketOpen || bar.day!=previousDay )
+					holding.close = bar.close;
+				else
 				{
-					if( type==Results.ETickType.SHORTABLE_SHARES )
-						console.log( `(${details.Contract.symbol})shortable shares = ${size}` );
-					this.holding.onSizeTick(type, size);
-				},
-				string:( type:Results.ETickType, value:string )=>{ this.holding.onStringTick(type, value); },
-				complete: ()=>{ console.log("reqMktData::complete") }
-			});*/
-			if( this.settings.previousSymbols.length==0 || this.symbol!=this.settings.previousSymbols[0] )
+					holding.high = bar.high;//not market open day==previousDay
+					holding.low = bar.low;//not market open day==previousDay
+
+					holding.bid = bar.bid;
+					holding.ask = bar.ask;
+					holding.volume = ProtoUtilities.toNumber( bar.volume );
+					holding.last = ProtoUtilities.toNumber( bar.close );
+				}
+			},
+			complete:()=>
 			{
-				var values:string[] = [];
-				const symbol = details.contract.symbol;
-				values.push( symbol );
-				this.settings.previousSymbols.forEach( previous=>{ if(symbol!=previous)values.push(previous); } );
-				this.settings.previousSymbols = values;
-				this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
+				if( !holding.close )
+					console.log( `No previous day close for '${details.contract.symbol}'` );
+			},
+			error: e=>
+			{
+				console.error(e);
 			}
+		});
+	/*	var isPreOpening = MarketUtilities.isPreOpening( this.contract.primaryExchange, this.contract.securityType );
+		this.tws.reqHistoricalData( this.contract, now, 1, Requests.BarSize.Day, Requests.Display.Trades, !isPreOpening, false ).subscribe(
+		{
+			next: ( bar:Bar ) =>
+			{
+				if( !this.holding.close )
+					this.holding.close = bar.close;
+				else
+				{
+					this.holding.last = bar.close;
+					//this.holding.close = bar.Close-bar.Open;
+					this.holding.low = bar.low;
+					this.holding.high = bar.high;
+					this.holding.volume = <number>bar.volume;
+				}
+				/*bars.push(bar);* /
+			},
+			complete: ()=> {},
+			error:  e=>{ console.error(e); this.cnsle.error("Could not connect to Tws.", e); }
+		});*/
+		//}
+		if( this.subscription )
+			this.tws.cancelMktData( new Map<number,TickObservable>( [[0,this.subscription]]).values() );
+		const ticks = [Requests.ETickList.Inventory, (isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
+/*		if( isMarketOpen )
+			ticks.push( Requests.ETickList.PlPrice );
+		else*/
+
+		this.subscription = this.tws.reqMktData( this.contract.id, ticks, false );
+		this.subscription.subscribe2( this.holding );
+		if( this.symbol!=this.previousSymbols[0] )
+		{
+			var values:string[] = [];
+			const symbol = details.contract.symbol;
+			values.push( symbol );
+			this.previousSymbols.forEach( previous=>{ if(symbol!=previous)values.push(previous); } );
+			this.previousSymbols = values;
+			this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
 		}
+	}
+
+	symbolIndexChanged( index )
+	{
+		console.log( `symbolIndexChanged( ${index} )` );
+		this.settings.selectedIndex = index;
+		this.symbolTabIndex.setValue( index );
+		this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
+		this.setSymbol( this.previousSymbols[index] );
 	}
 
 	onError = ( error: Results.IError ):void =>
@@ -150,11 +205,15 @@ export class SnapshotComponent implements AfterViewInit
 			// }
 		});
 	}
-
-	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
-	get symbol():string{ return this.contract ? this.contract.symbol : ''; }
+	setShortInterest( value, date )
+	{
+		this.symbolSettings.shortInterest = value;
+		this.symbolSettings.shortInterestDate = date;
+		this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );
+	}
 	setSymbol( symbol:string )
 	{
+		this.symbolSettings.assign( new SymbolSettings() );
 		if( symbol )
 		{
 			var contract = new IB.Contract();
@@ -162,23 +221,16 @@ export class SnapshotComponent implements AfterViewInit
 			contract.securityType = "STK";
 			contract.exchange = "SMART";
 			contract.currency = "USD";
-			this.twsService.reqContractDetails( contract ).subscribe( {next: value=>{this.onContractDetails(value);}, error: e=>{this.onError(e);} });
-/*			this.profileService.get<SymbolSettings>( `${SnapshotComponent.profileKey}.${symbol}` ).subscribe(
+			this.tws.reqContractDetails( contract ).subscribe( {next: value=>{this.onContractDetails(value);}, error: e=>{this.onError(e);} });
+			this.profileService.get<SymbolSettings>( `${SnapshotComponent.profileKey}.${symbol}` ).subscribe(
 			{
 				next: symbolSettings =>
 				{
 					if( symbolSettings )
-					{
-						var barSettings = symbolSettings.barSettings;
-						if( typeof barSettings.start==="string" )
-							barSettings.start = new Date( barSettings.start );
-						if( typeof barSettings.end==="string" )
-							barSettings.end = new Date( barSettings.end );
-					}
-					this.symbolSettings = symbolSettings || new SymbolSettings();
+						this.symbolSettings.assign( symbolSettings );
 				},
 				error: e =>{ console.log(e); }
-			});*/
+			});
 		}
 		else
 			this.details = null;
@@ -187,17 +239,30 @@ export class SnapshotComponent implements AfterViewInit
 	{
 		if( this.settings.selectedIndex!=event.index )
 		{
-			this.settings.selectedIndex = event.index;
+			//this.symbolTabIndex.setValue( event );
+			//this.settings.selectedIndex = event.index;
 			this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
 		}
 	}
 
 	get contract():IB.IContract{ return this.details ? this.details.contract : null; }
-	get previousSymbols(){ return this.settings ? this.settings.previousSymbols : [];}
+	get previousSymbols()
+	{
+	    return this.settings ? this.settings.previousSymbols : ["SPY"];
+	} set previousSymbols(value)
+	{
+	    if( this.settings )
+	        this.settings.previousSymbols = value;
+	}
 	details: Results.IContractDetails;
+	fundamentals=new Fundamentals();
 	holding: TickEx;
+	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
+	get symbol():string{ return this.contract ? this.contract.symbol : ''; }
 	get symbolSettings(){ if(!this._symbolSettings)this._symbolSettings = new SymbolSettings(); return this._symbolSettings;} set symbolSettings(value){this._symbolSettings=value;} _symbolSettings:SymbolSettings;
 	get chartSettings(){ return this.symbolSettings.chartSettings; }
+	contractEvents = new Subject<TickEx>();
+
 /*	get barSettings(){ return this.symbolSettings.barSettings; } set barSettings( value:IBarSettings )
 	{
 		this.symbolSettings.barSettings = value;
@@ -210,8 +275,13 @@ export class SnapshotComponent implements AfterViewInit
 	}*/
 	subscription:TickObservable;
 //	get treeSettings(){ return this.symbolSettings.treeSettings; } set treeSettings( value:ITreeSettings ){this.symbolSettings.treeSettings = value;this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );}
-	private settings:Settings;
+	get settings(){ return this._settings} set settings(value){ this.settings.assign(value); } private _settings:Settings = new Settings();
+
 	private static profileKey="SnapshotComponent";
 	@ViewChild( 'tabs', {static: false} ) tabs;
+	@ViewChild( 'symbolTabs', {static: false} ) symbolTabs;
 	@ViewChild('optionTabs', {static: false} ) optionTabs;
+	//@ViewChild(MatTabGroup) tabGroup: MatTabGroup;
+	symbolTabIndex = new FormControl(0);
+
 }

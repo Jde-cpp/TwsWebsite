@@ -22,10 +22,10 @@
 	<mat-form-field>
 		<input matInput placeholder="Limit" class="number" type="number" step="0.01" [ngModel]="limit" (ngModelChange)="limit=$event">
 	</mat-form-field>
-	 <mat-form-field>
+	 <mat-form-field *ngIf="showStop" >
 		<input matInput placeholder="Stop" class="number" type="number" step="0.01" [ngModel]="stop" (ngModelChange)="stop=$event">
 	 </mat-form-field>
-	 <mat-form-field>
+	 <mat-form-field *ngIf="showStop">
 		<input matInput placeholder="Stop-Limit" class="number" type="number" step="0.01" [ngModel]="stopLimit" (ngModelChange)="stopLimit=$event">
 	 </mat-form-field>
 </mat-dialog-content>

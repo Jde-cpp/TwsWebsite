@@ -1,7 +1,7 @@
-import { Component, EventEmitter, Input, Output, Inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {MatRadioChange} from '@angular/material/radio'
-import { Subject } from 'rxjs';
+import { Subject, Observable, Subscription } from 'rxjs';
 import {IErrorService} from 'src/app/services/error/IErrorService'
 import { TwsService } from 'src/app/services/tws/tws.service';
 import { TickEx } from 'src/app/services/tws/Tick';
@@ -15,16 +15,20 @@ import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { DateUtilities } from 'src/app/utilities/dateUtilities';
+//import { DateUtilities } from 'src/app/utilities/dateUtilities';
 
 @Component({ selector: 'option-tab', /*styleUrls: ['optionTable.component.css'],*/ templateUrl: './option-tab.html' })
-export class OptionTabComponent
+export class OptionTabComponent implements OnInit, OnDestroy
 {
 	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 	ngOnInit()
 	{
-    	this.run();
+		this.contractSubscription = this.contractEvents.subscribe( {next: value=>{this.holding=value;this.run();}} );
+	}
+	ngOnDestroy()
+	{
+		this.contractSubscription.unsubscribe();
 	}
 	run = ():void =>
 	{
@@ -83,7 +87,8 @@ export class OptionTabComponent
 	}
 
 	@Input() set isActive(value:boolean){ if( this._isActive=value )this.run();} get isActive(){return this._isActive;} private _isActive: boolean;
-	@Input() set holding(value){ var prev = this.contractId; this._holding=value; if(  prev!=this.contractId ) this.run();} get holding(){return this._holding;} _holding: TickEx;
+	set holding(value){ var prev = this.contractId; this._holding=value; if(  prev!=this.contractId ) this.run();} get holding(){return this._holding;} _holding: TickEx;
+	@Input() contractEvents:Observable<TickEx>; private contractSubscription:Subscription;
 	@Input() optionType:string="2";
 	lengthChange: Subject<number> = new Subject<number>();
 	pageEvents = new Subject<PageEvent>();

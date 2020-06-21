@@ -1,11 +1,5 @@
 import {Component,EventEmitter,OnInit,Input,Output, OnDestroy} from '@angular/core';
-//import { ThemePalette } from '@angular/material';
-//import * as AppFromServer from '../../../proto/appFromServer';
-//import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
 import { Observable, Subscription } from 'rxjs';
-//import {Observable} from 'rxjs';
-//import { emit } from 'cluster';
-
 
 export class PageEvent
 {

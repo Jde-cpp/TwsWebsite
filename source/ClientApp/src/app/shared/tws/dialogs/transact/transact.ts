@@ -14,6 +14,7 @@ export class Data
 	tick:TickEx;
 	isBuy:boolean;
 	quantity: number;
+	showStop: boolean;
 }
 @Component( {templateUrl: 'transact.html', styleUrls:["transact.css"]} )
 export class TransactDialog
@@ -21,9 +22,9 @@ export class TransactDialog
 	constructor( public dialogRef:MatDialogRef<TransactDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private twsService : TwsService )
 	{
 		this.quantity = data.quantity || 100;
-		this._submitting = false;
+		//this._submitting = false;
 		this.isBuy = data.isBuy;
-		//this.option = data.option;
+		this.showStop = data.showStop!=false;
 		if( data.tick )
 		{
 			this.tick = data.tick;
@@ -57,6 +58,7 @@ export class TransactDialog
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){this._isBuy=value ? "Buy" : "Sell";} _isBuy:string;
 	quantity:number;
 	limit:number;
+	showStop:boolean;
 	stop:number;
 	stopLimit:number;
 	tick:TickEx;

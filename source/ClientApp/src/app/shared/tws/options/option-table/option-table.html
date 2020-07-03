@@ -1,16 +1,16 @@
-<div class="example-container mat-elevation-z8" style="max-height: 582px; width: 800px; align-content: center; margin: auto;  text-align: center;">
+<div class="example-container mat-elevation-z8" style="max-height: 660px; width: 800px; align-content: center; margin: auto;  text-align: center;">
 	<mat-table #mainTable matSort [dataSource]="pageContent" style="display: inherit;" class="mat-elevation-z8" (matSortChange)="sortData($event)">
 		<ng-container matColumnDef="expiration">
 			<mat-header-cell class="symbolField" *matHeaderCellDef> Expiration </mat-header-cell>
 			<mat-cell class="symbolField" *matCellDef="let element">{{element.expiration}}</mat-cell>
 		</ng-container>
 		<ng-container matColumnDef="strike">
-			<mat-header-cell class="symbolField" *matHeaderCellDef> Strike </mat-header-cell>
-			<mat-cell class="symbolField" *matCellDef="let element">{{element.strike}}</mat-cell>
+			<mat-header-cell class="numberField" *matHeaderCellDef> Strike </mat-header-cell>
+			<mat-cell class="numberField" *matCellDef="let element">{{element.strike}}</mat-cell>
 		</ng-container>
 		<ng-container matColumnDef="oi">
-			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> OI </mat-header-cell>
-			<mat-cell class="symbolField" *matCellDef="let element">{{element.oi | number:'1.0-0'}}</mat-cell>
+			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> OI </mat-header-cell>
+			<mat-cell class="numberField" *matCellDef="let element">{{element.oi | number:'1.0-0'}}</mat-cell>
 		</ng-container>
 		<ng-container matColumnDef="oiChange">
 			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> oiChange </mat-header-cell>

@@ -107,7 +107,8 @@ cd $clientDir
 
 npm install @types/long --save;
 npm install protobufjs --save;
-npm install highcharts --save;
+#npm install highcharts --save;
+npm install highcharts-angular
 ng add @angular/material;
 
 npm install

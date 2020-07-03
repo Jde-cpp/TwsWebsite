@@ -53,7 +53,7 @@ export class Holding extends TickEx
 {
 	constructor( update:Results.IPortfolioUpdate )
 	{
-		super( update.contract );
+		super( update.contract, null );
 		this.set( update );
 	}
 	set( update:Results.IPortfolioUpdate )

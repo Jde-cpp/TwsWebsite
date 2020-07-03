@@ -146,7 +146,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				console.error( `this.mktDataSubscriptions.has(${contractId})` );//should never be here, because not in holdings
 			else
 			{
-				var isMarketOpen = MarketUtilities.isMarketOpen( contract.primaryExchange, contract.securityType );
+				var isMarketOpen = MarketUtilities.isMarketOpen2( contract.primaryExchange, contract.securityType );
 				if( isMarketOpen )
 				{
 					let subscription = this.tws.reqMktData( contractId, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );

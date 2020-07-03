@@ -45,9 +45,10 @@ import { AppComponent } from './app.component';
 
 import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
 import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
+import {SnapshotContentComponent} from './pages/tws/snapshot/snapshot-content';
 import {TradeComponent} from './pages/tws/trades/trades.component'
 
-import {CookieProfile} from './services/profile/cookieProfile.service'
+import {LocalStorageProfile} from './services/profile/localStorageProfile.service'
 import {DefaultErrorService } from './services/error/DefaultError.service'
 
 import {CanActivateComponentSidenav} from './pages/material-site/component-sidenav/component-sidenav-can-load-guard';
@@ -57,7 +58,7 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
 @NgModule({
   declarations: [
 	 AppComponent,
-	 PortfolioComponent,SnapshotComponent,TradeComponent,
+	 PortfolioComponent,SnapshotComponent,SnapshotContentComponent,TradeComponent,
 	 PaginatorComponent,
 	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SummaryComponent,
 	 TransactDialog, RollDialog, OptionEntryDialog,
@@ -69,7 +70,7 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
   ],
   entryComponents: [TransactDialog, RollDialog, OptionEntryDialog],
   providers: [
-		{provide: 'IProfile', useClass: CookieProfile},
+		{provide: 'IProfile', useClass: LocalStorageProfile},
 		{provide: 'IErrorService', useClass: DefaultErrorService},
 		CanActivateComponentSidenav, StyleManager, ThemeStorage
 	],

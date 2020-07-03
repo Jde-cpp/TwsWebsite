@@ -6,6 +6,7 @@ import * as IbResults from '../../proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import { BidiModule } from '@angular/cdk/bidi';
+import { interval } from 'rxjs';
 
 /*
 export interface ITicker
@@ -20,11 +21,15 @@ export interface ITicker
 /*just ITickObserver*/
 export class Tick implements ITickObserver
 {
+	constructor( public isMarketOpen:boolean )
+	{
+		//console.log( `isMarketOpen=${isMarketOpen}` );
+	}
 	generic( type:Results.ETickType, value:number ):void
 	{
 		if( type==49 )
 			this.halted = value!=0;
-		else
+		else if( type!=Results.ETickType.SHORTABLE )
 			console.log( `onGenericTick( '${Results.ETickType[type]}', '${value}')` );
 	}
 	price( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
@@ -43,8 +48,18 @@ export class Tick implements ITickObserver
 			this.low = price;
 		else if( type==Results.ETickType.OpenTick )
 			this.open = price;
-		else if( type!=Results.ETickType.MARK_PRICE || (type<Results.ETickType.Low13Week && type>Results.ETickType.High52Week) )
-			console.log( `onPriceTick( '${type.toString()}', '${price}') - not handled` );
+		else if( type!=Results.ETickType.MARK_PRICE && type<Results.ETickType.Low13Week && type>Results.ETickType.High52Week )
+			console.log( `onPriceTick( '${Results.ETickType[type]}', '${price}') - not handled` );
+		let now = Date.now();
+		if( this.delay && now>this.nextUpdate )
+		{
+			this.nextUpdate = now+this.delay;
+			this._askSizeDelay = this._askSize;
+			this._askDelay = this._ask;
+			this._bidSizeDelay = this._bidSize;
+			this._bidDelay = this._bid;
+			this._lastDelay = this.last;
+		}
 	}
 	size( type:Results.ETickType, size:number ):void
 	{
@@ -78,49 +93,58 @@ export class Tick implements ITickObserver
 	{
 		this.completed = true;
 	}
-	get ask(){return this._ask;} set ask(value)
+	get ask(){return this.delay ? this._askDelay || this._ask : this._ask;} set ask(value)
 	{
-		if( TickEx.isMarketOpen || value>0 )
+		if( this.isMarketOpen || value>0 )
 		{
 			this._ask = value>0 ? value : null;
-			if( this._ask && this._ask<this.low )
+			if( this._ask && this._ask<(this.low || this._ask+1) )
 				this.low = this._ask;
 		}
-	} _ask:number|null;
-	get askSize(){return this._askSize;} set askSize(value){this._askSize = value>0 ? value : null;} _askSize:number|null;
-	get bid(){return this._bid;} set bid(value)
+	} _ask:number|null; _askDelay:number|null;
+	get askSize(){return this.delay ? this._askSizeDelay : this._askSize;} set askSize(value){this._askSize = value>0 ? value : null;} _askSize:number|null; _askSizeDelay:number|null;
+	get bid(){return this.delay ? this._bidDelay || this._bid : this._bid;} set bid(value)
 	{
-		if( TickEx.isMarketOpen || value>0 )
+		if( this.isMarketOpen || value>0 )
 		{
 			this._bid = value>0 ? value : null;
-			if( this._bid && this._bid>this.high )
+			if( this._bid && this._bid>(this.high || 0) )
 				this.high = this._bid;
 		}
-	} _bid:number|null; bidSize:number;
+	} _bid:number|null; _bidDelay:number|null;
+	get bidSize(){return this.delay ? this._bidSizeDelay : this._bidSize;} set bidSize(value){this._bidSize = value>0 ? value : null;} _bidSize:number|null; _bidSizeDelay:number|null;
 	completed:boolean=false;
 	close:number;
+	get delay():number{ return this.isMarketOpen ? 10000 : null;} nextUpdate:number=Date.now();
 	get currentPrice():number{ return this.last>=this.bid && this.last<=this.ask ? this.last : (this.ask+this.bid)/2; }
 	halted:boolean;
 	high:number;
 	lastTime: Date;
 	low:number;
 	open:number;
-	last:number; lastSize:number;
+	get last(){return this.delay ? this._lastDelay || this._last : this._last;} set last(value)
+	{
+		this._last = value;
+		if( this.isMarketOpen || value>0 )
+		{
+			this.high = Math.max( value, this.high );
+			this.low = Math.min( value, this.low );
+		}
+	} _last:number; _lastDelay:number; lastSize:number;
 	shortableAvailable:number;
 	get volume(){return this._volume;} set volume(value)
 	{
-		if( TickEx.isMarketOpen || value>0 )
+		if( this.isMarketOpen || value>0 )
 			this._volume = value>0 ? value : null;
 	} _volume:number|null;
 	volumeAverage:number;
-	static isMarketOpen:boolean=true;
 }
 /*Tick + Contract Info*/
 export class TickEx extends Tick
 {
-	constructor( private _contract:IB.IContract )
+	constructor( private _contract:IB.IContract, isMarketOpen:boolean )
 	{
-		super();
+		super( isMarketOpen==null ? MarketUtilities.isMarketOpen2(_contract.exchange, _contract.securityType) : isMarketOpen );
 		if( !_contract.multiplier )
 			_contract.multiplier = 1;
 	}
@@ -141,6 +165,10 @@ export class TickEx extends Tick
 	{
 		//if( this.contract.symbol=="AAPL" )
 		//	this._contract.multiplier = 1.0;
-		return this.close>0 ? this.last-this.close : 0;
+		var change  = this.close>0 ? this.currentPrice-this.close : 0;
+		//if( change>5.0 )
+		//    console.log( `change=${change}` )
+		return change;
 	}
+//	isMarketOpen:boolean;
 }

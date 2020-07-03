@@ -16,7 +16,7 @@ export class Option extends TickEx
 {
 	constructor( _contract:IB.IContract, public option:Results.IOption ) //, public index:number
 	{
-		super( _contract );
+		super( _contract, null );
 		this.ask = option.ask;
 		this.bid = option.bid;
 		this.last = option.last;
@@ -29,7 +29,7 @@ export class Option extends TickEx
 	}
 	size( type:Results.ETickType, size:number ):void
 	{
-		if( MarketUtilities.isMarketOpen("SMART", "OPT") )
+		if( MarketUtilities.isMarketOpen2("SMART", "OPT") )
 			super.size( type, size );
 	}
 /*	subscribe()

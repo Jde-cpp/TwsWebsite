@@ -87,7 +87,7 @@ export class OptionEntryDialog implements OnDestroy
 					}
 				}
 				let contract = new IB.Contract( {id:this.strikes.get(strike)[isCall ? 0 : 1], strike: strike, expiration: expiration, right: isCall ? "CALL" : "PUT"} );
-				this.option = new TickEx( contract );
+				this.option = new TickEx( contract, null );
 
 				//option:Results.IOption, public expiration:number, public isCall:boolean
 			},

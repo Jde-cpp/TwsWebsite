@@ -1,5 +1,10 @@
 import { DateUtilities } from './dateUtilities';
 
+import * as ib2 from 'src/app/proto/ib';
+import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'src/app/proto/results';
+import Results = IbResults.Jde.Markets.Proto.Results;
+
 export class MarketUtilities
 {
 	static isHoliday( value:Date )
@@ -9,35 +14,121 @@ export class MarketUtilities
 		{
 			if( value.getUTCFullYear()==2020 )
 			{
-				isHoliday = (value.getUTCMonth()==3 && value.getUTCDate()==10);
+				isHoliday = /*(value.getUTCMonth()==3 && value.getUTCDate()==10)
+					||*/ ( value.getUTCMonth()==6 && value.getUTCDate()==3 )
+					|| ( value.getUTCMonth()==8 && value.getUTCDate()==7 )
+					|| ( value.getUTCMonth()==10 && value.getUTCDate()==26 )
+					|| ( value.getUTCMonth()==11 && value.getUTCDate()==25 );
 			}
 		}
 		return isHoliday;
 	}
-	static previousTradingDay( value:Date|null=null )
+	static previousTradingDay( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
 	{
 		let copy = value ? new Date(value) : new Date();
-		copy.setDate( copy.getDate()-1 );
+		if( tradingHours && copy.getTime()/1000<tradingHours.start )
+			copy.setDate( copy.getDate()-1 );
 		while( MarketUtilities.isHoliday(copy) )
 			copy.setDate( copy.getDate()-1 );
-		return DateUtilities.endOfDay( copy );
+		do
+			copy.setDate( copy.getDate()-1 );
+		while( MarketUtilities.isHoliday(copy) );
+		return DateUtilities.beginningOfDay( copy );
 	}
-	static nextTradingDay( value:Date|null=null )
+	static nextTradingDay( value:Date|null=null ):Date
 	{
 		let copy = value ? new Date( value ) : new Date();
-		if( copy.getUTCDay()==0 )
+		do
 			copy.setDate( copy.getDate()+1 );
-		else if( copy.getUTCDay()==6 )
-			copy.setDate( copy.getDate()+2 );
-		//TODO get holidays
-		return copy;
+		while( MarketUtilities.isHoliday(copy) );
+		return DateUtilities.beginningOfDay( copy );
 	}
-	static isMarketOpen( exchange:string, secType:string )
+	static currentTradingDay( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
+	{
+		const day = MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDay(value, tradingHours) );
+		return day;
+	}
+	static isMarketOpen2( exchange:string, secType:string )
 	{
 		const etString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
 		const et = new Date( etString );
 		return !MarketUtilities.isHoliday( et )
 			&& ( secType=="STK" ? et.getHours()>3 && et.getHours()<19 : (et.getHours()==9 && et.getMinutes()>29) || (et.getHours()>9 && et.getHours()<16) );
+	}
+	static isMarketOpen( details:Results.IContractDetails )
+	{
+		return MarketUtilities.contractHours(details.tradingHours).start*1000 < new Date().getTime();
+/*		var now = new Date().getTime()/1000;
+		for( let openClose of details.tradingHours )
+		{
+			if( openClose.end )
+				return now>openClose.start && now<openClose.end;
+		}
+		return false;*/
+	}
+	static contractHours( tradingHours:Results.IContractHours[] ):Results.IContractHours
+	{
+		var now = new Date().getTime()/1000;
+		let i=0
+		for( ; i<tradingHours.length && now>=(tradingHours[i].end || now); ++i );
+		return i<tradingHours.length ? tradingHours[i] : null;
+	}
+	static startTrading( date:Date, contract:IB.IContract ):Date
+	{
+		const exchange = contract.exchange;
+		if( exchange!="Nasdaq" && exchange!="Nyse" )
+			console.error( `need to implement exchange '${exchange}` );
+
+		const etString = date.toLocaleString( "en-US", {timeZone: "America/New_York"} );
+		const et = new Date( etString );
+		et.setHours( contract.securityType=="STK" ? 3 : 9.5 );
+		return et;
+	}
+	static endTrading( date:Date, contract:IB.IContract ):Date
+	{
+		const exchange = contract.primaryExchange;
+		if( exchange!="Nasdaq" && exchange!="Nyse" && exchange!="Arca" )
+			console.error( `need to implement exchange '${exchange}` );
+
+		const etString = date.toLocaleString( "en-US", {timeZone: "America/New_York"} );
+		const et = new Date( etString );
+		et.setHours( contract.securityType=="STK" ? 20 : 4, 0, 0, 0 );
+		return et;
+	}
+	static endLiquid( date:Date, contract:IB.IContract ):Date
+	{
+		const liquid = this.endTrading( date, contract );
+		if( contract.securityType=="STK" )
+			liquid.setHours( 16 );
+		return liquid;
+	}
+/*	static startTrading( details:Results.IContractDetails )
+	{
+		var now = new Date().getTime()/1000;
+		let i=0
+		for( ; i<details.tradingHours.length && now>(details.tradingHours[i].end || now); ++i );
+		return i<details.tradingHours.length ? details.tradingHours[i].start*1000 : null;
+	}
+	static endTrading( details:Results.IContractDetails )
+	{
+		var now = new Date().getTime()/1000;
+		let i=0
+		for( ; i<details.tradingHours.length && now>(details.tradingHours[i].end || now); ++i );
+		return i<details.tradingHours.length ? details.tradingHours[i].start*1000 : null;
+	}
+*/
+	static getTimezoneOffset( exchange:string )
+	{
+		if( exchange!="Nasdaq" && exchange!="Nyse" )
+			console.error( `need to implement exchange '${exchange}` );
+		return DateUtilities.easternTimezoneOffset;
+	}
+	static getExtendedHoursEnd( exchange:string, secType:string )
+	{
+		if( exchange!="Nasdaq" && exchange!="Nyse" )
+			console.error( `need to implement exchange '${exchange}` );
+
+		return 19*60+DateUtilities.easternTimezoneOffset;
 	}
 	static isPreOpening( exchange:string, secType:string )
 	{

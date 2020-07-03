@@ -58,8 +58,11 @@ export class OptionTableComponent implements OnInit, OnDestroy
 						optionContract.expiration = day.expirationDays;
 						optionContract.securityType = "OPT";
 						optionContract.right = day.isCall ? "CALL" : "PUT";
+						optionContract.strike = option.strike;
 						optionContract.id = option.id;
-						var value = new Option( optionContract, optionContract );//, index++
+						var value = new Option( optionContract, option );//, index++
+						//value.oi = option.openInterest;
+						//value.oiChange = option.oiChange;
 						this.options.push( value );
 					}
 				}
@@ -108,7 +111,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	{
 		this.pageContent = new Array<Option>();
 		let foundSelected = !this.selectedOption;
-		const marketOpen = MarketUtilities.isMarketOpen( "", "OPT" );
+		const marketOpen = MarketUtilities.isMarketOpen2( "", "OPT" );
 		//for( var i=this.pageInfo.startIndex; i<Math.min(this.pageInfo.startIndex+this.pageInfo.pageSize, this.options.length); ++i )
 		let cancelSubscriptions = new Map<number,TickObservable>(); let subscriptions = new Array<Option>();
 		for( var i=0; i<this.options.length; ++i )
@@ -160,10 +163,10 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		}
 		if( !foundSelected )
 		    this.selectedOption = null;
-		if( this._table._data )
+		//if( this._table._data )
 		    this._table.renderRows();
-		else
-		    console.log('ho data');
+		//else
+		 //   console.log('no data');
 	}
 
 	cellClick( row:Option )
@@ -206,7 +209,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 //	exposure:number;
 //	oi:number;
 	options: Option[];
-	pageContent: Option[]; pageInfo = new PageEvent();
+	pageContent: Option[]=[]; pageInfo = new PageEvent();
 //	value:number;
 	private selectedOption:Option|null=null;
 	@Output() selectionChange = new EventEmitter<Option>();

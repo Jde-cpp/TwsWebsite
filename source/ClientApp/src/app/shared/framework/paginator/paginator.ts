@@ -1,4 +1,4 @@
-import {Component,EventEmitter,OnInit,Input,Output, OnDestroy} from '@angular/core';
+import {Component,EventEmitter,OnInit,Input,Output, OnDestroy, ChangeDetectorRef} from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 
 export class PageEvent
@@ -14,6 +14,8 @@ export class PageEvent
 @Component({ selector: 'paginator', templateUrl: './paginator.html' })
 export class PaginatorComponent implements OnInit, OnDestroy
 {
+	constructor( private cdr: ChangeDetectorRef )
+	{}
 	ngOnInit()
 	{
 		this.lengthChangeSubscription = this.lengthChange.subscribe( (value)=>this.length = value );
@@ -39,7 +41,7 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	@Input() hidePageSize: boolean;
 	@Input() lengthChange:Observable<number>;//
 	private lengthChangeSubscription: Subscription;
-	set length(value){ if(!value) value=0; if( value!=this.length ){ this._length=value; this.startIndex=this.startIndex;} } get length(){return this._length;} _length: number=0; //The length of the total number of items that are being paginated.
+	set length(value){ if(!value) value=0; if( value!=this.length ){ this._length=value; this.startIndex=this.startIndex; this.cdr.detectChanges();} } get length(){return this._length;} _length: number=0; //The length of the total number of items that are being paginated.
 	@Input() set pageIndex( value ){ this.startIndex = value*this.pageSize; } get pageIndex(){return this.startIndex/this.length; }
 	@Input() set pageSize(value){ if( value!=this.pageSize ){ this._pageSize=value; this.startIndex=this.startIndex;} } get pageSize(){return this._pageSize;} _pageSize:number=50;
 	//@Input() pageSizeOptions: number[];
@@ -50,7 +52,7 @@ export class PaginatorComponent implements OnInit, OnDestroy
 	set startIndex(value)
 	{
 		if( value>this.length-1 )
-			value = this.pageSize-1;
+			value = this.length-this.pageSize-1;
 		if( value<0 )
 			value = 0;
 		if( value!=this.startIndex )
@@ -59,9 +61,15 @@ export class PaginatorComponent implements OnInit, OnDestroy
 			if( this.page )
 				this.page.next( {startIndex:this.startIndex, pageSize:this.pageSize} );
 		}
+		//console.log( `startIndex=${this.startIndex}` );
 	}
 	get startIndex(){return this._startIndex}; _startIndex:number=0;
-	get endIndex(){ return Math.min(this.startIndex+this.pageSize, this.length-1); }
+	get endIndex()
+	{
+		const endIndex = Math.max( Math.min(this.startIndex+this.pageSize, this.length-1), 0 );
+		//console.log( `length=${this.length} pageSize=${this.pageSize} startIndex=${this.startIndex}, endIndex=${endIndex}` );
+		return endIndex;
+	}
 	get onFirstPage(){ return this.startIndex==0; }
 	get onLastPage(){ return this.endIndex==this.length-1; }
 }

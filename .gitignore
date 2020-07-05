@@ -72,3 +72,9 @@ baseline/ClientApp/src/app/proto/*.js
 baseline/ClientApp/src/app/proto/*.ts
 source/ClientApp/src/styles/*
 source/ClientApp/src/_app-theme.scss
+source/ClientApp/src/app/shared/framework/paginator/*
+source/ClientApp/src/app/utilities/settings.ts
+source/ClientApp/src/app/utilities/dateUtilities.ts
+source/ClientApp/src/app/utilities/mathUtilities.ts
+source/ClientApp/src/app/utilities/settings.ts
+source/ClientApp/src/app/utilities/stl.ts

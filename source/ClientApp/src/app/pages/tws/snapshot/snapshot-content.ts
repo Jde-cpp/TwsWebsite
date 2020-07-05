@@ -1,4 +1,4 @@
-import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBinding, ChangeDetectorRef } from '@angular/core';
+import { Inject, Input, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBinding, ChangeDetectorRef } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTabChangeEvent} from '@angular/material/tabs';
@@ -62,23 +62,14 @@ export class SnapshotContentComponent implements AfterViewInit
 
 	setSymbol( symbol:string )
 	{
-		if( symbol && symbol==this.symbol )
-		    return;
-		this.settingsSymbolContainer.reset( symbol );
-		if( symbol )
-		{
-			var contract = new IB.Contract();
-			contract.symbol = symbol;
-			contract.securityType = "STK";
-			contract.exchange = "SMART";
-			contract.currency = "USD";
-			this.settingsSymbolContainer.load().subscribe(
-			{
-				complete:()=>{this.tws.reqContractDetails( contract ).subscribe( {next: value=>{this.onContractDetails(value);}, error: e=>{this.onError(e);} });}
-			});
-		}
-		else
-			this.details = null;
+		this.settingsSymbolContainer = new Settings<SymbolSettings>(SymbolSettings, `SnapshotComponent.${symbol}`, this.profileService );
+		// var contract = new IB.Contract();
+		// contract.symbol = symbol;
+		// contract.securityType = "STK";
+		// contract.exchange = "SMART";
+		// contract.currency = "USD";
+		let contract = { 'symbol': symbol, securityType: "STK", exchange: "SMART", currency: "USD" };
+		this.settingsSymbolContainer.load().subscribe({ complete:()=>{this.tws.reqContractDetails( contract ).subscribe( {next: value=>{this.onContractDetails(value);}, error: e=>{this.onError(e);} });} });
 	}
 
 	onContractDetails = ( details: Results.IContractDetails ):void =>
@@ -89,7 +80,7 @@ export class SnapshotContentComponent implements AfterViewInit
 		//this.contractEvents.next( tick );
 		this.tws.reqFundamentals( details.contract.id ).subscribe( {next: value=>
 		{
-			this.fundamentals.values=value;
+			this.fundamentals = new Fundamentals( value );
 		//	console.log( this.symbolSettings.shortInterest/this.fundamentals.sharesOutstanding );
 		}} );
 		const now = new Date();
@@ -241,7 +232,7 @@ export class SnapshotContentComponent implements AfterViewInit
 		const isMarketOpen = MarketUtilities.isMarketOpen( this.details );
 		const liquidStart = isMarketOpen ? liquidHours.start*1000 : null;
 		//maxDate = new Date(currentDate)
-		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endTrading( DateUtilities.endOfDay(currentDate), this.details.contract ).getTime();
+		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endLiquid( DateUtilities.endOfDay(currentDate), this.details.contract ).getTime();
 		//const endLiquid =  isMarketOpen ? new Date(liquidHours.end*1000) : MarketUtilities.endLiquid( currentDate, this.details.contract );
 		const minDate = isMarketOpen ? tradingHours.start*1000 : endTrading-range;
 		//minDate.setHours( 4.0 ); maxDate.setHours( 19.0 ); liquidStart.setHours( 9 ); liquidStart.setMinutes( 30 );
@@ -253,29 +244,43 @@ export class SnapshotContentComponent implements AfterViewInit
 		};
 		let [minTime, maxTime] = getMinMax();
 		let minValue=Number.MAX_VALUE; let maxValue=Number.MIN_VALUE;
+		let minIndex=0, maxIndex = 0;
 		for( let bar of bars )
     	{
+			if( bar[0]<minTime )
+				++minIndex;
+			else if( bar[0]>maxTime )
+				break;
+			++maxIndex;
+		}
+		if( maxIndex==bars.length )
+			bars.push( [maxTime, null] );
+		bars = bars.slice( minIndex, maxIndex );
+
+		for( let bar of bars )
+		{
 			minValue = Math.min( bar[1], minValue );
 			maxValue = Math.max( bar[1], maxValue );
 		}
-		bars.push( [maxTime, null] );
-//		for( let bar of bars )
-//			console.log( `${new Date(bar[0])} - ${bar[1]}` );
+		//minValue = 1180;
 		const showLarge = false;
+		let tick = this.tick;
 		let series:Highcharts.SeriesLineOptions =
 		{
 			name: 'Quotes',
 			data: bars,
 			type: "line",
-			enableMouseTracking:showLarge
+			enableMouseTracking:showLarge,
+			color: tick.currentPrice>tick.close ? "green" : "red"
 		};
-		let tick = this.tick;
 		const plotLine = minTime>liquidStart ? regularEnd.getTime() : liquidStart;
-		let yAxisLength = Math.sqrt( statResult.variance )*tick.open/8;
-		while( minValue<tick.open-yAxisLength || maxValue>tick.open+yAxisLength )
-			yAxisLength*=2;
+		//let yAxisLength = Math.sqrt( statResult.variance )*tick.open/8;
+		const midpoint = (maxValue+minValue)/2;
+		let yAxisLength = (maxValue-minValue)/2;
+		//while( minValue<midpoint-yAxisLength || maxValue>midpoint+yAxisLength )
+		//	yAxisLength*=2;
 
-		console.log( `min: ${tick.open-yAxisLength}, max: ${tick.open+yAxisLength}, time=${new Date(minTime)}->${new Date(maxTime)}` );
+		//console.log( `min: ${midpoint-yAxisLength}, max: ${midpoint+yAxisLength}, time=${new Date(minTime)}->${new Date(maxTime)} range=${range}` );
 		theme( Highcharts );
 		//console.log( `plotline=${new Date(plotLine)}` );
 		let height = showLarge ? "470px" : "74px";
@@ -290,7 +295,7 @@ export class SnapshotContentComponent implements AfterViewInit
 				width: width,
 				events:
 				{
-					load: function ()
+					load: !isMarketOpen ? null : function ()
 					{
 						var series:Highcharts.Series = this.series[0];
 						setInterval(function ()
@@ -311,12 +316,12 @@ export class SnapshotContentComponent implements AfterViewInit
 			},
 			credits: {enabled:false},
 			exporting: { enabled: false },
-			navigator: {enabled: false },
+			navigator: {enabled: showLarge },
 			scrollbar: {enabled: false },
 			series: [series],
 			time: { useUTC: false },
-			yAxis: {labels:{enabled:false}, visible:true, min: tick.open-yAxisLength, max: tick.open+yAxisLength, plotLines:[{color: 'green', width: 2, dashStyle: 'ShortDash', value: tick.close}] },
-			xAxis: {labels:{enabled:false}, visible:true,  ordinal: false, min: minTime, max: maxTime, minRange:range, plotLines:[{color: '#FF0000', width: 2, value: plotLine}]},
+			yAxis: {labels:{enabled:showLarge}, visible:true, min: midpoint-yAxisLength, max: midpoint+yAxisLength, maxRange: yAxisLength*2, range: yAxisLength*2, plotLines:[{color: 'green', width: 2, dashStyle: 'ShortDash', value: tick.close}] },
+			xAxis: {labels:{enabled:showLarge}, visible:true,  ordinal: false, min: minTime, max: maxTime, maxRange: range, minRange:range, plotLines:[{color: '#FF0000', width: 2, value: plotLine}]},
 			rangeSelector: { selected: 0, inputEnabled: false, buttonTheme: {visibility: 'hidden'}, labelStyle: {visibility: 'hidden'} }
 		};
 		Highcharts.stockChart( showLarge ? 'chart2' : 'chart', options );
@@ -344,9 +349,9 @@ export class SnapshotContentComponent implements AfterViewInit
 	details: Results.IContractDetails;
 	fundamentals:Fundamentals;
 	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
-	settingsSymbolContainer:Settings<SymbolSettings> = new Settings<SymbolSettings>(SymbolSettings, "SnapshotComponent.", this.profileService );
+	settingsSymbolContainer:Settings<SymbolSettings>;
 	get settingsSymbol():SymbolSettings{ return this.settingsSymbolContainer.value; }
-	get symbol():string{ return this.contract ? this.contract.symbol : ''; }
+	@Input() set symbol(value){ this.setSymbol( value ); } get symbol():string{ return this.contract ? this.contract.symbol : ''; }
 	subscription:TickObservable;
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;

@@ -1,15 +1,15 @@
 import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {MatRadioChange} from '@angular/material/radio'
-import { Subject, Observable, Subscription } from 'rxjs';
+import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
 import {IErrorService} from 'src/app/services/error/IErrorService'
 import { IProfile } from 'src/app/services/profile/IProfile';
 import { TwsService } from 'src/app/services/tws/tws.service';
 import { TickEx } from 'src/app/services/tws/Tick';
-import { PageEvent } from 'src/app/shared/framework/paginator/paginator'
+import { IPageEvent } from 'src/app/shared/framework/paginator/paginator'
 import { Option } from 'src/app/shared/tws/options/option-table/option'
 import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
-import {Settings} from 'src/app/utilities/settings'
+import {Settings,JoinSettings} from 'src/app/utilities/settings'
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
@@ -17,14 +17,22 @@ import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { Day } from 'src/app/utilities/dateUtilities';
+import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
 
-/*
-class PageSettings
+
+class PageSettings implements IPageEvent
 {
+	assign( value:any )
+	{
+		if( value.pageSize!=undefined )
+			this.pageSize = value.pageSize;
+		if( value.startIndex!=undefined )
+			this.startIndex = value.startIndex;
+	}
 	pageSize:number=12;
-}
-*/
+	startIndex:number=0;
+};
+
 
 class SymbolSettings
 {
@@ -54,30 +62,34 @@ export class OptionTabComponent implements OnInit, OnDestroy
 	}
 	ngOnInit()
 	{
-		this.contractSubscription = this.contractEvents.subscribe( {next: value=>
+	/*	this.contractSubscription = this.contractEvents.subscribe( {next: value=>
 		{
 			this.holding=value;
 		}} );
+		*/
 		this.tabSubscription = this.tabEvents.subscribe( {next: value=>
 		{
 			this.isActive = this.index==value;
 		}} );
+		//this.run();
 	}
 	ngOnDestroy()
 	{
-		this.contractSubscription.unsubscribe();
+		//this.contractSubscription.unsubscribe();
 		this.settingsContainer.save();
+		this.pageSettings.save();
 	}
 	run = ():void =>
 	{
-		if( !this.isActive || !this.contractId )
+		var contractId = this.contract ? this.contract.id : 0;
+		if( !this.isActive || !contractId )
 			return;
-		this.settingsContainer.reset( this.contractId.toString() );
-		this.settingsContainer.load().subscribe(
+		this.settingsContainer.reset( contractId.toString() );
+		JoinSettings( this.pageSettings, this.settingsContainer ).subscribe(
 		{
 			complete: ()=>
 			{
-				this.tws.reqOptionParams( this.contractId ).subscribe(
+				this.tws.reqOptionParams( contractId ).subscribe(
 				{
 					next: ( params:Results.IOptionParams ) =>
 					{
@@ -100,7 +112,7 @@ export class OptionTabComponent implements OnInit, OnDestroy
 	}
 	changeType = (event:MatRadioChange):void=>
 	{
-		console.log( `changeType - ${this.optionType=="1" ? "Calls" : this.optionType=="2" ? "Puts" : "Calls-Puts" }` );
+	//	console.log( `changeType - ${this.optionType=="1" ? "Calls" : this.optionType=="2" ? "Puts" : "Calls-Puts" }` );
 		this.settings.type==+this.optionType;
 		this.settingsContainer.save();
 }
@@ -113,16 +125,18 @@ export class OptionTabComponent implements OnInit, OnDestroy
 	{
 		this.selectedOption = option;
 	}
-	onPaginator( event:PageEvent )
+	onPaginator( event:IPageEvent )
 	{
+		this.pageInfo = event;
 		this.pageEvents.next( event );
+		this.pageSettings.save();
 	}
 
 	onTransactClick( buy:boolean )
 	{
 		const dialogRef = this.dialog.open(OptionEntryDialog, {
 			width: '600px',
-			data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: this.holding }
+			data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: this.tick }
 		});
 		dialogRef.afterClosed().subscribe(result =>
 		{
@@ -135,7 +149,7 @@ export class OptionTabComponent implements OnInit, OnDestroy
 	}
 	expirationIndexChange( index )
 	{
-		console.log( `expirationIndexChange( ${index} )` );
+		//console.log( `expirationIndexChange( ${index} )` );
 		this.settings.expiration = index==0 ? 0 : this.expirations[index];
 		this.settingsContainer.save();
 	}
@@ -143,27 +157,24 @@ export class OptionTabComponent implements OnInit, OnDestroy
 	id:number;
 	set isActive(value:boolean){ if( this._isActive=value )this.run();} get isActive(){return this._isActive;} private _isActive: boolean;
 	@Input() index:number;
-	@Input() symbol:string;
-	set holding(value)
-	{
-		var prev = this.contractId;
-		this._holding=value;
-		if( prev!=this.contractId )
-			this.run();
-	} get holding(){return this._holding;} _holding: TickEx;
-	@Input() contractEvents:Observable<TickEx>; private contractSubscription:Subscription;
+	//@Input() symbol:string;
+	@Input() set tick(value){ if( this._tick=value ) this.run(); } get tick(){return this._tick;} _tick: TickEx;
+	//@Input() contractEvents:Observable<TickEx>; private contractSubscription:Subscription;
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
-	@Input() optionType:string="2";
+	optionType:string="2";
 	lengthChange: Subject<number> = new Subject<number>();
-	pageEvents = new Subject<PageEvent>();
-	get contractId(){ return this.holding ? this.holding.contract.id : 0; }
+	//get pageSize(){ return this.pageSettings.value.pageSize; }
+	pageEvents = new Subject<IPageEvent>();
+	get pageInfo():IPageEvent{ return this.pageSettings.value; } set pageInfo(value:IPageEvent){ this.pageSettings.value.assign(value); }
+	get contract(){ return this.tick ? this.tick.contract : null; }
+	get expiration():Day{ return this.expirations && this.expirationSelectedIndex<this.expirations.length ? this.expirations[this.expirationSelectedIndex] : 0; }
 	expirationDisplays : string[];
-	expirations : number[];
+	expirations : Day[];
 	get expirationSelectedIndex(){ return this.settings.expiration ? Math.max(0, this.expirations.indexOf(this.settings.expiration)) : 0; }
 	set expirationSelectedIndex(value){ this.settings.expiration= value ? this.expirations[value] : 0; }
 	selectedOption:Option=null;
 	settingsContainer:Settings<SymbolSettings> = new Settings<SymbolSettings>( SymbolSettings, 'OptnTabCmpnnt.', this.profile );
 	get settings(){ return this.settingsContainer ? this.settingsContainer.value : null;}
+	pageSettings = new Settings<PageSettings>( PageSettings, 'OptnTabCmpnnt', this.profile );
 	strikes:number[];
-	//private static settingsPage:PageSettings=null;  private static PageSettingsKey="OptionTabComponent";
 }

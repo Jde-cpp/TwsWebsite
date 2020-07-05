@@ -61,17 +61,17 @@ export class SnapshotComponent implements OnInit, AfterViewInit
 		});
 	}
 
-/*	symbolIndexChanged( index )
+	symbolIndexChanged( index )
 	{
-		console.log( `symbolIndexChanged( ${index} )` );
-		this.settings.selectedIndex = index;
-		if( this.symbolTabIndex.value!=index )
-			this.symbolTabIndex.setValue( index );
-		this.settingsContainer.save();
-		//this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
-		this.setSymbol( this.previousSymbols[index] );
+		this.tabEvents.next( index );
+		// console.log( `symbolIndexChanged( ${index} )` );
+		// this.settings.selectedIndex = index;
+		// if( this.symbolTabIndex.value!=index )
+		// 	this.symbolTabIndex.setValue( index );
+		// this.settingsContainer.save();
+		// //this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
+		// this.setSymbol( this.previousSymbols[index] );
 	}
-	*/
 	get previousSymbols()
 	{
 	    return this.settings.previousSymbols;
@@ -80,7 +80,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit
 	    if( this.settings )
 	        this.settings.previousSymbols = value;
 	}
-	//contractEvents = new Subject<TickEx>();
+	tabEvents = new Subject<boolean>();
 
 /*	get barSettings(){ return this.symbolSettings.barSettings; } set barSettings( value:IBarSettings )
 	{

@@ -71,7 +71,7 @@ class Connection
 {
 	constructor( private cnsl: IErrorService )
 	{
-		console.log( 'Connection::Connection' );
+		//console.log( 'Connection::Connection' );
 		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6811', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		//this.socket.binary(true);
 		this.socket.subscribe(
@@ -460,7 +460,7 @@ class Connection
 	{
 		var callback = new Subject<Results.IContractDetails>();
 		var id = this.getRequestId();
-		console.log( `reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}`)
+		//console.log( `reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}`)
 		var param = new Requests.RequestContractDetails( {"id": id} ); param.contracts.push( contract );
 		var msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
 		this.contractCallbacks.set( id, callback );

@@ -35,7 +35,7 @@
 				<td class="numberCell">{{tick?.low| number:'1.2-2'}} - {{tick?.high | number:'1.2-2'}}</td>
 				<td class="numberCell" *ngIf="tick==null || !tick.volumeAverage">{{volumeDisplay}}</td>
 				<td class="numberCell" *ngIf="tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</td>
-				<td class="numberCell" title="{{symbolSettings?.shortInterestDate}}">{{ (fundamentals.sharesOutstanding && symbolSettings ? symbolSettings.shortInterest/fundamentals.sharesOutstanding*100 : null) | number:'1.1-1' }}%</td>
+				<td class="numberCell" title="{{settingsSymbol?.shortInterestDate}}">{{ (fundamentals?.sharesOutstanding && settingsSymbol ? settingsSymbol.shortInterest/fundamentals.sharesOutstanding*100 : null) | number:'1.1-1' }}%</td>
 				<td class="numberCell">{{tick?.shortableAvailable/1000 | number:'1.0-0'}}K</td>
 			</tr></tbody>
 		</table>
@@ -51,8 +51,9 @@
 	</mat-tab> -->
 	<mat-tab>
 		<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Options</ng-template>
-		<!-- <ng-template matTabContent> -->
-			<option-tab [symbol]="m" [index]="0" [contractEvents]="contractEvents.asObservable()" [tabEvents]="tabEvents.asObservable()"></option-tab>
-		<!-- </ng-template> -->
+		<ng-template matTabContent>
+			<option-tab [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></option-tab>
+			<!-- [contractEvents]="contractEvents.asObservable()" -->
+		</ng-template>
 	</mat-tab>
 </mat-tab-group>

@@ -9,7 +9,7 @@ import { Tick, TickEx } from 'src/app/services/tws/Tick';
 import {Option} from './option';
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { PageEvent } from 'src/app/shared/framework/paginator/paginator'
+import { IPageEvent } from 'src/app/shared/framework/paginator/paginator'
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import { DateUtilities } from 'src/app/utilities/dateUtilities';
 
@@ -36,14 +36,14 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		this.pageSubscription.unsubscribe();
 		this.tws.cancelMktData( this.subscriptions.values() );
 	}
-	run = ():void =>
+	run():void
 	{
-		if( !this.contractId )
+		if( !this.contract )
 			return;
 		if( this.options && this.options.length!=0 )
 			this.lengthChange.emit( 0 );
 		this.options = new Array<Option>();
-		this.tws.optionSummary( this.contractId, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike ).subscribe(
+		this.tws.optionSummary( this.contract.id, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike ).subscribe(
 		{
 			next: ( values:Results.IOptionValues ) =>
 			{
@@ -191,25 +191,36 @@ export class OptionTableComponent implements OnInit, OnDestroy
 //		this.dialog.open( DetailsDialog, {width: '600px', data: row} );
 	}
 
-	get contract():IB.IContract{ return this.holding ? this.holding.contract : null; }
-	get contractId(){ return this.contract ? this.contract.id : 0; }
+	@Input() set contract(value){ this._contract=value; } get contract(){return this._contract;} private _contract:IB.IContract;//():IB.IContract{ return /*this.holding ? this.holding.contract :*/ null; }
+	//get contractId(){ return this.contract ? this.contract.id : 0; }
 	displayedColumns : string[] = [ 'strike', 'oi', 'oiChange', 'volume', 'last', 'bid_size', 'bid', 'ask', 'ask_size' ];
-	@Input() set optionType( value ){ this._optionType=value; this.run();} get optionType(){ return this._optionType;} _optionType:OptionType;
-	@Input() holding: TickEx;
+	@Input() set optionType( value )
+	{
+		const optionType = +value;
+		if(  optionType!=this._optionType )
+		{
+			const isUndefined = this._optionType==undefined;
+			this._optionType=optionType;
+			if( !isUndefined )
+				this.run();
+		}
+	} get optionType(){ return this._optionType;} _optionType:OptionType;
+	//@Input() holding: TickEx;
 	@Input() startExpiration:number;
 	@Input() endExpiration:number;
 	@Input() startStrike:number;
 	@Input() endStrike:number;
-	@Input() pageEvents:Observable<PageEvent>; private pageSubscription:Subscription;
+	@Input() pageEvents:Observable<IPageEvent>; private pageSubscription:Subscription;
 	private isSingleClick:boolean;
 	@Output() lengthChange = new EventEmitter<number>();
 	@ViewChild('mainTable',{static:false}) _table:MatTable<Option>;
 
-	loaded:boolean=false;
+	init:boolean;
 //	exposure:number;
 //	oi:number;
 	options: Option[];
-	pageContent: Option[]=[]; pageInfo = new PageEvent();
+	pageContent: Option[]=[];
+	@Input() pageInfo:IPageEvent;
 //	value:number;
 	private selectedOption:Option|null=null;
 	@Output() selectionChange = new EventEmitter<Option>();

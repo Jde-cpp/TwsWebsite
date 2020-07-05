@@ -1,11 +1,11 @@
 <!--<h1>Snapshot</h1>
 <p>This displays a security Snapshot.</p>-->
-<mat-tab-group #symbolTabs [(selectedIndex)]="settings.selectedIndex">
+<mat-tab-group #symbolTabs [(selectedIndex)]="settings.selectedIndex" (selectedIndexChange)="symbolIndexChanged($event)">
 	<!-- (selectedIndexChange)="symbolIndexChanged($event)" -->
-	<mat-tab *ngFor="let m of previousSymbols">
+	<mat-tab *ngFor="let m of previousSymbols;">
 		<ng-template mat-tab-label>{{m}}</ng-template>
 		<ng-template matTabContent>
-			<snapshot-content></snapshot-content>
+			<snapshot-content [symbol]="m"></snapshot-content>
 		</ng-template>
 	</mat-tab>
 </mat-tab-group>

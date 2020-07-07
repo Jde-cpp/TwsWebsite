@@ -10,7 +10,7 @@ import IB = ib2.Jde.Markets.Proto;
 
 export class Data
 {
-	//contract:IB.IContract;
+	details:Results.IContractDetails;
 	tick:TickEx;
 	isBuy:boolean;
 	quantity: number;
@@ -29,6 +29,7 @@ export class TransactDialog
 		{
 			this.tick = data.tick;
 			this.limit = data.isBuy ? data.tick.bid : data.tick.ask;
+			this.details = data.details;
 			if( this.limit==-1 )
 				this.limit = data.tick.last;
 			const delta = Math.round( (this.limit *.01)*100 )/100 * (data.isBuy ? -1 : 1);
@@ -44,7 +45,13 @@ export class TransactDialog
 
 	onSubmitClick():void
 	{
-		this.twsService.placeOrder( this.data.tick.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: true}, this.stop, this.stopLimit );
+		this.twsService.placeOrder( this.data.tick.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: false}, this.stop, this.stopLimit ).subscribe2(
+		{
+			status: ( value:Results.IOrderStatus )=>{ console.log( `status='${value}'` ); },
+			open: ( value:Results.IOpenOrder )=>{ console.log( `open='${value}'` ); },
+			complete: ()=>{ console.log( `status=complete` ); },
+			error: (e)=>{ console.error( `error=${e.message}` ); }
+		});
 	}
 	get backgroundColor():string
 	{
@@ -53,7 +60,8 @@ export class TransactDialog
 		const prefix = `rgba(${red},${green},0,`;
 		return `linear-gradient(to right, ${prefix}255),${prefix}0))`;
 	}
-	get description(){ return /*this.option ? this.option.description :*/ this.tick.contract.symbol; }
+	get description(){ return /*this.option ? this.option.description :*/ `${this.details.contract.symbol} - ${this.details.longName}`; }
+	details:Results.IContractDetails;
 	isBuy2:number=1;
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){this._isBuy=value ? "Buy" : "Sell";} _isBuy:string;
 	quantity:number;

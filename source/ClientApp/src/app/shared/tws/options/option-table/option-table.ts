@@ -55,6 +55,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 					{
 						//_contract:IB.IContract, option:Results.IOption, public expiration:number, public isCall:boolean/*, public underlying:TickEx*/
 						var optionContract = new IB.Contract( this.contract );
+						optionContract.localSymbol = null;
 						optionContract.expiration = day.expirationDays;
 						optionContract.securityType = "OPT";
 						optionContract.right = day.isCall ? "CALL" : "PUT";

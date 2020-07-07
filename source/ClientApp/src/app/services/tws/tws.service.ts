@@ -120,7 +120,7 @@ class Connection
 			}
 			else if( message.orderStatus || message.openOrder )
 			{
-				var id = message.orderStatus ? message.orderStatus.clientId : message.openOrder.order.clientId;
+				var id = message.orderStatus ? message.orderStatus.id : message.openOrder.webId;
 				const original = this.orders.get( id );
 				if( original )
 				{

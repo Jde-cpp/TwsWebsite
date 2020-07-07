@@ -1,0 +1,12 @@
+<h2 mat-dialog-title [ngStyle]="{'background': backgroundColor}">{{description}}</h2>
+<mat-dialog-content>
+	<fieldset>
+		<legend>Order Description</legend>
+	</fieldset>
+</mat-dialog-content>
+<mat-dialog-actions style="flex: content; flex-direction: row;align-items: flex-start;display: flex;">
+	<span>
+		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="_submitting" (click)="_submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}}</button>
+		<button style="margin-left:50px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
+	</span>
+</mat-dialog-actions>

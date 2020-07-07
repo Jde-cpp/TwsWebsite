@@ -7,12 +7,12 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
 import {MatChipsModule} from '@angular/material/chips';
+import {MatDialogModule} from '@angular/material/dialog';
 import { MatNativeDateModule } from '@angular/material/core';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
-//import {MatDialogModule} from '@angular/material/dialog';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatTableModule} from '@angular/material/table';
 import {MatTabsModule} from '@angular/material/tabs';
@@ -43,6 +43,7 @@ import {QuantityComponent} from './shared/tws/widgets/quantity/quantity'
 import {routes} from './routes';
 import { AppComponent } from './app.component';
 
+import {OrderComponent} from './pages/tws/orders/orders'
 import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
 import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
 import {SnapshotContentComponent} from './pages/tws/snapshot/snapshot-content';
@@ -58,14 +59,14 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
 @NgModule({
   declarations: [
 	 AppComponent,
-	 PortfolioComponent,SnapshotComponent,SnapshotContentComponent,TradeComponent,
+	 OrderComponent,PortfolioComponent,SnapshotComponent,SnapshotContentComponent,TradeComponent,
 	 PaginatorComponent,
 	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SummaryComponent,
 	 TransactDialog, RollDialog, OptionEntryDialog,
 	 QuantityComponent],
   imports: [
 	 BrowserModule, RouterModule.forRoot(routes), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
-	 MatAutocompleteModule,MatButtonModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatRadioModule, MatTableModule, MatTabsModule, MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule,MatSnackBarModule, MatSortModule,
+	 MatAutocompleteModule,MatButtonModule, MatDialogModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatRadioModule, MatTableModule, MatTabsModule, MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule,MatSnackBarModule, MatSortModule,
 	 NavBarModule, ThemePickerModule
   ],
   entryComponents: [TransactDialog, RollDialog, OptionEntryDialog],

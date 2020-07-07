@@ -1,4 +1,4 @@
-import { Inject, Input, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBinding, ChangeDetectorRef } from '@angular/core';
+import { AfterViewInit, ElementRef, EventEmitter, Inject, Input, Component, OnInit, OnDestroy, Output,  ViewChild, ChangeDetectorRef } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTabChangeEvent} from '@angular/material/tabs';
@@ -42,14 +42,26 @@ class SymbolSettings implements IAssignable<SymbolSettings>
 }
 
 @Component( {selector: 'snapshot-content', styleUrls: ['snapshot.css'], templateUrl: './snapshot-content.html'} )
-export class SnapshotContentComponent implements AfterViewInit
+export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{
 		//console.log( 'SnapshotComponent::SnapshotComponent' );
 //		throw 'SnapshotComponent::SnapshotComponent';
 	}
+	ngOnInit()
+	{
+		const symbol = this._symbol;
+		this.settingsSymbolContainer = new Settings<SymbolSettings>(SymbolSettings, `SnapshotComponent.${symbol}`, this.profileService );
+		// var contract = new IB.Contract();
+		// contract.symbol = symbol;
+		// contract.securityType = "STK";
+		// contract.exchange = "SMART";
+		// contract.currency = "USD";
+		let contract = { 'symbol': symbol, securityType: "STK", exchange: "SMART", currency: "USD" };
+		this.settingsSymbolContainer.load().subscribe({ complete:()=>{this.tws.reqContractDetails( contract ).subscribe( {next: value=>{this.onContractDetails(value);}, error: e=>{this.onError(e);} });} });
 
+	}
 	ngAfterViewInit():void
 	{
 		this.tabEvents.next( this.tabs ? this.tabs.selectedIndex : 0 );
@@ -62,16 +74,13 @@ export class SnapshotContentComponent implements AfterViewInit
 
 	setSymbol( symbol:string )
 	{
-		this.settingsSymbolContainer = new Settings<SymbolSettings>(SymbolSettings, `SnapshotComponent.${symbol}`, this.profileService );
-		// var contract = new IB.Contract();
-		// contract.symbol = symbol;
-		// contract.securityType = "STK";
-		// contract.exchange = "SMART";
-		// contract.currency = "USD";
-		let contract = { 'symbol': symbol, securityType: "STK", exchange: "SMART", currency: "USD" };
-		this.settingsSymbolContainer.load().subscribe({ complete:()=>{this.tws.reqContractDetails( contract ).subscribe( {next: value=>{this.onContractDetails(value);}, error: e=>{this.onError(e);} });} });
+		if( symbol && symbol!=this.symbol )
+			this.symbolEvent.next( symbol );
 	}
-
+	onConfigurationClick()
+	{
+		//TODO dialog
+	}
 	onContractDetails = ( details: Results.IContractDetails ):void =>
 	{
 		this.details = details;
@@ -86,7 +95,7 @@ export class SnapshotContentComponent implements AfterViewInit
 		const now = new Date();
 	//	this.setShortInterest( 15139641, new Date(2020,6,15) );
 
-		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDay() );
+		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDay(now, details.tradingHours[0]) );
 		this.tws.reqPreviousDay( [this.contract.id] ).subscribe(
 		{
 			next: ( bar:Results.IDaySummary ) =>
@@ -165,7 +174,7 @@ export class SnapshotContentComponent implements AfterViewInit
 	onTransactClick( buy:boolean )
 	{
 		const dialogRef = this.dialog.open(TransactDialog, {
-			width: '600px',
+			width: '600px', autoFocus: false,
 			data: { details: this.details, tick: this.tick, isBuy: buy }
 		});
 		dialogRef.afterClosed().subscribe(result =>
@@ -351,7 +360,8 @@ export class SnapshotContentComponent implements AfterViewInit
 	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
 	settingsSymbolContainer:Settings<SymbolSettings>;
 	get settingsSymbol():SymbolSettings{ return this.settingsSymbolContainer.value; }
-	@Input() set symbol(value){ this.setSymbol( value ); } get symbol():string{ return this.contract ? this.contract.symbol : ''; }
+	@Input() set symbol(value){ this._symbol=value; } get symbol():string{ return this.contract ? this.contract.symbol : ''; } private _symbol;
+	@Output() symbolEvent = new EventEmitter<string>();
 	subscription:TickObservable;
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;

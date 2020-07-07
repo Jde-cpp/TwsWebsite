@@ -1,8 +1,9 @@
 //import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import {TradeComponent} from './pages/tws/trades/trades.component';
+import {OrderComponent} from './pages/tws/orders/orders';
 import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
 import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
+import {TradeComponent} from './pages/tws/trades/trades.component';
 
 export const routes: Routes =
 [
@@ -10,5 +11,6 @@ export const routes: Routes =
 	{path: 'portfolio', component: PortfolioComponent},
 	{path: 'snapshot', component: SnapshotComponent},
 	{path: 'trades', component: TradeComponent},
+	{path: 'orders', component: OrderComponent},
 	{path: '**', redirectTo: ''}
 ];

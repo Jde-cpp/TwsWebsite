@@ -17,7 +17,8 @@ export class Data
 	isBuy:boolean;
 	option:TickEx;
 	expirations: number[];
-	underlying: TickEx;
+	//underlying: TickEx;
+	underlying:Results.IContractDetails;
 	//strikes:number[];
 }
 @Component( { templateUrl: 'option-entry.html', styleUrls:["option-entry.css"]} )
@@ -25,10 +26,10 @@ export class OptionEntryDialog implements OnDestroy
 {
 	constructor( public dialogRef:MatDialogRef<OptionEntryDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private tws : TwsService )
 	{
+		this.option = data.option;
 		this.isBuy = data.isBuy;
 		for( let expiration of data.expirations )
 			this.expirations.set( expiration, MarketUtilities.optionDisplayFromDays(expiration) );
-		this.option = data.option;
 		this.limit = data.isBuy ? this.bid : this.ask;
 		this.underlying = data.underlying;
 		this.setStrikes( this.expiration, this.option.strike, this.option.isCall );
@@ -60,7 +61,7 @@ export class OptionEntryDialog implements OnDestroy
 		if( this.option )
 			this.strikes.set( this.strike, [this.option.isCall ? this.option.contractId : null, !this.option.isCall ? this.option.contractId : null ] );
 		let tempStrikes = new Map<number,[number,number]>();
-		let contract:IB.IContract = { exchange: "SMART", securityType: "OPT", right: isCall ? "CALL" : "PUT", expiration: expiration, symbol: this.underlyingSymbol };
+		let contract:IB.IContract = { exchange: "SMART", securityType: "OPT", right: isCall ? "CALL" : "PUT", expiration: expiration, symbol: this.underlying.contract.symbol };
 		this.tws.reqContractDetails( contract ).subscribe(
 		{
 			next: value=>
@@ -124,7 +125,13 @@ export class OptionEntryDialog implements OnDestroy
 	}
 	onSubmitClick():void
 	{
-		//this.tws.placeOrder( this.data.option.underlying.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: true}, this.stop, this.stopLimit );
+		this.tws.placeOrder( this.data.option.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: false}, this.stop, this.stopLimit ).subscribe2(
+		{
+			status: ( value:Results.IOrderStatus )=>{ console.log( `status='${value}'` ); },
+			open: ( value:Results.IOpenOrder )=>{ console.log( `open='${value}'` ); },
+			complete: ()=>{ console.log( `status=complete` ); },
+			error: (e)=>{ console.error( `error=${e.message}` ); }
+		});
 	}
 	updateTicker( expiration:number, strike:number )
 	{
@@ -142,7 +149,7 @@ export class OptionEntryDialog implements OnDestroy
 	}
 	get bid(){return this.option && this.option.bid || 0;}
 	get bidSize(){return this.option.bidSize || 0;}
-	get description(){ return `${this.underlyingSymbol}${this.option ? ' '+this.option.display : ''}`; }
+	get description(){ return `${this.option.display} - ${this.underlying.longName}`; }
 	expirations = new Map<number,string>();
 	//get expirationDay(){ return this._expirationDay;} set expirationDay(value){ this._expirationDay=value; } private _expirationDay:number;
 	get expiration(){ return this.option && this.option.expiration || 0; }
@@ -156,8 +163,8 @@ export class OptionEntryDialog implements OnDestroy
 	strikes = new Map<number,[number,number]>();
 	stop:number;
 	stopLimit:number;
-	underlying:TickEx;
-	get underlyingSymbol(){return this.underlying.contract.symbol;}
+	underlying:Results.IContractDetails;
+	//get underlyingSymbol(){return this.underlying.contract.symbol;}
 	get option():TickEx{ return this._option}; set option(value){ if(!value) this.subscription=null; this._option = value; } _option:TickEx;
 	get subscription(){return this._subscription;} set subscription(value){ if( this.subscription ) this.tws.cancelMktData( new Map<number,TickObservable>( [[0,this.subscription]]).values() ); this._subscription=value;} _subscription:TickObservable;
 	private _submitting=false;

@@ -1,4 +1,4 @@
-import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBinding, ChangeDetectorRef } from '@angular/core';
+import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBinding, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTabGroup} from '@angular/material/tabs';
@@ -27,7 +27,7 @@ class PageSettings implements IAssignable<PageSettings>
 }
 
 @Component( {selector: 'snapshot', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html', styles: [`:host {'class': 'mat-drawer-container'}`]} )
-export class SnapshotComponent implements OnInit, AfterViewInit
+export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	@HostBinding('class.mat-drawer-container') public highlighted: boolean = true;
 	constructor( private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
@@ -60,10 +60,21 @@ export class SnapshotComponent implements OnInit, AfterViewInit
 			error: e =>{console.log(e)}
 		});
 	}
-
-	symbolIndexChanged( index )
+	ngOnDestroy()
 	{
-		this.tabEvents.next( index );
+		this.settingsContainer.save();
+	}
+	onSymbol( symbol:string )
+	{
+		console.log( symbol );
+		let index = this.previousSymbols.indexOf( symbol );
+		if( index==-1 )
+		{
+			this.previousSymbols.unshift( symbol );
+			index = 0;
+		}
+		this.settings.selectedIndex = index;
+		//this.tabEvents.next( index );
 		// console.log( `symbolIndexChanged( ${index} )` );
 		// this.settings.selectedIndex = index;
 		// if( this.symbolTabIndex.value!=index )

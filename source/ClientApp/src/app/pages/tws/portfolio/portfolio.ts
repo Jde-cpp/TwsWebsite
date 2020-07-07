@@ -161,14 +161,14 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	};
 	loadPreviousDay( contract:IB.IContract, isMarketOpen:boolean, holding:Holding, day:number )
 	{
-		if( contract.symbol=="AXE" )
-			console.log( `AXE day=${day}` );
+//		if( contract.symbol=="AXE" )
+//			console.log( `AXE day=${day}` );
 		this.tws.reqPreviousDay( [contract.id] ).subscribe(
 		{
 			next: ( bar:Results.IDaySummary ) =>
 			{
-				if( contract.symbol=="ALGT" )
-					console.log( `${contract.symbol} close=${bar.close}` );
+			//	if( contract.symbol=="ALGT" )
+			//		console.log( `${contract.symbol} close=${bar.close}` );
 
 				if( isMarketOpen || bar.day!=day )
 					holding.previousDay = new Price( bar );
@@ -270,14 +270,20 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}
 		else
 		{
-			const dialogRef = this.dialog.open( TransactDialog, {width: '600px', data: {tick: this.selected, isBuy: buy, quantity: this.selected.position, showStop: buy!=this.selected.position<0}} );
-			dialogRef.afterClosed().subscribe(result =>
+			this.tws.reqContractDetails( this.selected.contract ).subscribe(
 			{
-				// if( result && this.settings.limit!=result.limit )
-				// {
-				// 	this.settings.limit = result.limit;
-				// 	this.subscribe( this.applicationId, this.level );
-				// }
+				next: details=>
+				{
+					const dialogRef = this.dialog.open( TransactDialog, {width: '600px',	autoFocus: false, data: {tick: this.selected, isBuy: buy, quantity: this.selected.position, showStop: buy!=this.selected.position<0, details: details}} );
+					dialogRef.afterClosed().subscribe(result =>
+					{
+						// if( result && this.settings.limit!=result.limit )
+						// {
+						// 	this.settings.limit = result.limit;
+						// 	this.subscribe( this.applicationId, this.level );
+						// }
+					});
+				}
 			});
 		}
 	}

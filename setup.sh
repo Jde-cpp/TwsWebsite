@@ -70,8 +70,11 @@ cd $appDir;moveToDir services;
 
 cd $appDir; moveToDir utilities;
 	addHard $frameworkDir/utilities dateUtilities.ts;
+	addHard $frameworkDir/utilities mathUtilities.ts;
+	addHard $frameworkDir/utilities ProgressObservable.ts;
 	addHard $frameworkDir/utilities protoUtilities.ts;
-
+	addHard $frameworkDir/utilities settings.ts;
+	addHard $frameworkDir/utilities stl.ts;
 
 cd $appDir; moveToDir proto;
 

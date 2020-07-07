@@ -34,7 +34,7 @@ export class Tick implements ITickObserver
 	}
 	price( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
 	{
-		if( type==Results.ETickType.ClosePrice )
+		if( type==Results.ETickType.ClosePrice && this.isMarketOpen )
 			this.close = price;
 		else if( type==Results.ETickType.BidPrice )
 			this.bid = price;
@@ -58,7 +58,7 @@ export class Tick implements ITickObserver
 			this._askDelay = this._ask;
 			this._bidSizeDelay = this._bidSize;
 			this._bidDelay = this._bid;
-			this._lastDelay = this.last;
+			this._lastDelay = this._last;
 		}
 	}
 	size( type:Results.ETickType, size:number ):void
@@ -114,8 +114,11 @@ export class Tick implements ITickObserver
 	} _bid:number|null; _bidDelay:number|null;
 	get bidSize(){return this.delay ? this._bidSizeDelay : this._bidSize;} set bidSize(value){this._bidSize = value>0 ? value : null;} _bidSize:number|null; _bidSizeDelay:number|null;
 	completed:boolean=false;
-	close:number;
-	get delay():number{ return this.isMarketOpen ? 10000 : null;} nextUpdate:number=Date.now();
+	get close(){return this._close;} set close(value)
+	{
+		this._close = value;
+	} private _close:number;
+	get delay():number{ return this.isMarketOpen ? null : null;} nextUpdate:number=Date.now();
 	get currentPrice():number{ return this.last>=this.bid && this.last<=this.ask ? this.last : (this.ask+this.bid)/2; }
 	halted:boolean;
 	high:number;

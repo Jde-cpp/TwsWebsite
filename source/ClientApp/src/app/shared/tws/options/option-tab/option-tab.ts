@@ -134,17 +134,23 @@ export class OptionTabComponent implements OnInit, OnDestroy
 
 	onTransactClick( buy:boolean )
 	{
-		const dialogRef = this.dialog.open(OptionEntryDialog, {
-			width: '600px',
-			data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: this.tick }
-		});
-		dialogRef.afterClosed().subscribe(result =>
+		this.tws.reqContractDetails( this.tick.contract ).subscribe(
 		{
-			// if( result && this.settings.limit!=result.limit )
-			// {
-			// 	this.settings.limit = result.limit;
-			// 	this.subscribe( this.applicationId, this.level );
-			// }
+			next: details=>
+			{
+				const dialogRef = this.dialog.open(OptionEntryDialog, {
+					width: '600px',
+					data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: details }
+				});
+				dialogRef.afterClosed().subscribe(result =>
+				{
+					// if( result && this.settings.limit!=result.limit )
+					// {
+					// 	this.settings.limit = result.limit;
+					// 	this.subscribe( this.applicationId, this.level );
+					// }
+				});
+			}
 		});
 	}
 	expirationIndexChange( index )

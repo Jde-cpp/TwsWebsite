@@ -76,8 +76,8 @@ export class Holding extends TickEx
 	//contract:IB.IContract;
 	get marketValue():number{const primary = this.isOption ? this._marketValue : this.currentPrice*this.position; const secondary = this.isOption ? this.currentPrice*this.position : this._marketValue; return primary || secondary;} set marketValue( value )
 	{
-		if( this.contract.symbol=="ALGT" )
-			console.log( `${this.contract.symbol} - marketValue=${value}` );
+		//if( this.contract.symbol=="ALGT" )
+		//	console.log( `${this.contract.symbol} - marketValue=${value}` );
 	    this._marketValue = value;
 	} _marketValue:number|null=null;
 	position:number;
@@ -96,8 +96,8 @@ export class Holding extends TickEx
 	get pnl():number{ return this.change*this.position*this.contract.multiplier; }
 	get change():number
 	{
-		if( this.contract.symbol=="ALGT" )
-			this.contract.multiplier = 1.0;
+	//	if( this.contract.symbol=="ALGT" )
+	//		this.contract.multiplier = 1.0;
 
 		return this.marketValue/(this.position*this.contract.multiplier)-this.pricePrevious;
 	}

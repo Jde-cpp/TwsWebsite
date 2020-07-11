@@ -34,9 +34,10 @@ import{ OptionTableComponent } from './shared/tws/options/option-table/option-ta
 import{ OptionTabComponent } from './shared/tws/options/option-tab/option-tab';
 import {SummaryComponent} from './shared/tws/summary/summary';
 
-import {TransactDialog} from './shared/tws/dialogs/transact/transact'
-import {RollDialog} from './shared/tws/dialogs/roll/roll-dialog'
+import {ConfirmationDialog} from './shared/tws/dialogs/transact/confirmation'
 import {OptionEntryDialog} from './shared/tws/dialogs/option-entry/option-entry';
+import {RollDialog} from './shared/tws/dialogs/roll/roll-dialog'
+import {TransactDialog} from './shared/tws/dialogs/transact/transact'
 
 import {QuantityComponent} from './shared/tws/widgets/quantity/quantity'
 
@@ -62,7 +63,7 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
 	 OrderComponent,PortfolioComponent,SnapshotComponent,SnapshotContentComponent,TradeComponent,
 	 PaginatorComponent,
 	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SummaryComponent,
-	 TransactDialog, RollDialog, OptionEntryDialog,
+	 ConfirmationDialog, OptionEntryDialog, RollDialog, TransactDialog,
 	 QuantityComponent],
   imports: [
 	 BrowserModule, RouterModule.forRoot(routes), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,

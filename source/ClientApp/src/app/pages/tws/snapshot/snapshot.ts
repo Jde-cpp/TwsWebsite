@@ -22,7 +22,7 @@ class PageSettings implements IAssignable<PageSettings>
 			this.previousSymbols.push( i );
 		this.selectedIndex = value.selectedIndex;
 	}
-	previousSymbols:string[]=[];
+	previousSymbols:string[]=["SPY"];
 	selectedIndex:number=0;
 }
 
@@ -44,25 +44,31 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		{
 			complete: ()=>
 			{
-				setTimeout( ()=>//screws up the selected tab.
+				if( this.settings.selectedIndex!=0 )
 				{
-/*					if( this.symbolTabs.selectedIndex != this.settings.selectedIndex )
-						this.symbolTabs.selectedIndex = this.settings.selectedIndex;
-					else
-						this.symbolIndexChanged( this.settings.selectedIndex );
-*/
-				//	this.tabEvents.next( this.tabs ? this.tabs.selectedIndex : 0 );
-
-					// this.symbolTabs.selectedIndex = this.settings.selectedIndex;
-					// this.tabEvents.next( this.tabs ? this.tabs.selectedIndex : 0 );
-				});
+					const symbol = this.settings.previousSymbols[this.settings.selectedIndex];
+					this.previousSymbols.splice( this.settings.selectedIndex, 1 );
+					this.previousSymbols.unshift( symbol );
+					this.settings.selectedIndex = 0;
+					this.settingsContainer.save();
+				}
+				//this.previousSymbols[0] = "SHOP";
+				//this.settingsContainer.save();
+				if( this.symbolTabs.selectedIndex != this.settings.selectedIndex )
+					this.symbolTabs.selectedIndex = this.settings.selectedIndex;
+				setTimeout( ()=>{});//screws up the selected tab.
 			},
 			error: e =>{console.log(e)}
 		});
 	}
 	ngOnDestroy()
 	{
+		this.settings.selectedIndex = this.selected.value;
 		this.settingsContainer.save();
+	}
+	onIndexChange(newIndex)
+	{
+		this.settings.selectedIndex = newIndex;
 	}
 	onSymbol( symbol:string )
 	{
@@ -71,9 +77,10 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		if( index==-1 )
 		{
 			this.previousSymbols.unshift( symbol );
-			index = 0;
+			this.selected.setValue( 0 );
+			if( this.symbolTabs.selectedIndex )
+				this.symbolTabs.selectedIndex = 0;
 		}
-		this.settings.selectedIndex = index;
 		//this.tabEvents.next( index );
 		// console.log( `symbolIndexChanged( ${index} )` );
 		// this.settings.selectedIndex = index;
@@ -83,15 +90,13 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		// //this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
 		// this.setSymbol( this.previousSymbols[index] );
 	}
-	get previousSymbols()
-	{
-	    return this.settings.previousSymbols;
-	} set previousSymbols(value)
-	{
-	    if( this.settings )
-	        this.settings.previousSymbols = value;
-	}
-	tabEvents = new Subject<boolean>();
+	get previousSymbols(){ return this.settings.previousSymbols;}
+	// } set previousSymbols(value)
+	// {
+	//     if( this.settings )
+	//         this.settings.previousSymbols = value;
+	// }
+	//tabEvents = new Subject<boolean>();
 
 /*	get barSettings(){ return this.symbolSettings.barSettings; } set barSettings( value:IBarSettings )
 	{
@@ -104,6 +109,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );
 	}*/
 //	get treeSettings(){ return this.symbolSettings.treeSettings; } set treeSettings( value:ITreeSettings ){this.symbolSettings.treeSettings = value;this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );}
+	selected = new FormControl(0);
 	settingsContainer:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
 	get settings():PageSettings{ return this.settingsContainer ? this.settingsContainer.value : null; }
 

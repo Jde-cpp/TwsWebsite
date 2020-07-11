@@ -4,27 +4,28 @@ import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { Subject } from 'rxjs';
 import {IData} from 'src/app/shared/tws/summary/summary'
-import {Tick} from 'src/app/services/tws/Tick'
+import {TickEx} from 'src/app/services/tws/Tick'
 
-export class Order
+export class Order extends TickEx
 {
 	constructor( public order:Results.IOpenOrder )
-	{}
+	{
+		super( order.contract, null );
+	}
 	get id(){ return this.order.order.id; }
 	get commission(){ return this.order.state.commission; }
 	get quantity(){ return this.order.order.quantity; }
-	get ask(){ return this.tick ? this.tick.ask : null; }
-	get bid(){ return this.tick ? this.tick.bid : null; }
-	get symbol(){ return this.order.contract.symbol; }
+	//get ask(){ return this.tick ? this.tick.ask : null; }
+	//get bid(){ return this.tick ? this.tick.bid : null; }
+	//get symbol(){ return this.order.contract.symbol; }
 	get isBuy(){ return this.order.order.isBuy; }
-	get last(){ return this.tick ? this.tick.price : null; }
+	//get last(){ return this.tick ? this.tick.price : null; }
 	get limit(){ return this.order.order.limit; }
 	get statusString(){ return this.order.state.status; }
-	get startTime(){ return this.order.order.activeStartTime; }
-	get stopTime(){ return this.order.order.activeStopTime; }
+	//get startTime(){ return this.order.order.activeStartTime; }
+	//get stopTime(){ return this.order.order.activeStopTime; }
 
 	status:Results.IOrderStatus;
-	tick:Tick;
 }
 
 export class DataSource implements IData

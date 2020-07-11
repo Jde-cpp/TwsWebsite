@@ -104,7 +104,7 @@ export class OptionTabComponent implements OnInit, OnDestroy
 							this.expirationDisplays.push( MarketUtilities.optionDisplayFromDays(expiration) );
 						}
 					},
-					error:  e=>{ console.error(e); this.cnsl.error("Could not connect to Tws.", e); }
+					error:  e=>{ console.error(e); this.cnsl.error(`Could not retrieve Options '${e.message}'.`, e); }
 				} );
 			},
 			error:  e=>{ console.error(e); }
@@ -176,7 +176,7 @@ export class OptionTabComponent implements OnInit, OnDestroy
 	get expiration():Day{ return this.expirations && this.expirationSelectedIndex<this.expirations.length ? this.expirations[this.expirationSelectedIndex] : 0; }
 	expirationDisplays : string[];
 	expirations : Day[];
-	get expirationSelectedIndex(){ return this.settings.expiration ? Math.max(0, this.expirations.indexOf(this.settings.expiration)) : 0; }
+	get expirationSelectedIndex(){ return this.settings.expiration && this.expirations ? Math.max(0, this.expirations.indexOf(this.settings.expiration)) : 0; }
 	set expirationSelectedIndex(value){ this.settings.expiration= value ? this.expirations[value] : 0; }
 	selectedOption:Option=null;
 	settingsContainer:Settings<SymbolSettings> = new Settings<SymbolSettings>( SymbolSettings, 'OptnTabCmpnnt.', this.profile );

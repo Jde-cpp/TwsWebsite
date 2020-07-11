@@ -7,7 +7,7 @@ import theme from 'highcharts/themes/dark-unica';
 import * as Highcharts from 'highcharts/highstock';
 
 import {Fundamentals } from './fundamentals'
-import { TransactDialog } from '../../../shared/tws/dialogs/transact/transact'
+import { TransactDoModal } from '../../../shared/tws/dialogs/transact/transact'
 import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
 
 import {IErrorService} from 		'src/app/services/error/IErrorService'
@@ -85,7 +85,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	{
 		this.details = details;
 		const isMarketOpen = MarketUtilities.isMarketOpen( this.details );
-		let tick = this.tick = new TickEx( details.contract, MarketUtilities.isMarketOpen(details) );
+		let tick = this.tick = new TickEx( details.contract, isMarketOpen );
 		//this.contractEvents.next( tick );
 		this.tws.reqFundamentals( details.contract.id ).subscribe( {next: value=>
 		{
@@ -93,8 +93,11 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		//	console.log( this.symbolSettings.shortInterest/this.fundamentals.sharesOutstanding );
 		}} );
 		const now = new Date();
-	//	this.setShortInterest( 15139641, new Date(2020,6,15) );
-
+	/*	if( this.symbol=="TSLA" )
+			this.setShortInterest( 13958518, new Date(2020,6,30) );
+		if( this.symbol=="SPY" )//https://www.wsj.com/market-data/quotes/etf/US/ARCX/SPY
+			this.setShortInterest( 193700000, new Date(2020,6,30) );
+		*/
 		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDay(now, details.tradingHours[0]) );
 		this.tws.reqPreviousDay( [this.contract.id] ).subscribe(
 		{
@@ -173,7 +176,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	onTransactClick( buy:boolean )
 	{
-		const dialogRef = this.dialog.open(TransactDialog, {
+		TransactDoModal( this.dialog, this.profileService, this.tws, this.details, this.tick, buy );
+/*		const dialogRef = this.dialog.open(TransactDialog, {
 			width: '600px', autoFocus: false,
 			data: { details: this.details, tick: this.tick, isBuy: buy }
 		});
@@ -184,7 +188,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			// 	this.settings.limit = result.limit;
 			// 	this.subscribe( this.applicationId, this.level );
 			// }
-		});
+		});*/
 	}
 	setShortInterest( value, date )
 	{

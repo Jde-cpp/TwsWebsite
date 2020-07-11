@@ -1,8 +1,10 @@
-import {Component, Inject} from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {Component, Inject,AfterViewInit} from '@angular/core';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { IProfile } from 'src/app/services/profile/IProfile';
 import { TickEx } from 'src/app/services/tws/Tick';
 import { TwsService } from 'src/app/services/tws/tws.service';
-//import { Option } from 'src/app/shared/options/option-table/option'
+import {ConfirmationDialog} from './confirmation'
+import {Settings, IAssignable} from 'src/app/utilities/settings'
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import * as ib2 from 'src/app/proto/ib';
@@ -15,11 +17,42 @@ export class Data
 	isBuy:boolean;
 	quantity: number;
 	showStop: boolean;
+	allAccounts:Map<string,string>;
+	settingsContainer:Settings<DialogSettings>;
 }
-@Component( {templateUrl: 'transact.html', styleUrls:["transact.css"]} )
-export class TransactDialog
+
+export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : TwsService, details:Results.IContractDetails, tick:TickEx, isBuy:boolean, quantity: number=null, showStop:boolean=true )
 {
-	constructor( public dialogRef:MatDialogRef<TransactDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private twsService : TwsService )
+	let settingsContainer = new Settings<DialogSettings>( DialogSettings, "TransactDialog", profile );
+	settingsContainer.load().subscribe({ complete: ()=>
+	{
+		tws.reqManagedAccts().subscribe( (numbers)=>
+		{
+			let allAccounts = new Map<string,string>();
+			for( let account in numbers )
+				allAccounts.set( account, numbers[account] );
+			const dialogRef = dialog.open(TransactDialog, {
+				width: '600px', autoFocus: false,
+				data: { details: details, tick: tick, isBuy: isBuy, quantity: quantity, showStop: showStop, allAccounts: allAccounts, settingsContainer: settingsContainer }
+			});
+			dialogRef.afterClosed().subscribe(result =>
+			{
+				// if( result && this.settings.limit!=result.limit )
+				// {
+				// 	this.settings.limit = result.limit;
+				// 	this.subscribe( this.applicationId, this.level );
+				// }
+			});
+
+		});
+	} });
+
+}
+
+@Component( {templateUrl: 'transact.html', styleUrls:["transact.css"]} )
+export class TransactDialog implements AfterViewInit
+{
+	constructor( public dialogRef:MatDialogRef<TransactDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private tws : TwsService, private dialog : MatDialog )
 	{
 		this.quantity = data.quantity || 100;
 		//this._submitting = false;
@@ -37,7 +70,9 @@ export class TransactDialog
 			this.stopLimit = this.stop+delta;
 		}
 	}
-
+	ngAfterViewInit():void
+	{
+	}
 	onCancelClick(): void
 	{
 	  this.dialogRef.close( null );
@@ -45,14 +80,31 @@ export class TransactDialog
 
 	onSubmitClick():void
 	{
-		this.twsService.placeOrder( this.data.tick.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: false}, this.stop, this.stopLimit ).subscribe2(
+		const subscription = this.tws.placeOrder( this.data.tick.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: true, whatIf: true, account: this.selectedAccount}, this.stop, this.stopLimit );
+		let initial:Results.IOpenOrder;
+		let shown = false;
+		subscription.subscribe2(
 		{
 			status: ( value:Results.IOrderStatus )=>{ console.log( `status='${value}'` ); },
-			open: ( value:Results.IOpenOrder )=>{ console.log( `open='${value}'` ); },
+			open: ( value:Results.IOpenOrder )=>
+			{
+				if( !initial && !value.state.equityWithLoanBefore )
+					initial = value;//1st one doesn't have margin.
+				else if( !shown )
+				{
+					shown = true;
+					this.dialogRef.close( null );
+					const dialogRef = this.dialog.open(ConfirmationDialog, {
+						width: '600px', autoFocus: false,
+						data: { transactData: this.data, subscription: subscription, order:value, stop: this.stop, stopLimit: this.stopLimit }
+					});
+				}
+			},
 			complete: ()=>{ console.log( `status=complete` ); },
 			error: (e)=>{ console.error( `error=${e.message}` ); }
 		});
 	}
+	get allAccounts(){ return this.data.allAccounts;}; //{ [k: string]: string };
 	get backgroundColor():string
 	{
 		const red = this.isBuy ? 0 : 255;
@@ -66,12 +118,29 @@ export class TransactDialog
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){this._isBuy=value ? "Buy" : "Sell";} _isBuy:string;
 	quantity:number;
 	limit:number;
+	get selectedAccount(){ return this.settingsContainer.value.selectedAccount; } set selectedAccount(v)
+	{
+		if( this.selectedAccount!=v )
+		{
+			this.settingsContainer.value.selectedAccount=v;
+			this.settingsContainer.save();
+		}
+	}
+	get settingsContainer(){ return this.data.settingsContainer;}
 	showStop:boolean;
-	stop:number;
-	stopLimit:number;
+	get stop(){return this._stop;} set stop(value){this._stop = Math.round(value*100)/100;} private _stop:number;
+	get stopLimit(){return this._stopLimit;} set stopLimit(value){this._stopLimit = Math.round(value*100)/100;} private _stopLimit:number;
 	tick:TickEx;
-	////option fields
 	//option:Option;
 
 	private _submitting=false;
+}
+
+class DialogSettings implements IAssignable<DialogSettings>
+{
+	assign( value:DialogSettings )
+	{
+		this.selectedAccount = value.selectedAccount;
+	}
+	selectedAccount:string;
 }

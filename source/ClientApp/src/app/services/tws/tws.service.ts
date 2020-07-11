@@ -120,7 +120,7 @@ class Connection
 			}
 			else if( message.orderStatus || message.openOrder )
 			{
-				var id = message.orderStatus ? message.orderStatus.id : message.openOrder.webId;
+				var id = message.orderStatus ? message.orderStatus.id : message.openOrder.order.id;
 				const original = this.orders.get( id );
 				if( original )
 				{
@@ -134,7 +134,7 @@ class Connection
 					if( message.orderStatus )
 					{
 						const display = original.setStatus( message.orderStatus );
-						if( display.length )
+						if( display )
 							this.cnsl.info( display );
 					}
 				}
@@ -233,6 +233,8 @@ class Connection
 				else
 					console.error( "unknown message id:  "+id );
 			}
+			else if( message.positionMulti )
+				this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
 			else if( message.flex )
 				this.handleReceive( message.flex, this.flexCallbacks, "flex" );
 			else if( message.stringResult )
@@ -351,14 +353,22 @@ class Connection
 
 	handlePositionMultiEnd( reqId:number )
 	{
-		var callback = this.accountUpdateMultiCallbacks.get( reqId );
+		let callback = this.accountUpdateMultiCallbacks.get( reqId );
 		if( callback )
 		{
 			if( callback[1] )
 				callback[1]( reqId );
 		}
 		else
-			console.error( "unknown accountUpdateCallbacks request:  "+reqId );
+		{
+			let callback2 = this.positionCallbacks.get( reqId );
+			if( callback2 )
+				callback2.next( null );
+			else if( callback2==null )
+				this.positionCallbacks.delete( reqId );
+			else
+				console.error( "unknown PositionMultiEnd request:  "+reqId );
+		}
 	}
 	complete( map, reqId:number )
 	{
@@ -406,6 +416,7 @@ class Connection
 	reqMktData( contractId:number, tickList:Requests.ETickList[], snapshot:boolean ):TickObservable
 	{
 		var id = this.getRequestId();
+		console.log( `(${id})RequestMrkDataSmart( ${contractId}, [${tickList.join()}])` );
 		var param = new Requests.RequestMrkDataSmart( {"id": id, "contractId": contractId, "tickList": tickList, "snapshot": snapshot } );
 		var msg = new Requests.RequestUnion(); msg.marketDataSmart = param;
 		this.send( msg );
@@ -460,7 +471,7 @@ class Connection
 	{
 		var callback = new Subject<Results.IContractDetails>();
 		var id = this.getRequestId();
-		//console.log( `reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}`)
+		console.log( `reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}`)
 		var param = new Requests.RequestContractDetails( {"id": id} ); param.contracts.push( contract );
 		var msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
 		this.contractCallbacks.set( id, callback );
@@ -526,6 +537,29 @@ class Connection
 		this.send( msg );
 		return callback;
 	}
+	reqPositions( accountNumber: string ):Subject<Results.IPositionMulti>
+	{
+		var id = this.getRequestId();
+		console.log( `(${id})reqPositions( '${accountNumber}' )` );
+		let callback = new Subject<Results.IPositionMulti>();
+		this.positionCallbacks.set( id, callback );
+		this.send( new Requests.RequestUnion({"requestPositions":{"id": id, "accountNumber": accountNumber}}) );
+		return callback;
+	}
+	cancelPositions( subscription: Observable<Results.IPositionMulti> ):void
+	{
+		let matched = [...this.positionCallbacks].find( ([key, val]) => val==subscription );
+		if( matched.length )
+		{
+			var id = matched[0];
+			console.log( `(${id})cancelPositions()` );
+			this.send( new Requests.RequestUnion({genericRequests:{"type": Requests.ERequests.CancelPositionsMulti, "ids": [id]}}) );
+			this.positionCallbacks.set( id, null );
+		}
+		else
+			console.error( "could not find position subscription." );
+	}
+
 	accountUpdateUnsubscribe( number, callback )
 	{
 		try
@@ -572,6 +606,7 @@ class Connection
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable
 	{
 		const id = this.getRequestId();
+		console.log( `(${id})placeOrder( ${contract.symbol}x${(order.isBuy ? 1 : -1)*order.quantity}@${order.limit} )` );
 		this.send( new Requests.RequestUnion({placeOrder: {"id":id, "contract": contract, "order": order, stop:stop, stopLimit:stopLimit}}) );
 
 		let callback = new OrderSubject();
@@ -618,6 +653,7 @@ class Connection
 	private accountUpdateMultiCallbacks = new Map<number, [AccountUpdateCallback, EndCallback]>();
 	private marketDataCallbacks = new Map<number, TickSubject>();
 	private historicalCallbacks = new Map<number, Subject<Bar>>();
+	private positionCallbacks = new Map<number,Subject<Results.IPositionMulti>>();
 	private fundamentalCallbacks = new Map<number, Subject<{ [k: string]: number }>>();
 	private contractCallbacks = new Map<number, Subject<Results.IContractDetails>>();
 	//private contractMultiCallbacks = new Map<number, Subject<Results.IContractDetails>>();
@@ -640,6 +676,8 @@ export class TwsService
 	reqContractDetails( contract:IB.IContract ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetails(contract); }
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetailsMulti(contractIds); }
 	reqAccountUpdates( accountNumber: string ):AccountUpdateType{ return this.connection.reqAccountUpdates( accountNumber ); }
+	reqPositions( accountNumber: string ):Observable<Results.IPositionMulti>{ return this.connection.reqPositions( accountNumber ); }
+	cancelPositions( subscription: Observable<Results.IPositionMulti> ):void{ return this.connection.cancelPositions( subscription ); }
 	accountUpdatesUnsubscribe( requests:Map<string,AccountUpdateType> ){ this.connection.accountUpdatesUnsubscribe(requests); };
 	accountUpdateUnsubscribe( accountId:string, request:AccountUpdateType ){ this.connection.accountUpdateUnsubscribe(accountId,request); };
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }

@@ -1,7 +1,5 @@
-<!--<h1>Snapshot</h1>
-<p>This displays a security Snapshot.</p>-->
-<mat-tab-group #symbolTabs [(selectedIndex)]="settings.selectedIndex">
-	<!-- (selectedIndexChange)="symbolIndexChanged($event)" -->
+<mat-tab-group #symbolTabs [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)">
+	<!-- [(selectedIndex)]="settings.selectedIndex" -->
 	<mat-tab *ngFor="let m of previousSymbols;">
 		<ng-template mat-tab-label>{{m}}</ng-template>
 		<ng-template matTabContent>

@@ -137,9 +137,12 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			this.tws.cancelMktData( cancelSubscriptions.values() );
 		for( let option of subscriptions )
 		{
-			var subscription = this.tws.reqMktData( option.contractId, [Requests.ETickList.PlPrice], false );
-			this.subscriptions.set( option.contractId, subscription );
-			subscription.subscribe2( option );
+			if( MarketUtilities.isMarketOpen2(option.contract.exchange, option.contract.securityType) )
+			{
+				var subscription = this.tws.reqMktData( option.contractId, [Requests.ETickList.PlPrice], false );
+				this.subscriptions.set( option.contractId, subscription );
+				subscription.subscribe2( option );
+			}
 			//Should be call to RequsetPrevOptionValues
 			// if( !MarketUtilities.isMarketOpen("", "OPT") )
 			// {

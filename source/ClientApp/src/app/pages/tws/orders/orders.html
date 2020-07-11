@@ -5,20 +5,24 @@
 		<mat-table style="display: inline-block;width:1200px" #mainTable matSort [dataSource]="data" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
 			<ng-container matColumnDef="symbol">
 				<mat-header-cell mat-sort-header class="symbolCell" *matHeaderCellDef> Symbol </mat-header-cell>
-				<mat-cell class="symbolCell" *matCellDef="let element"> {{element.symbol}} </mat-cell>
+				<mat-cell class="symbolCell" *matCellDef="let element"> {{element.contract.symbol}} </mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="id">
+				<!-- <mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef></mat-header-cell> -->
+				<!-- <mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.startTime==0 ? null : element.startTime | date: "MM/dd/yy HH:mm:ss"}} </mat-cell> -->
 			</ng-container>
 			<ng-container matColumnDef="shares">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Shares </mat-header-cell>
 				<mat-cell class="numberBCell" *matCellDef="let element">{{ (element.isBuy ? 1 : -1)*element.quantity | number:'1.0-0'}}</mat-cell>
 			</ng-container>
-			<ng-container matColumnDef="openTime">
+			<!-- <ng-container matColumnDef="openTime">
 				<mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef> Open </mat-header-cell>
 				<mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.startTime==0 ? null : element.startTime | date: "MM/dd/yy HH:mm:ss"}} </mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="closeTime">
 				<mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef> Close </mat-header-cell>
 				<mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.stopTime==0 ? null : element.stopTime | date: "HH:mm:ss"}} </mat-cell>
-			</ng-container>
+			</ng-container> -->
 			<ng-container matColumnDef="status">
 				<mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef> Status </mat-header-cell>
 				<mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.statusString}} </mat-cell>
@@ -39,10 +43,10 @@
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Last </mat-header-cell>
 				<mat-cell class="numberBCell" *matCellDef="let element">{{element.last | number:'1.2-2'}}</mat-cell>
 			</ng-container>
-			<ng-container matColumnDef="commissions">
+			<!-- <ng-container matColumnDef="commissions">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Commissions </mat-header-cell>
 				<mat-cell class="numberBCell" *matCellDef="let element">{{element.commission | number:'1.2-2'}}</mat-cell>
-			</ng-container>
+			</ng-container> -->
 			<ng-container matColumnDef="buttons" stickyEnd>
 				<mat-header-cell *matHeaderCellDef></mat-header-cell>
 				<mat-cell *matCellDef="let element"><button mat-icon-button (click)="cancel(element.id, $event)"><mat-icon>cancel</mat-icon></button></mat-cell>

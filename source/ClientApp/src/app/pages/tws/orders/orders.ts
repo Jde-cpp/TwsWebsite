@@ -5,8 +5,9 @@ import { IProfile } from 'src/app/services/profile/IProfile';
 import { TwsService } from 'src/app/services/tws/tws.service';
 import {TickObservable} from 'src/app/services/tws/ITickObserver'
 import { OrderObservable } from 'src/app/services/tws/IOrderObserver';
-
-//import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import {DateUtilities} from 		'src/app/utilities/dateUtilities'
+import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 import { Settings } from 'src/app/utilities/settings'
 import {DataSource,Order} from './DataSource'
 import { FormControl } from '@angular/forms';
@@ -58,45 +59,54 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 					if( found )
 						order.status = value;
 					return found
-
 				});
 			},
 			open: (value:Results.IOpenOrder)=>
 			{
-				orders.push( new Order(value) );
-				let subscription = this.tws.reqMktData( value.contract.id, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );
-				this.mktDataSubscriptions.set( value.contract.id, subscription );
-			/*	subscription.subscribe2(
+				let order = new Order( value );
+				this.tws.reqContractDetails( value.contract ).subscribe({ next: details=>
 				{
-					generic:( type:Results.ETickType, value:number )=>{ console.log( `(${holding.contract.symbol})onGenericTick( '${type.toString()}', '${value}')` ); },
-					price:( type:Results.ETickType, price:number, attributes:Results.ITickAttrib )=>
+					const isMarketOpen = MarketUtilities.isMarketOpen( details );
+					var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDay(new Date(), details.tradingHours[0]) );
+					this.tws.reqPreviousDay( [value.contract.id] ).subscribe(
 					{
-						if( price!=-1 )
+						next: ( bar:Results.IDaySummary ) =>
 						{
-							if( type==Results.ETickType.ClosePrice )
-								holding.current.last = price;
-							else if( type==Results.ETickType.BidPrice )
-								holding.current.bid = price;
-							else if( type==Results.ETickType.AskPrice )
-								holding.current.ask = price;
-							else
-								console.log( `(${holding.contract.symbol})onPriceTick( '${type.toString()}', '${price}') - not handled` );
-						}
-					},
-					size:( type:Results.ETickType, size:number )=>
+							if( isMarketOpen && bar.day>previousDay )
+							{
+								order.high = bar.high;
+								order.low = bar.low;
+								order.open = bar.open;
+							}
+							else if( isMarketOpen || bar.day==previousDay )
+								order.close = bar.close;
+							else if( bar.day>previousDay )
+							{
+								order.high = bar.high;//!isMarketOpen && day>previousDay
+								order.low = bar.low;
+
+								order.bid = bar.bid;
+								order.ask = bar.ask;
+								order.volume = ProtoUtilities.toNumber( bar.volume );
+								order.last = ProtoUtilities.toNumber( bar.close );
+							}
+						},
+						error: e=>{ console.error(e); }
+					});
+					if( isMarketOpen )
 					{
-						if( type==Results.ETickType.SHORTABLE_SHARES )
-							console.log( `(${holding.contract.symbol}) onSizeTick( '${type.toString()}', '${size}')` );
-						else if( type==Results.ETickType.Volume )
-							holding.volume = size;
-						else
-							console.log( `(${holding.contract.symbol})onSizeTick( '${type.toString()}', '${size}') - not handled` );
-					},
-					string:( type:Results.ETickType, value:string )=>{ /*holding.onStringTick(type, value);* / },
-					complete: ()=>{ console.log("reqMktData::complete") }
-				});*/
+						let subscription = this.tws.reqMktData( value.contract.id, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );
+						this.mktDataSubscriptions.set( value.contract.id, subscription );
+					}
+				}});
+				orders.push( order );
 			},
-			complete: ()=>{ this.data = new DataSource(this.settings.sort, orders); },
+			complete: ()=>
+			{
+				debugger;
+				console.log('complete2');
+				this.data = new DataSource(this.settings.sort, orders);
+			},
 			error:e=>{this.subscription=null;console.error(e); this.cnsle.error(e,null); }
 		});
 	}
@@ -124,7 +134,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 	get settings(){return this.profile.value; }
 	profile = new Settings<PageSettings>( PageSettings, "OrderComponent", this.profileService );
 	get sort():Sort{ return this.settings.sort; } set sort(value){this.settings.sort = value;}
-	displayedColumns:string[] = ["symbol","shares", "openTime", "closeTime", "status", "Limit", "bid", "ask", "last", "commissions", "buttons"];
+	displayedColumns:string[] = ["symbol","shares", "status", "Limit", "bid", "ask", "last", "buttons"];
 	subscription:OrderObservable;
 	mktDataSubscriptions = new Map<number,TickObservable>();
 }
@@ -132,5 +142,5 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 class PageSettings
 {
 	assign( value:PageSettings ){ this.sort = value.sort; }
-	sort:Sort = {active: "openTime", direction: "asc"};
+	sort:Sort = {active: "id", direction: "asc"};
 }

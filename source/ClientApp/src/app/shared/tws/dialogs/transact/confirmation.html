@@ -2,11 +2,40 @@
 <mat-dialog-content>
 	<fieldset>
 		<legend>Order Description</legend>
+		<div><span [class.confirmationBuy]="isBuy" [class.sell]="!isBuy">{{isBuy ? 'BUY' : 'SELL'}} {{order.quantity}}</span><span style="padding-left: 30px;">{{order.account}}</span></div>
+		<div style="display: flex;	justify-content: space-between;">
+			<span>Order Type {{orderType}}</span><span>Routing {{contract.exchange}}</span><span>Time in Force:  {{timeInForce}}</span>
+		</div>
+		<div style="display: flex;	justify-content: space-between;">
+			<span>Limit  {{order.limit | number:'1.2-2' }}</span>
+			<span *ngIf="this.data.stop">Stop  {{this.data.stop | number:'1.2-2' }}</span>
+			<span *ngIf="this.data.stopLimit">Stop Limit {{this.data.stopLimit | number:'1.2-2' }}</span>
+		</div>
 	</fieldset>
+	<div style="display: flex;">
+		<fieldset style="float: left;width: 25%;">
+			<legend>Amount {{contract.currency}}</legend>
+			<table>
+				<tr><td class="rowHeader">Amount</td><td class="number">{{order.quantity*order.limit | number:'1.0-0'}}</td></tr>
+				<tr><td class="rowHeader">Cmmssn</td><td class="number">{{state.minCommission| number:'1.2-2'}}...{{state.maxCommission| number:'1.2-2'}}</td></tr>
+				<tr><td class="rowHeader">Total</td><td class="number">≈{{order.quantity*order.limit+(state.minCommission+state.maxCommission)/2 | number:'1.0-0' }}</td></tr>
+			</table>
+		</fieldset>
+		<fieldset style="float: left;width: 63%;">
+			<legend>Margin Impact</legend>
+			<table>
+				<thead class="rowHeader"><tr style="padding:10px"><th></th><th>Current</th><th>Δ</th><th>Post</th></tr></thead>
+				<tr style="padding:10px"><td class="rowHeader">Equity</td><td class="number">{{state.equityWithLoanBefore | number:'1.0-0'}}</td><td class="number">{{state.equityWithLoanChange | number:'1.0-0'}}</td><td class="number">{{state.equityWithLoanAfter | number:'1.0-0'}}</td></tr>
+				<tr style="padding:10px"><td class="rowHeader">Initial</td><td class="number">{{state.initMarginBefore | number:'1.0-0'}}</td><td class="number">{{state.initMarginChange | number:'1.0-0'}}</td><td class="number">{{state.initMarginAfter | number:'1.0-0'}}</td></tr>
+				<tr style="padding:10px"><td class="rowHeader">Maintenance</td><td class="number">{{state.maintMarginBefore | number:'1.0-0'}}</td><td class="number">{{state.maintMarginChange | number:'1.0-0'}}</td><td class="number">{{state.maintMarginAfter | number:'1.0-0'}}</td></tr>
+				<tr style="padding:10px"><td class="rowHeader">Position</td><td class="number">{{position | number:'1.0-0'}}</td><td class="number">{{order.quantity | number:'1.0-0'}}</td><td class="number">{{position+order.quantity | number:'1.0-0'}}</td></tr>
+			</table>
+		</fieldset>
+	</div>
 </mat-dialog-content>
-<mat-dialog-actions style="flex: content; flex-direction: row;align-items: flex-start;display: flex;">
-	<span>
-		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="_submitting" (click)="_submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}}</button>
+<mat-dialog-actions>
+	<span style="flex: content; flex-direction: row;align-items: flex-end;display: flex;margin-left: auto;">
+		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="_submitting || position==null" (click)="_submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}}</button>
 		<button style="margin-left:50px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
 	</span>
 </mat-dialog-actions>

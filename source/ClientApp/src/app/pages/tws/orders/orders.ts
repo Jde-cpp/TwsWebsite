@@ -103,7 +103,6 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 			},
 			complete: ()=>
 			{
-				debugger;
 				console.log('complete2');
 				this.data = new DataSource(this.settings.sort, orders);
 			},

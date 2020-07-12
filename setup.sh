@@ -17,6 +17,7 @@ if [ $dotnet -eq 1 ]; then
 	cd ..;
 	rm -r -f TwsWebsite/;
 fi
+#npm i -g @angular/cli@latest
 ng new TwsWebsite --routing=false --style=scss;
 #chown -R $USER Website
 cd TwsWebsite;
@@ -91,6 +92,7 @@ else
 	cd $baseDir/baseline
 	cp -r . ../source/
 fi;
+npm install protobufjs --save;
 cd $clientDir
 	ln -s $marketProtoDir/ib.proto .;
 	ln -s $marketProtoDir/requests.proto .;
@@ -108,8 +110,7 @@ cd $clientDir
 
 
 npm install @types/long --save;
-npm install protobufjs --save;
-#npm install highcharts --save;
+npm install highcharts --save;
 npm install highcharts-angular
 ng add @angular/material;
 

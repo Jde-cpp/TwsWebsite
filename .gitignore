@@ -79,3 +79,6 @@ source/ClientApp/src/app/utilities/mathUtilities.ts
 source/ClientApp/src/app/utilities/settings.ts
 source/ClientApp/src/app/utilities/stl.ts
 source/ClientApp/src/app/utilities/ProgressObservable.ts
+source/ClientApp/src/app/utilities/protoUtilities.ts
+source/ClientApp/tsconfig.base.json
+source/ClientApp/.browserslistrc

@@ -28,12 +28,12 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	{}
 	ngOnInit()
 	{
-		this.pageSubscription = this.pageEvents.subscribe( {next: value=>{this.pageInfo=value;this.setPageContent();}} );
+		this._pageSubscription = this.pageEvents.subscribe( {next: value=>{this.pageInfo=value;this.setPageContent();}} );
 		this.run();
 	}
 	ngOnDestroy()
 	{
-		this.pageSubscription.unsubscribe();
+		this._pageSubscription.unsubscribe();
 		this.tws.cancelMktData( this.subscriptions.values() );
 	}
 	run():void
@@ -43,17 +43,18 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		if( this.options && this.options.length!=0 )
 			this.lengthChange.emit( 0 );
 		this.options = new Array<Option>();
+		const currentDate = MarketUtilities.currentTradingDay();
 		this.tws.optionSummary( this.contract.id, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike ).subscribe(
 		{
 			next: ( values:Results.IOptionValues ) =>
 			{
 				let index = 0;
 				const dayValue = values.day;
+				const setPrices = values.day==currentDate;
 				for( let day of values.optionDays )
 				{
 					for( let option of day.values )
 					{
-						//_contract:IB.IContract, option:Results.IOption, public expiration:number, public isCall:boolean/*, public underlying:TickEx*/
 						var optionContract = new IB.Contract( this.contract );
 						optionContract.localSymbol = null;
 						optionContract.expiration = day.expirationDays;
@@ -61,7 +62,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 						optionContract.right = day.isCall ? "CALL" : "PUT";
 						optionContract.strike = option.strike;
 						optionContract.id = option.id;
-						var value = new Option( optionContract, option );//, index++
+						var value = setPrices ? new Option( optionContract, option, option.bid, option.ask, option.last, option.volume ) : new Option( optionContract, option );//, index++
 						//value.oi = option.openInterest;
 						//value.oiChange = option.oiChange;
 						this.options.push( value );
@@ -111,14 +112,14 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	setPageContent()
 	{
 		this.pageContent = new Array<Option>();
-		let foundSelected = !this.selectedOption;
+		let foundSelected = !this._selectedOption;
 		const marketOpen = MarketUtilities.isMarketOpen2( "", "OPT" );
 		//for( var i=this.pageInfo.startIndex; i<Math.min(this.pageInfo.startIndex+this.pageInfo.pageSize, this.options.length); ++i )
 		let cancelSubscriptions = new Map<number,TickObservable>(); let subscriptions = new Array<Option>();
 		for( var i=0; i<this.options.length; ++i )
 		{
 			let option = this.options[i];
-			if( !foundSelected && option==this.selectedOption )
+			if( !foundSelected && option==this._selectedOption )
 				foundSelected = true;
 
 			const displayed = i>=this.pageInfo.startIndex && i<this.pageInfo.startIndex+this.pageInfo.pageSize;
@@ -166,7 +167,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			// }
 		}
 		if( !foundSelected )
-		    this.selectedOption = null;
+		this._selectedOption = null;
 		//if( this._table._data )
 		    this._table.renderRows();
 		//else
@@ -175,23 +176,23 @@ export class OptionTableComponent implements OnInit, OnDestroy
 
 	cellClick( row:Option )
 	{
-		this.isSingleClick = true;
+		this._isSingleClick = true;
 		setTimeout( ()=>
 		{
-			if( this.isSingleClick )
+			if( this._isSingleClick )
 			{
 				const index = 0;//+row.index;
-				this.selectedOption = this.selectedOption == row ? null : row;
-				this.selectionChange.emit( this.selectedOption );
+				this._selectedOption = this._selectedOption == row ? null : row;
+				this.selectionChange.emit( this._selectedOption );
 			}
 		},250);
 	}
 	cellDblClick( row:Option )
 	{
-		this.isSingleClick = false;
+		this._isSingleClick = false;
 		const index = 0;//+row.index;
-		if( this.selectedOption!=row )
-			this.selectedOption = row;
+		if( this._selectedOption!=row )
+		this._selectedOption = row;
 //		this.dialog.open( DetailsDialog, {width: '600px', data: row} );
 	}
 
@@ -214,8 +215,8 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	@Input() endExpiration:number;
 	@Input() startStrike:number;
 	@Input() endStrike:number;
-	@Input() pageEvents:Observable<IPageEvent>; private pageSubscription:Subscription;
-	private isSingleClick:boolean;
+	@Input() pageEvents:Observable<IPageEvent>; private _pageSubscription:Subscription;
+	private _isSingleClick:boolean;
 	@Output() lengthChange = new EventEmitter<number>();
 	@ViewChild('mainTable',{static:false}) _table:MatTable<Option>;
 
@@ -226,7 +227,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	pageContent: Option[]=[];
 	@Input() pageInfo:IPageEvent;
 //	value:number;
-	private selectedOption:Option|null=null;
+	private _selectedOption:Option|null=null;
 	@Output() selectionChange = new EventEmitter<Option>();
 	subscriptions = new Map<number,TickObservable>();
 }

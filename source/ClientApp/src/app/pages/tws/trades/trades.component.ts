@@ -7,6 +7,7 @@ import {DataSource} from './DataSource'
 import { FormControl } from '@angular/forms';
 import { ComponentPageTitle } from '../../material-site/page-title/page-title';
 import {IErrorService} from '../../../services/error/IErrorService'
+import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
 
 @Component( {selector: 'trades', styleUrls: ['trades.component.css'], templateUrl: './trades.component.html'} )
 export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
@@ -17,8 +18,10 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	ngOnInit()
 	{
 		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Trades" : "Trades";
-		this._end.setValue( MarketUtilities.previousTradingDay() );
-		this._start.setValue( this.end );
+		const today = DateUtilities.toDays( new Date() );
+		const currentTradingDay = MarketUtilities.currentTradingDay();
+		this.start = today>currentTradingDay ? currentTradingDay : MarketUtilities.previousTradingDay( today );
+		this.end = today==currentTradingDay ? currentTradingDay : this.start;
 	};
 
 	ngOnDestroy()
@@ -41,7 +44,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	load()
 	{
-		this.tws.flexExecutions( "act", this.start, this.end ).subscribe(
+		this.tws.flexExecutions( "act", DateUtilities.fromDays(this.start), DateUtilities.fromDays(this.end) ).subscribe(
 		{
 			next:	flex =>{ this.data = new DataSource( flex, this.settings.sort ); },
 			error:  e=>{console.error(e); this.cnsle.error(e,null); }
@@ -52,8 +55,8 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		this.data.sort( sort );
 		this.sort = sort;
 	}
-	get end():Date{ return new Date( this._end.value );} set end(value:Date){this._end.setValue(value);} _end = new FormControl();
-	get start():Date{ return this._start.value; } set start(value:Date){ this._start.setValue(value); } private _start = new FormControl();
+	get end():Day{ const time:Date = this._end.value; return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000));} set end(day:Day){ const time=DateUtilities.fromDays(day); this._end.setValue( new Date(time.getTime()+time.getTimezoneOffset()*60000)); } _end = new FormControl();
+	get start():Day{ const time:Date = this._start.value; return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000));} set start(day:Day){ const time=DateUtilities.fromDays(day); this._start.setValue( new Date(time.getTime()+time.getTimezoneOffset()*60000)); } _start = new FormControl();
 	private data:DataSource;
 	private static profileKey="TradeComponent";
 	settings:Settings={ sort:{active: "openTime", direction: "asc"} };

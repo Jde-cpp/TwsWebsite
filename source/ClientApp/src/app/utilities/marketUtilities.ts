@@ -1,4 +1,4 @@
-import { DateUtilities } from './dateUtilities';
+import { DateUtilities, Day } from './dateUtilities';
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
@@ -7,7 +7,7 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class MarketUtilities
 {
-	static isHoliday( value:Date )
+	static isDateHoliday( value:Date )
 	{
 		let isHoliday = [0,6].includes( value.getUTCDay() );
 		if( !isHoliday )
@@ -23,42 +23,91 @@ export class MarketUtilities
 		}
 		return isHoliday;
 	}
-	static previousTradingDay( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
+	static isHoliday( day:Day )
+	{
+		const mod = day%7;
+		return mod==2 || mod==3 || [18512,18592,18621].indexOf(day)!=-1;
+	}
+
+	static previousTradingDate( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
 	{
 		let copy = value ? new Date(value) : new Date();
 		if( tradingHours && copy.getTime()/1000<tradingHours.start )
 			copy.setDate( copy.getDate()-1 );
-		while( MarketUtilities.isHoliday(copy) )
+		while( MarketUtilities.isDateHoliday(copy) )
 			copy.setDate( copy.getDate()-1 );
 		do
 			copy.setDate( copy.getDate()-1 );
-		while( MarketUtilities.isHoliday(copy) );
+		while( MarketUtilities.isDateHoliday(copy) );
 		return DateUtilities.beginningOfDay( copy );
 	}
-	static nextTradingDay( value:Date|null=null ):Date
+	static previousTradingDay( reference?:Day, tradingHours?:Results.IContractHours ):Day
+	{
+		let day = 0;
+		if( tradingHours )
+			day = DateUtilities.toDays( this.previousTradingDate(reference ? DateUtilities.fromDays(reference) : new Date(), tradingHours) );
+		else
+		{
+			day = reference ?? DateUtilities.toDays( new Date() );
+			while( MarketUtilities.isHoliday(day) )
+				--day;
+			do
+				--day;
+			while( MarketUtilities.isHoliday(day) );
+
+		}
+		return day;
+	}
+
+	static nextTradingDate( value:Date|null=null ):Date
 	{
 		let copy = value ? new Date( value ) : new Date();
 		do
 			copy.setDate( copy.getDate()+1 );
-		while( MarketUtilities.isHoliday(copy) );
+		while( MarketUtilities.isDateHoliday(copy) );
 		return DateUtilities.beginningOfDay( copy );
 	}
-	static currentTradingDay( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
+	static nextTradingDay( value?:Day ):Day
 	{
-		const day = MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDay(value, tradingHours) );
+		let day = value ?? DateUtilities.toDays( new Date(value) );
+		do
+			++day;
+		while( MarketUtilities.isHoliday(day) );
 		return day;
 	}
+	static currentTradingDate( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
+	{
+		const day = MarketUtilities.nextTradingDate( MarketUtilities.previousTradingDate(value, tradingHours) );
+		return day;
+	}
+	static currentTradingDay( now?:Day, tradingHours?:Results.IContractHours ):Day
+	{
+		return MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDay(now, tradingHours) );
+	}
+
 	static isMarketOpen2( exchange:string, secType:string )
 	{
 		const etString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
 		const et = new Date( etString );
-		return !MarketUtilities.isHoliday( et )
+		return !MarketUtilities.isDateHoliday( et )
 			&& ( secType=="STK" ? et.getHours()>3 && et.getHours()<19 : (et.getHours()==9 && et.getMinutes()>29) || (et.getHours()>9 && et.getHours()<16) );
 	}
 	static isMarketOpen( details:Results.IContractDetails )
 	{
 		return MarketUtilities.contractHours(details.tradingHours).start*1000 < new Date().getTime();
 /*		var now = new Date().getTime()/1000;
+		for( let openClose of details.tradingHours )
+		{
+			if( openClose.end )
+				return now>openClose.start && now<openClose.end;
+		}
+		return false;*/
+	}
+
+	static isLiquid( details:Results.IContractDetails )
+	{
+		return MarketUtilities.contractHours(details.liquidHours).start*1000 < new Date().getTime();
+	/*		var now = new Date().getTime()/1000;
 		for( let openClose of details.tradingHours )
 		{
 			if( openClose.end )
@@ -134,7 +183,7 @@ export class MarketUtilities
 	{
 		const etString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
 		const et = new Date( etString );
-		return !MarketUtilities.isHoliday( et )
+		return !MarketUtilities.isDateHoliday( et )
 			&& secType=="STK" && et.getHours()>3 && ( et.getHours()<9 || (et.getHours()==9 && et.getMinutes()<30) );
 	}
 	static optionDisplayFromDays( expirationDays:number ):string
@@ -147,8 +196,8 @@ export class MarketUtilities
 		var result:string;
 		const month = expiration.toLocaleString( 'default', {month: 'short'} );
 		if( expiration.getTime()-now.getTime()<6*24*60*60*1000 )
-			result = "Friday";
-		else if( expiration.getDate()>14 && expiration.getDate()<22 )
+			result = DateUtilities.dayOfWeek( expiration );
+		else if( expiration.getDate()>14 && expiration.getDate()<22 && expiration.getUTCDay()==5 )
 		{
 			if( expiration.getFullYear()==now.getFullYear() || (expiration.getFullYear()==now.getFullYear()+1 && expiration.getMonth()<now.getMonth()) )
 				result = month;

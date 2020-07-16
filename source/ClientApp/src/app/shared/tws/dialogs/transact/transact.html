@@ -24,16 +24,21 @@
 		<span>{{askAmount}}</span>
 		<span>{{askSize}}</span>
 	</div>
-	<quantity step="100" [value]="quantity" (valueChange)="quantity=$event"></quantity>
+	<span>
+		<quantity step="100" [value]="quantity" (valueChange)="quantity=$event"></quantity>
+	</span>
 	<mat-form-field>
 		<input matInput placeholder="Limit" class="number" type="number" step="0.01" [ngModel]="limit" (ngModelChange)="limit=$event">
 	</mat-form-field>
-	 <mat-form-field *ngIf="showStop" >
+	<mat-form-field *ngIf="showStop" >
 		<input matInput placeholder="Stop" class="number" type="number" step="0.01" [ngModel]="stop" (ngModelChange)="stop=$event">
-	 </mat-form-field>
-	 <mat-form-field *ngIf="showStop">
+	</mat-form-field>
+	<mat-form-field *ngIf="showStop">
 		<input matInput placeholder="Stop-Limit" class="number" type="number" step="0.01" [ngModel]="stopLimit" (ngModelChange)="stopLimit=$event">
-	 </mat-form-field>
+	</mat-form-field>
+	<div>
+		<mat-checkbox *ngIf="!isLiquid" class="example-margin" [(ngModel)]="outsideRth">Outside RTH</mat-checkbox>
+	</div>
 </mat-dialog-content>
 <mat-dialog-actions style="flex: content; flex-direction: row;align-items: flex-start;display: flex;">
 	<button mat-raised-button [class.buy]="isBuy" [class.sell]="!isBuy" style="margin-left:10px;margin-right:20px" (click)="isBuy=!isBuy">{{isBuy ? "Buy" : "Sell"}}</button>

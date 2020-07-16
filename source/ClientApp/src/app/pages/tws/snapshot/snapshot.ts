@@ -13,7 +13,7 @@ import { NgAnalyzeModulesHost } from '@angular/compiler';
 //import * as Highcharts from 'highcharts';
 
 
-class PageSettings implements IAssignable<PageSettings>
+export class PageSettings implements IAssignable<PageSettings>
 {
 	assign( value:PageSettings )
 	{
@@ -24,6 +24,7 @@ class PageSettings implements IAssignable<PageSettings>
 	}
 	previousSymbols:string[]=["SPY"];
 	selectedIndex:number=0;
+	delay:number=0;
 }
 
 @Component( {selector: 'snapshot', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html', styles: [`:host {'class': 'mat-drawer-container'}`]} )

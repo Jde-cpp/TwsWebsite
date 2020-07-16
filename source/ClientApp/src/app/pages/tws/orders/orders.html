@@ -11,9 +11,21 @@
 				<!-- <mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef></mat-header-cell> -->
 				<!-- <mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.startTime==0 ? null : element.startTime | date: "MM/dd/yy HH:mm:ss"}} </mat-cell> -->
 			</ng-container>
+			<ng-container matColumnDef="status">
+				<mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef> Status </mat-header-cell>
+				<mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.statusString}} </mat-cell>
+			</ng-container>
 			<ng-container matColumnDef="shares">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Shares </mat-header-cell>
-				<mat-cell class="numberBCell" *matCellDef="let element">{{ (element.isBuy ? 1 : -1)*element.quantity | number:'1.0-0'}}</mat-cell>
+				<!-- <mat-cell class="numberBCell" *matCellDef="let element">{{ quantityDisplay | number:'1.0-0'}}</mat-cell> -->
+				<mat-cell class="numberBCell" *matCellDef="let element">
+					<!-- <div class="cell-wrapper"> -->
+						<quantity style="display: flex;width: 100%;" *ngIf="isEditing( element, 'shares' )" placeholder="{{element.quantityDisplay}}" step="100" [value]="element.quantityNew || element.quantityDisplay" (valueChange)="element.quantityNew=$event" (focusChange)="focusChange($event, element, 'shares')" ></quantity>
+					  <!-- <quantity *ngIf="rowEditable(row)"></quantity> -->
+						<!-- type="text" [value]="row.name" (keydown)="checkEnterKey($event, row.id)" -->
+						<span *ngIf="!isEditing( element, 'shares' )" (click)="edit( element, 'shares' )" class="cell-data">{{ element.quantityDisplay | number:'1.0-0'}}</span>
+					<!-- </div> -->
+				</mat-cell>
 			</ng-container>
 			<!-- <ng-container matColumnDef="openTime">
 				<mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef> Open </mat-header-cell>
@@ -23,13 +35,21 @@
 				<mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef> Close </mat-header-cell>
 				<mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.stopTime==0 ? null : element.stopTime | date: "HH:mm:ss"}} </mat-cell>
 			</ng-container> -->
-			<ng-container matColumnDef="status">
-				<mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef> Status </mat-header-cell>
-				<mat-cell class="dateTimeBCell" *matCellDef="let element"> {{element.statusString}} </mat-cell>
-			</ng-container>
 			<ng-container matColumnDef="Limit">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> limit </mat-header-cell>
-				<mat-cell class="numberBCell" *matCellDef="let element">{{element.limit | number:'1.2-2'}}</mat-cell>
+				<!-- <mat-cell class="numberBCell" *matCellDef="let element">{{element.limit | number:'1.2-2'}}</mat-cell> -->
+				<mat-cell class="numberBCell" *matCellDef="let element">
+					<!-- <div> -->
+						<quantity style="display: flex;width: 100%;" *ngIf="isEditing( element, 'limit' )" placeholder="{{element.limit}}" step=".01" [value]="element.limitNew || element.limit" (valueChange)="element.limitNew=$event" (focusChange)="focusChange($event, element, 'limit')" ></quantity>
+					<!-- <quantity *ngIf="rowEditable(row)"></quantity> -->
+						<!-- type="text" [value]="row.name" (keydown)="checkEnterKey($event, row.id)" -->
+						<span *ngIf="!isEditing( element, 'limit' )" (click)="edit( element, 'limit' )" class="cell-data">{{element.limit | number:'1.2-2'}}</span>
+					<!-- </div> -->
+				</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="bidSize">
+				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Bid SZ </mat-header-cell>
+				<mat-cell class="numberBCell" *matCellDef="let element">{{element.bidSize | number:'1.0-0'}}</mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="bid">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Bid </mat-header-cell>
@@ -38,6 +58,10 @@
 			<ng-container matColumnDef="ask">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Ask </mat-header-cell>
 				<mat-cell class="numberBCell" *matCellDef="let element">{{element.ask | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="askSize">
+				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Ask SZ </mat-header-cell>
+				<mat-cell class="numberBCell" *matCellDef="let element">{{element.askSize | number:'1.0-0'}}</mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="last">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Last </mat-header-cell>
@@ -49,7 +73,11 @@
 			</ng-container> -->
 			<ng-container matColumnDef="buttons" stickyEnd>
 				<mat-header-cell *matHeaderCellDef></mat-header-cell>
-				<mat-cell *matCellDef="let element"><button mat-icon-button (click)="cancel(element.id, $event)"><mat-icon>cancel</mat-icon></button></mat-cell>
+				<mat-cell *matCellDef="let element">
+					<button mat-icon-button *ngIf="hasChanges(element)" (click)="submit(element)"><mat-icon>publish</mat-icon></button>
+					<button mat-icon-button *ngIf="hasChanges(element)" (click)="undo(element)"><mat-icon>undo</mat-icon></button>
+					<button mat-icon-button (click)="cancel(element.id)"><mat-icon>cancel</mat-icon></button>
+				</mat-cell>
 			</ng-container>
 			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
 			<mat-row mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>

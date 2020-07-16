@@ -41,13 +41,14 @@ export class ConfirmationDialog
 	}
 	onCancelClick(): void
 	{
-	  //this.dialogRef.close( null );
-	  console.log( JSON.stringify(this.order) );
-	  console.log( JSON.stringify(this.state) );
+	  this.dialogRef.close( null );
+	  //console.log( JSON.stringify(this.order) );
+	  //console.log( JSON.stringify(this.state) );
 	}
 	onSubmitClick()
 	{
 		this.order.whatIf = false;
+		this.order.id = 0;
 		const subscription = this.tws.placeOrder( this.contract, this.order, this.data.stop, this.data.stopLimit );
 		this.dialogRef.close( null );
 	}

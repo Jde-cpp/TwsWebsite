@@ -16,7 +16,7 @@
 					<button mat-icon-button primary><mat-icon class="iconButton" (click)="load()">cloud_download</mat-icon></button>
 				</div>
 				<div>
-					<mat-checkbox [(ngModel)]="groupBySymbol">Group by Symbol</mat-checkbox>
+					<!-- <mat-checkbox [(ngModel)]="groupBySymbol">Group by Symbol</mat-checkbox> -->
 				</div>
 			</div>
 			<tws-summary *ngIf="data" [data]="data" style="margin-left:10px"></tws-summary>
@@ -53,7 +53,7 @@
 			</ng-container>
 			<ng-container matColumnDef="return_">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Return </mat-header-cell>
-				<mat-cell class="numberBCell" *matCellDef="let element">{{(element.return_-1)*100 | number:'1.2-2'}}</mat-cell>
+				<mat-cell class="numberBCell" *matCellDef="let element">{{element.return_==null ? null : (element.return_-1)*100 | number:'1.2-2'}}</mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="openLongPrediction">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> OLong </mat-header-cell>

@@ -14,13 +14,13 @@ import { attr } from 'highcharts';
 /*TickEx+option*/
 export class Option extends TickEx
 {
-	constructor( _contract:IB.IContract, public option:Results.IOption ) //, public index:number
+	constructor( _contract:IB.IContract, public option:Results.IOption, bid?, ask?, last?, volume? ) //, public index:number
 	{
 		super( _contract, null );
-		this.ask = option.ask;
-		this.bid = option.bid;
-		this.last = option.last;
-		this.volume = option.volume;
+		this.ask = ask;
+		this.bid = bid;
+		this.last = last;
+		this.volume = volume;
 	}
 	price( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
 	{

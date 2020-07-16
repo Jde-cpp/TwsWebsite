@@ -107,7 +107,7 @@ export class OptionTabComponent implements OnInit, OnDestroy
 					error:  e=>{ console.error(e); this.cnsl.error(`Could not retrieve Options '${e.message}'.`, e); }
 				} );
 			},
-			error:  e=>{ console.error(e); }
+			error:  e=>{ debugger;console.error(e); }
 		} );
 	}
 	changeType = (event:MatRadioChange):void=>

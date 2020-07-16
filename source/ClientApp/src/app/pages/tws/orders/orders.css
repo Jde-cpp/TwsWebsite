@@ -22,7 +22,16 @@ table
 	justify-content: flex-end;
 }
 
+.numberBCell
+{
+	padding-right:10px;
+	justify-content: flex-end;
+}
 .symbolField
 {
 	flex: 0 0 75px;
+}
+.numberHCell
+{
+	justify-content: center
 }

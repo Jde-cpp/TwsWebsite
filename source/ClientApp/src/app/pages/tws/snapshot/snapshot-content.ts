@@ -5,8 +5,9 @@ import {MatTabChangeEvent} from '@angular/material/tabs';
 import { Subject } from 'rxjs';
 import theme from 'highcharts/themes/dark-unica';
 import * as Highcharts from 'highcharts/highstock';
-
+import {ConfigurationData,ConfigurationDialog} from './configuration'
 import {Fundamentals } from './fundamentals'
+import {PageSettings} from './snapshot'
 import { TransactDoModal } from '../../../shared/tws/dialogs/transact/transact'
 import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
 
@@ -28,7 +29,7 @@ import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
-class SymbolSettings implements IAssignable<SymbolSettings>
+export class SymbolSettings implements IAssignable<SymbolSettings>
 {
 	assign( value:SymbolSettings )
 	{
@@ -79,7 +80,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	onConfigurationClick()
 	{
-		//TODO dialog
+		var data:ConfigurationData = { symbolSettings: this.settingsSymbolContainer, pageSettings: this.pageSettings }
+		const dialogRef = this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
 	}
 	onContractDetails = ( details: Results.IContractDetails ):void =>
 	{
@@ -98,7 +100,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		if( this.symbol=="SPY" )//https://www.wsj.com/market-data/quotes/etf/US/ARCX/SPY
 			this.setShortInterest( 193700000, new Date(2020,6,30) );
 		*/
-		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDay(now, details.tradingHours[0]) );
+		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDate(now, details.tradingHours[0]) );
 		this.tws.reqPreviousDay( [this.contract.id] ).subscribe(
 		{
 			next: ( bar:Results.IDaySummary ) =>
@@ -201,8 +203,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	showChart()
 	{
 		let tws = this.tws, cnsle = this.cnsle, contract = this.contract, dayBars = [];
-		let endTime = DateUtilities.endOfDay( MarketUtilities.currentTradingDay( new Date(), MarketUtilities.contractHours(this.details.tradingHours)) );
-		tws.reqHistoricalData( contract, DateUtilities.endOfDay(MarketUtilities.previousTradingDay()), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).subscribe(
+		let endTime = DateUtilities.endOfDay( MarketUtilities.currentTradingDate( new Date(), MarketUtilities.contractHours(this.details.tradingHours)) );
+		tws.reqHistoricalData( contract, DateUtilities.endOfDay(MarketUtilities.previousTradingDate()), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).subscribe(
 		{
 			next: ( bar:Bar ) =>
 			{
@@ -235,7 +237,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	showChart2( bars, statResult:StatResult )
 	{
 		const tradingHours = MarketUtilities.contractHours( this.details.tradingHours ), now = new Date();
-		const currentDate = MarketUtilities.currentTradingDay( now, tradingHours );
+		const currentDate = MarketUtilities.currentTradingDate( now, tradingHours );
 		//console.log( currentDate );
 		//var offset = MarketUtilities.getTimezoneOffset( this.contract.primaryExchange );
 		const range=23400000/*6.5 hours*/, regularEnd = new Date(currentDate);
@@ -364,6 +366,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
 	settingsSymbolContainer:Settings<SymbolSettings>;
 	get settingsSymbol():SymbolSettings{ return this.settingsSymbolContainer.value; }
+	@Input() pageSettings:Settings<PageSettings>;
 	@Input() set symbol(value){ this._symbol=value; } get symbol():string{ return this.contract ? this.contract.symbol : ''; } private _symbol;
 	@Output() symbolEvent = new EventEmitter<string>();
 	subscription:TickObservable;

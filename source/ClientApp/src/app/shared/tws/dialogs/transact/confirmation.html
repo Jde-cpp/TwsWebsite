@@ -2,7 +2,11 @@
 <mat-dialog-content>
 	<fieldset>
 		<legend>Order Description</legend>
-		<div><span [class.confirmationBuy]="isBuy" [class.sell]="!isBuy">{{isBuy ? 'BUY' : 'SELL'}} {{order.quantity}}</span><span style="padding-left: 30px;">{{order.account}}</span></div>
+		<div>
+			<span [class.confirmationBuy]="isBuy" [class.sell]="!isBuy">{{isBuy ? 'BUY' : 'SELL'}} {{order.quantity}}</span>
+			<span style="padding-left: 30px;">{{order.account}}</span>
+			<span style="padding-left: 30px;" *ngIf="this.order.outsideRth">Outside Regular Trading Hours:  true</span>
+		</div>
 		<div style="display: flex;	justify-content: space-between;">
 			<span>Order Type {{orderType}}</span><span>Routing {{contract.exchange}}</span><span>Time in Force:  {{timeInForce}}</span>
 		</div>

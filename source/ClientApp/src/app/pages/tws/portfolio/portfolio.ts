@@ -153,8 +153,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 					this.mktDataSubscriptions.set( contractId, subscription );
 					subscription.subscribe2( holding );
 				}
-				const current = MarketUtilities.previousTradingDay();
-				var day = DateUtilities.toDays( current );
+				const day = MarketUtilities.previousTradingDay();
 				this.loadPreviousDay( contract, isMarketOpen, holding, day );
 			}
 		}

@@ -8,22 +8,25 @@ import {TickEx} from 'src/app/services/tws/Tick'
 
 export class Order extends TickEx
 {
-	constructor( public order:Results.IOpenOrder )
+	constructor( public openOrder:Results.IOpenOrder )
 	{
-		super( order.contract, null );
+		super( openOrder.contract, null );
 	}
-	get id(){ return this.order.order.id; }
-	get commission(){ return this.order.state.commission; }
-	get quantity(){ return this.order.order.quantity; }
+	get id(){ return this.openOrder.order.id; }
+	get commission(){ return this.openOrder.state.commission; }
+	get quantity(){ return this.openOrder.order.quantity; }
+	get quantityDisplay(){ return (this.isBuy ? 1 : -1)*this.quantity; }
+	set quantityNew(value){ this.#quantityNew = this.quantityDisplay==value ? null : value; } get quantityNew(){return this.#quantityNew;} #quantityNew:number|null=null;
 	//get ask(){ return this.tick ? this.tick.ask : null; }
 	//get bid(){ return this.tick ? this.tick.bid : null; }
-	//get symbol(){ return this.order.contract.symbol; }
-	get isBuy(){ return this.order.order.isBuy; }
+	//get symbol(){ return this.openOrder.contract.symbol; }
+	get isBuy(){ return this.openOrder.order.isBuy; }
 	//get last(){ return this.tick ? this.tick.price : null; }
-	get limit(){ return this.order.order.limit; }
-	get statusString(){ return this.order.state.status; }
-	//get startTime(){ return this.order.order.activeStartTime; }
-	//get stopTime(){ return this.order.order.activeStopTime; }
+	get limit(){ return this.openOrder.order.limit; }
+	set limitNew(value){ this.#limitNew = this.quantityDisplay==value ? null : value; } get limitNew(){return this.#limitNew;} #limitNew:number|null=null;
+	get statusString(){ return this.openOrder.state.status; }
+	//get startTime(){ return this.openOrder.order.activeStartTime; }
+	//get stopTime(){ return this.openOrder.order.activeStopTime; }
 
 	status:Results.IOrderStatus;
 }

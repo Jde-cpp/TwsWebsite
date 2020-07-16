@@ -1,14 +1,5 @@
 #!/bin/bash
-dotnet=${1:-0}
-link=${2:-1}
-#from TwsWebsite
-baseDir=`pwd`;
-clientDir=$baseDir/source/ClientApp;
-appDir=$clientDir/src/app;
-materialDir=$(dirname $(readlink -e $baseDir/../MaterialSite/source/projects/material-site/src))/src;
-frameworkDir=$(dirname $(readlink -e $baseDir/../WebFramework/source/ClientApp/src/app))/app;
-marketProtoDir=$(dirname $(readlink -e $baseDir/../../MarketLibrary/source/types/proto))/proto;
-source $baseDir/../WebFramework/common.sh
+source ./env.sh;
 
 if [ $dotnet -eq 1 ]; then
 	dotnet new angular -o TwsWebsite;
@@ -93,21 +84,7 @@ else
 	cp -r . ../source/
 fi;
 npm install protobufjs --save;
-cd $clientDir
-	ln -s $marketProtoDir/ib.proto .;
-	ln -s $marketProtoDir/requests.proto .;
-	ln -s $marketProtoDir/results.proto .;
-	npx pbjs -r ib_root -t static-module -w es6 -o src/app/proto/ib.js ib.proto & npx pbts -o src/app/proto/ib.d.ts src/app/proto/ib.js
-	npx pbjs -r ib_root -t static-module -w es6 -o src/app/proto/ib.js ib.proto & npx pbts -o src/app/proto/ib.d.ts src/app/proto/ib.js
-	npx pbjs -r request_root -t static-module -w es6 -o src/app/proto/requests.js requests.proto & npx pbts -o src/app/proto/requests.d.ts src/app/proto/requests.js;
-	npx pbjs -r request_root -t static-module -w es6 -o src/app/proto/requests.js requests.proto & npx pbts -o src/app/proto/requests.d.ts src/app/proto/requests.js;
-	npx pbjs -r result_root -t static-module -w es6 -o src/app/proto/results.js results.proto & npx pbts -o src/app/proto/results.d.ts src/app/proto/results.js;
-	npx pbjs -r result_root -t static-module -w es6 -o src/app/proto/results.js results.proto & npx pbts -o src/app/proto/results.d.ts src/app/proto/results.js;
-	rm ib.proto;
-	rm requests.proto;
-	rm results.proto;
-
-
+source ./proto.sh;
 
 npm install @types/long --save;
 npm install highcharts --save;

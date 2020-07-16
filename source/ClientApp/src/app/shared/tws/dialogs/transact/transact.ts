@@ -9,6 +9,7 @@ import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
+import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 
 export class Data
 {
@@ -63,6 +64,7 @@ export class TransactDialog implements AfterViewInit
 			this.tick = data.tick;
 			this.limit = data.isBuy ? data.tick.bid : data.tick.ask;
 			this.details = data.details;
+			this.isLiquid = MarketUtilities.isLiquid( this.details );
 			if( this.limit==-1 )
 				this.limit = data.tick.last;
 			const delta = Math.round( (this.limit *.01)*100 )/100 * (data.isBuy ? -1 : 1);
@@ -80,7 +82,7 @@ export class TransactDialog implements AfterViewInit
 
 	onSubmitClick():void
 	{
-		const subscription = this.tws.placeOrder( this.data.tick.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: true, whatIf: true, account: this.selectedAccount}, this.stop, this.stopLimit );
+		const subscription = this.tws.placeOrder( this.data.tick.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: true, whatIf: true, account: this.selectedAccount, usePriceMngmntAlgrthm: 1, outsideRth: this.outsideRth}, this.stop, this.stopLimit );
 		let initial:Results.IOpenOrder;
 		let shown = false;
 		subscription.subscribe2(
@@ -101,7 +103,7 @@ export class TransactDialog implements AfterViewInit
 				}
 			},
 			complete: ()=>{ console.log( `status=complete` ); },
-			error: (e)=>{ console.error( `error=${e.message}` ); }
+			error: (e)=>{ debugger; console.error( `error=${e.message}` ); }
 		});
 	}
 	get allAccounts(){ return this.data.allAccounts;}; //{ [k: string]: string };
@@ -114,8 +116,10 @@ export class TransactDialog implements AfterViewInit
 	}
 	get description(){ return /*this.option ? this.option.description :*/ `${this.details.contract.symbol} - ${this.details.longName}`; }
 	details:Results.IContractDetails;
-	isBuy2:number=1;
+	//isBuy2:number=1;
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){this._isBuy=value ? "Buy" : "Sell";} _isBuy:string;
+	isLiquid:boolean;
+	outsideRth:boolean=false;
 	quantity:number;
 	limit:number;
 	get selectedAccount(){ return this.settingsContainer.value.selectedAccount; } set selectedAccount(v)

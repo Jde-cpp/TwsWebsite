@@ -1,10 +1,13 @@
 import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
+import { Subject } from 'rxjs';
+
+import {IData} from 'src/app/shared/tws/summary/summary'
+import {ITradeCommon} from 'src/app/services/tws/ExecutionObserver'
+
+import Jde from 'src/app/utilities/mathUtilities'
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { Subject } from 'rxjs';
-import {IData} from 'src/app/shared/tws/summary/summary'
-import Jde from 'src/app/utilities/mathUtilities'
 
 export class Trade
 {
@@ -17,7 +20,7 @@ export class Trade
 		this.price = params.price ? params.price : 0;
 		this.commission = params.commission ? params.commission : 0;
 	}
-	static fromTws( tws:Results.ITrade ):Trade{ return new Trade( {id:tws.id, orderId:tws.orderId,date:new Date(tws.date*1000),quantity:tws.quantity,price:tws.price,commission:tws.commission} ); }
+	static fromTws( tws:Results.ITrade ):Trade{ return new Trade( {id:tws.id, orderId:tws.orderId,date:new Date(tws.time*1000),quantity:tws.shares,price:tws.price,commission:tws.commission} ); }
 	id: number;
 	orderId:number;
 	date: Date;
@@ -36,18 +39,18 @@ export class TradeResult
 	{
 		let remainder:Trade|null = null;
 		if( Math.abs(this.offsetShares)==Math.abs(this.shares) )
-			console.error( `shares=${this.shares}, adding offset ${offset.quantity}` )
-		if( offset.quantity>0==this.first.quantity>0 )
+			console.error( `shares=${this.shares}, adding offset ${offset.shares}` )
+		if( offset.shares>0==this.first.quantity>0 )
 			this.openTrades.push( Trade.fromTws(offset) );
 		else
 		{
 			let trade = Trade.fromTws( offset );
-			var remainingQuantity = Math.abs(this.shares)-Math.abs(this.offsetShares+offset.quantity);
+			var remainingQuantity = Math.abs(this.shares)-Math.abs(this.offsetShares+offset.shares);
 			if( remainingQuantity<0 )
 			{
 				trade.quantity-=remainingQuantity;
 				remainder = new Trade( trade );
-				remainder.quantity = (offset.quantity>0 ? 1 : -1)*remainingQuantity;
+				remainder.quantity = (offset.shares>0 ? 1 : -1)*remainingQuantity;
 				console.trace( "check this calc" );
 			}
 			if( !this.offsetTrades )
@@ -86,16 +89,16 @@ export class TradeResult
 
 export class DataSource implements IData
 {
-	constructor( flex:Results.Flex, sortOptions:Sort )
+	constructor( flex:Results.Flex, executions:Results.IExecution[], sortOptions:Sort )
 	{
 		var contractTrades = new Map<number,TradeResult>();
 		let proceeds = 0; let cost = 0;
-		for( let trade of flex.trades )
+		let add = ( trade:ITradeCommon )=>
 		{
-			const contractId = trade.contractId;
+			const contractId = trade.contract.id;
 			let open = contractTrades.get( contractId );
 			if( !open )
-				contractTrades.set( contractId, new TradeResult(trade.symbol, Trade.fromTws(trade)) );
+				contractTrades.set( contractId, new TradeResult(trade.contract.symbol, Trade.fromTws(trade)) );
 			else
 			{
 				let remainder = open.apply( trade );
@@ -115,12 +118,17 @@ export class DataSource implements IData
 						this.negativeGain+=-open.gain;
 					}
 					if( remainder )
-						contractTrades.set( contractId, new TradeResult(trade.symbol, remainder) );
+						contractTrades.set( contractId, new TradeResult(trade.contract.symbol, remainder) );
 					else
 						contractTrades.delete( contractId );
 				}
 			}
-		}
+		};
+
+		for( const trade of executions )
+			add( <ITradeCommon>trade );
+		for( const trade of flex.trades )
+			add( <ITradeCommon>trade );
 		for( let [contractId,result] of contractTrades )
 			this.values.push( result );
 

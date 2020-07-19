@@ -12,6 +12,7 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 import { IPageEvent } from 'src/app/shared/framework/paginator/paginator'
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import { DateUtilities } from 'src/app/utilities/dateUtilities';
+import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
@@ -50,7 +51,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			{
 				let index = 0;
 				const dayValue = values.day;
-				const setPrices = values.day==currentDate;
+				this.setPrices = values.day==currentDate;
 				for( let day of values.optionDays )
 				{
 					for( let option of day.values )
@@ -62,7 +63,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 						optionContract.right = day.isCall ? "CALL" : "PUT";
 						optionContract.strike = option.strike;
 						optionContract.id = option.id;
-						var value = setPrices ? new Option( optionContract, option, option.bid, option.ask, option.last, option.volume ) : new Option( optionContract, option );//, index++
+						var value = this.setPrices ? new Option( optionContract, option, option.bid, option.ask, option.last, option.volume ) : new Option( optionContract, option );//, index++
 						//value.oi = option.openInterest;
 						//value.oiChange = option.oiChange;
 						this.options.push( value );
@@ -143,6 +144,28 @@ export class OptionTableComponent implements OnInit, OnDestroy
 				var subscription = this.tws.reqMktData( option.contractId, [Requests.ETickList.PlPrice], false );
 				this.subscriptions.set( option.contractId, subscription );
 				subscription.subscribe2( option );
+			}
+			else if( !this.setPrices )
+			{
+				this.tws.reqPreviousDay( [option.contractId] ).subscribe(
+				{
+					next: ( bar:Results.IDaySummary ) =>
+					{
+						option.high = bar.high;//!isMarketOpen && day>previousDay
+						option.low = bar.low;
+
+						option.bid = bar.bid;
+						option.ask = bar.ask;
+						option.volume = ProtoUtilities.toNumber( bar.volume );
+						option.last = ProtoUtilities.toNumber( bar.close );
+					},
+					complete:()=>
+					{
+						if( !tick.close )
+							console.log( `No previous day close for '${details.contract.symbol}'` );
+					},
+					error: e=>{ if( e.code!=162 ) console.error( e ); }
+				});
 			}
 			//Should be call to RequsetPrevOptionValues
 			// if( !MarketUtilities.isMarketOpen("", "OPT") )
@@ -229,5 +252,6 @@ export class OptionTableComponent implements OnInit, OnDestroy
 //	value:number;
 	private _selectedOption:Option|null=null;
 	@Output() selectionChange = new EventEmitter<Option>();
+	setPrices = false;
 	subscriptions = new Map<number,TickObservable>();
 }

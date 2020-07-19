@@ -50,6 +50,8 @@ cd ..;moveToDir shared;
 cd $appDir/shared;
 	if [ $link -eq 1 ]; then
 		moveToDir framework;
+		addHardDir $frameworkDir/shared/framework date-range
+		addHardDir $frameworkDir/shared/framework link-select
 		addHardDir $frameworkDir/shared/framework paginator
 		addHardDir $frameworkDir/shared/framework severity-picker
 	else
@@ -60,6 +62,7 @@ cd $appDir;moveToDir services;
 	if [ $link -eq 1 ]; then addHardDir $frameworkDir/services error; else cp $frameworkDir/services/error .; fi;
 
 cd $appDir; moveToDir utilities;
+	addHard $frameworkDir/utilities collections.ts;
 	addHard $frameworkDir/utilities dateUtilities.ts;
 	addHard $frameworkDir/utilities mathUtilities.ts;
 	addHard $frameworkDir/utilities ProgressObservable.ts;

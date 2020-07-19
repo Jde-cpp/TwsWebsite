@@ -1,8 +1,0 @@
-<mat-chip-list *ngIf="!isSelect" >
-	<mat-chip *ngFor="let option of options" (click)="onSelectionChange(option.value)" [selected]="level==option.value">{{option.name}}</mat-chip>
-</mat-chip-list>
-<mat-form-field>
-	<mat-select (selectionChange)="onSelectionChange($event.value)" [value]="level">
-		<mat-option *ngFor="let option of options" [value]="option.value">{{option.name}}</mat-option>
-	</mat-select>
-</mat-form-field>

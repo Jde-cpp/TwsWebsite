@@ -82,3 +82,7 @@ source/ClientApp/src/app/utilities/ProgressObservable.ts
 source/ClientApp/src/app/utilities/protoUtilities.ts
 source/ClientApp/tsconfig.base.json
 source/ClientApp/.browserslistrc
+source/ClientApp/src/app/shared/framework/link-select/link-select.*
+source/ClientApp/src/app/shared/framework/date-range/date-range.*
+source/ClientApp/src/app/shared/framework/severity-picker/*
+source/ClientApp/src/app/utilities/collections.ts

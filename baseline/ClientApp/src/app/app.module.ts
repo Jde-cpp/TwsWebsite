@@ -40,6 +40,8 @@ import {OptionEntryDialog} from './shared/tws/dialogs/option-entry/option-entry'
 import {RollDialog} from './shared/tws/dialogs/roll/roll-dialog'
 import {TransactDialog} from './shared/tws/dialogs/transact/transact'
 
+import {DateRangeComponent} from './shared/framework/date-range/date-range'
+import {LinkSelectComponent} from './shared/framework/link-select/link-select'
 import {QuantityComponent} from './shared/tws/widgets/quantity/quantity'
 
 import {routes} from './routes';
@@ -66,7 +68,7 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
 	 PaginatorComponent,
 	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SummaryComponent,
 	 ConfirmationDialog, OptionEntryDialog, RollDialog, TransactDialog,
-	 QuantityComponent],
+	 LinkSelectComponent, DateRangeComponent, QuantityComponent],
   imports: [
 	 BrowserModule, RouterModule.forRoot(routes), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
 	 MatAutocompleteModule,MatButtonModule, MatDialogModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatRadioModule, MatTableModule, MatTabsModule, MatCheckboxModule,MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule,MatSnackBarModule, MatSortModule,

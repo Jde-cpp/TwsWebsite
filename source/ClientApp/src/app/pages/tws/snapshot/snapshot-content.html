@@ -32,17 +32,16 @@
 </mat-toolbar>
 <div id="chart2"></div>
 <mat-tab-group #tabs (selectedTabChange)="onTabChange($event)" >
-	<!-- <mat-tab>
+	<mat-tab>
 		<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
-		<!-- <ng-template matTabContent> -- >
-			<candlestick [contract]="contract" [(settings)]="chartSettings" [isActive]="tabs.selectedIndex==0"></candlestick>
-		<!-- </ng-template> -- >
-	</mat-tab> -->
+		<ng-template matTabContent>
+			<candlestick [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></candlestick>
+		</ng-template>
+	</mat-tab>
 	<mat-tab>
 		<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Options</ng-template>
 		<ng-template matTabContent>
-			<option-tab [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></option-tab>
-			<!-- [contractEvents]="contractEvents.asObservable()" -->
+			<option-tab [tick]="tick" [index]="1" [tabEvents]="tabEvents.asObservable()"></option-tab>
 		</ng-template>
 	</mat-tab>
 </mat-tab-group>

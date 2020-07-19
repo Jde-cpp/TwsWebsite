@@ -9,7 +9,7 @@ import {ConfigurationData,ConfigurationDialog} from './configuration'
 import {Fundamentals } from './fundamentals'
 import {PageSettings} from './snapshot'
 import { TransactDoModal } from '../../../shared/tws/dialogs/transact/transact'
-import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
+//import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
 
 import {IErrorService} from 		'src/app/services/error/IErrorService'
 import { IProfile } from 			'src/app/services/profile/IProfile';
@@ -37,7 +37,7 @@ export class SymbolSettings implements IAssignable<SymbolSettings>
 		this.shortInterestDate=value.shortInterestDate;
 		this.tabIndex = value.tabIndex;
 	}
-	chartSettings:IChartSettings = {	start: new Date(Date.now()-1000*60*60*24*7), zoomHours:24, barSize: Requests.BarSize.Minute30 };
+	//chartSettings:IChartSettings = {	start: new Date(Date.now()-1000*60*60*24*7), zoomHours:24, barSize: Requests.BarSize.Minute30 };
 	shortInterest:number;shortInterestDate:Date;
 	tabIndex:number;
 }
@@ -360,7 +360,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 
 	get contract():IB.IContract{ return this.details ? this.details.contract : null; }
-	get chartSettings(){ return this.settingsSymbol.chartSettings; }
+	//get chartSettings(){ return this.settingsSymbol.chartSettings; }
 	details: Results.IContractDetails;
 	fundamentals:Fundamentals;
 	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }

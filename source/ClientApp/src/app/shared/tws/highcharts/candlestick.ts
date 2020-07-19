@@ -1,61 +1,76 @@
-import { Component, AfterViewInit, Input, EventEmitter, Output } from '@angular/core';
+import { Component, AfterViewInit, Inject, Input, OnDestroy, EventEmitter, Output } from '@angular/core';
 import {FormControl} from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-//import { Tick } from '../../../types/Tick';
-import { TwsService } from 'src/app/services/tws/tws.service';
-//import {Highcharts} from 'highcharts/es-modules/parts/Globals.js'
-//import * as Highcharts from 'highcharts'
+import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
+import {SeriesCandlestickOptions,SeriesColumnOptions} from "highcharts";
 import * as Highstock from "highcharts/highstock";
 import * as Highcharts from "highcharts";
-import {SeriesCandlestickOptions,SeriesColumnOptions} from "highcharts";
+import { TickEx } from 'src/app/services/tws/Tick';
 
-import * as ib2 from 'src/app/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'src/app/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbRequests from 'src/app/proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import {IErrorService} from 'src/app/services/error/IErrorService'
+import { IProfile } from 'src/app/services/profile/IProfile';
+import { TwsService, Bar } from 	'src/app/services/tws/tws.service';
+//import {Highcharts} from 'highcharts/es-modules/parts/Globals.js'
+//import * as Highcharts from 'highcharts'
+import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
+import {Settings,JoinSettings, IAssignable} from 'src/app/utilities/settings'
 
+import * as ib2 from 'src/app/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'src/app/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbRequests from 'src/app/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests; import BarSize = Requests.BarSize;
+import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { LinkSelectOptions } from '../../framework/link-select/link-select';
 
 @Component({ selector: 'candlestick', styleUrls: ['candlestick.css'], templateUrl: './candlestick.html' })
-export class CandlestickComponent implements AfterViewInit
+export class CandlestickComponent implements AfterViewInit, OnDestroy
 {
-	constructor( private http: HttpClient, private twsService : TwsService )
+	constructor( private http: HttpClient, private tws : TwsService, @Inject('IErrorService') private cnsl: IErrorService, @Inject('IProfile') private profile: IProfile )
 	{}
 	ngAfterViewInit():void
 	{
 		this.addTheme();
 	}
-
-	run = ( contract:IB.IContract ):void =>
+	ngOnDestroy()
 	{
-		if( this.contract!=contract )
-			this._contract = contract;
-		if( this.contract && !this.loaded && this.isActive )
-		{
-			var end = this.end.getTime() ? this.end : new Date( Date.now() );
-			var days = this.start.getTime() ? Math.round((end.getTime()-this.start.getTime())/(1000*60*60*24)) : 1;
-			if( days>5 )
-				days = Math.round( days*5/7 );
-			days = 1;
-			let bars:Results.IBar[] = [];
-			/*
-			this.twsService.reqHistoricalData( this.contract, end, days, this.barSize, Requests.Display.Trades, true, false ).subscribe(
-			{
-				next: ( bar => {bars.push(bar);}),
-				complete: ()=> {this.onHistoricalData(bars); },
-				error:  e=>{console.error(e);}
-			});*/
-		}
+		this.settingsContainer.save();
 	}
-	onHistoricalData = ( bars: Results.IBar[] ):void=>
+
+	run()
+	{
+		if( !this.isActive )
+			return;
+
+		if( this.settingsContainer.isLoaded )
+			this.onSettingsLoaded();
+		else
+			this.settingsContainer.loadThen( this.onSettingsLoaded );
+
+	}
+	onSettingsLoaded = ():void =>
+	{
+		var end = this.end || MarketUtilities.currentTradingDay();
+		var days = this.start ? this.end-this.start : 1;
+		if( days>5 )
+			days = Math.round( days*5/7 );
+		let bars:Bar[] = [];
+		this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(this.end)), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).subscribe(
+		{
+			next: ( bar:Bar ) =>
+			{
+				bars.push( bar );
+			},
+			complete:()=>{ this.onHistoricalData(bars); },
+			error:  e=>{console.error(e);}
+		});
+	}
+	onHistoricalData = ( bars: Bar[] ):void=>
 	{
 		var ohlc = [], volume = [];
 		var groupingUnits = [['week', [1]], ['month',[1, 2, 3, 4, 6]]];
 		bars.forEach( bar=>
 		{
-			var time = new Date( (<number>bar.time)*1000);
-			console.log( `${time} - ${bar.open} ${bar.low} ${bar.high} ${bar.close}` );
+			//var time = new Date( (<number>bar.time)*1000);
+			//console.log( `${time} - ${bar.open} ${bar.low} ${bar.high} ${bar.close}` );
 			let milliseconds = 1000*parseInt(bar.time.toString());
 			ohlc.push( [milliseconds, bar.open, bar.high, bar.low, bar.close] );
 			volume.push( [milliseconds,bar.volume] );
@@ -340,27 +355,28 @@ export class CandlestickComponent implements AfterViewInit
 
 	}
 	loaded:boolean;
-	get settings():IChartSettings{ return {start: this.start, end: this.end, zoomHours: this.zoomHours, barSize: this.barSize, barStart: null, barEnd:null}; }	@Input()
-	set settings( value:IChartSettings )
-	{
-		this.start = value.start; this.end = value.end;
-		this.zoomHours = value.zoomHours;
-		this.barSize = Requests.BarSize.Minute;//value.barSize;
-	}@Output() settingsChange = new EventEmitter<IChartSettings>(); _settings:IChartSettings;
-	@Input() set start(value:Date){this._start.setValue(value);this.run(this.contract);} get start():Date|null{return new Date( this._start.value );} _start = new FormControl();
-	@Input() set end(value:Date){this._end.setValue(value);this.run(this.contract);} get end():Date|null{return new Date( this._end.value );} private _end = new FormControl();
-	@Input() set zoomHours(value:number){this._zoomHours=value;this.run(this.contract);} get zoomHours(){return this._zoomHours;} private _zoomHours: number;
-	@Input() set barSize(value){this._barSize=value;this.run(this.contract);} get barSize(){return this._barSize;} private _barSize: Requests.BarSize=Requests.BarSize.Minute;
-	@Input() set isActive(value:boolean){this._isActive=value;this.run(this.contract);} get isActive(){return this._isActive;} private _isActive: boolean;
-	@Input() set contract(value:IB.IContract){this.run(value);} get contract(){return this._contract;} private _contract: IB.IContract;
+	candleSticks = new LinkSelectOptions<BarSize>( new Map([[BarSize.Minute, '1 min'],[BarSize.Minute2, '2 min'],[BarSize.Minute3, '3 min'], [BarSize.Minute5, '15 min'][BarSize.Minute15, '1 min'], [BarSize.Minute30, '30 min'],[BarSize.Hour, 'Hour'],[BarSize.Week, 'Week'],[BarSize.Month, 'Month'][BarSize.Month3, '3 Months'],[BarSize.Year, 'year']]), 3 );
+	get contract(){return this.tick.contract;}
+	set start( value:Day ){ this.settingsContainer.value.start = value;this.run();} get start():Day|null{ return this.settingsContainer.value.start; }
+	set end(value:Day){ this.settingsContainer.value.end = value;this.run();} get end():Day|null{ return this.settingsContainer.value.end; }
+	set zoomHours(value:number){this._zoomHours=value;this.run();} get zoomHours(){return this._zoomHours;} private _zoomHours: number;
+	set barSize(value){this._barSize=value;this.run();} get barSize(){return this._barSize;} private _barSize: Requests.BarSize=Requests.BarSize.Minute;
+	settingsContainer:Settings<ChartSettings> = new Settings<ChartSettings>( ChartSettings, 'Candlestick.', this.profile );
+
+	set isActive(value:boolean){ if( this._isActive=value )this.run();} get isActive(){return this._isActive;} private _isActive: boolean;
+	//@Input() set contract(value:IB.IContract){this.run(value);} get contract(){return this._contract;} private _contract: IB.IContract;
+	@Input() index:number;
+	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickEx;
+	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 }
 
-export class IChartSettings
+export class ChartSettings implements IAssignable<ChartSettings>
 {
-	start: Date = new Date( Date.now()-1000*60*60*24*7 );
-	end?: Date | null=null;
+	assign( other:ChartSettings ){this.start=other.start; this.end=other.end; this.zoomHours=other.zoomHours; this.barSize=other.barSize;}
+	start: Day = MarketUtilities.currentTradingDay()-7;
+	end: Day | null=null;
 	zoomHours: number=24;
 	barSize: Requests.BarSize = Requests.BarSize.Minute30;
-	barStart?:Date|null;
-	barEnd?:Date|null;
+	//barStart?:Date|null;
+	//barEnd?:Date|null;
 }

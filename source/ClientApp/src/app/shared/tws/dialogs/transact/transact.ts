@@ -116,7 +116,12 @@ export class TransactDialog implements AfterViewInit
 	}
 	get description(){ return /*this.option ? this.option.description :*/ `${this.details.contract.symbol} - ${this.details.longName}`; }
 	details:Results.IContractDetails;
-	//isBuy2:number=1;
+
+	get ask(){return this.tick.ask || 0;}
+	get askSize(){return this.tick.askSize || 0;}
+	get bid(){return this.tick && this.tick.bid || 0;}
+	get bidSize(){return this.tick.bidSize || 0;}
+
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){this._isBuy=value ? "Buy" : "Sell";} _isBuy:string;
 	isLiquid:boolean;
 	outsideRth:boolean=false;

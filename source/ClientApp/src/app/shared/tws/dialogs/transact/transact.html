@@ -1,6 +1,6 @@
 <h2 mat-dialog-title [ngStyle]="{'background': backgroundColor}">{{description}}</h2>
 <mat-dialog-content>
-	<mat-form-field style="display:inline; margin-left: 100px;">
+	<mat-form-field *ngIf="allAccounts.length>1" style="display:inline; margin-left: 100px;">
 		<mat-select [(ngModel)]="selectedAccount" name="accounts" ngDefaultControl>
 			<!-- (selectionChange)="accountChange($event.value)" -->
 			<mat-option *ngFor="let account of allAccounts | keyvalue" [value]="account.key">{{account.value}}</mat-option>
@@ -24,18 +24,32 @@
 		<span>{{askAmount}}</span>
 		<span>{{askSize}}</span>
 	</div>
-	<span>
-		<quantity step="100" [value]="quantity" (valueChange)="quantity=$event"></quantity>
-	</span>
-	<mat-form-field>
-		<input matInput placeholder="Limit" class="number" type="number" step="0.01" [ngModel]="limit" (ngModelChange)="limit=$event">
-	</mat-form-field>
-	<mat-form-field *ngIf="showStop" >
-		<input matInput placeholder="Stop" class="number" type="number" step="0.01" [ngModel]="stop" (ngModelChange)="stop=$event">
-	</mat-form-field>
-	<mat-form-field *ngIf="showStop">
-		<input matInput placeholder="Stop-Limit" class="number" type="number" step="0.01" [ngModel]="stopLimit" (ngModelChange)="stopLimit=$event">
-	</mat-form-field>
+	<div style="display: flex;align-items: center; justify-content: center;">
+		<mat-form-field style="width:70px" [floatLabel]="always">
+			<input matInput type="number" disabled=true placeholder="Bid Size" [(ngModel)]="bidSize">
+		</mat-form-field>
+		<button mat-stroked-button (click)="limit=bid">{{bid | number:'1.2-2'}}</button>
+		<button mat-stroked-button (click)="limit=ask">{{ask | number:'1.2-2'}}</button>
+		<mat-form-field style="width:70px" [floatLabel]="always">
+			<input matInput type="number" disabled=true placeholder="Ask Size" [(ngModel)]="askSize">
+		</mat-form-field>
+	</div>
+	<div style="display: flex;align-items: center; justify-content: center;">
+		<span>
+			<quantity step="100" [value]="quantity" (valueChange)="quantity=$event"></quantity>
+		</span>
+		<span>
+			<quantity step=".01" placeholder="limit" [value]="limit" (valueChange)="limit=$event"></quantity>
+		</span>
+	</div>
+	<div *ngIf="showStop" style="display: flex;align-items: center; justify-content: center;">
+		<span>
+			<quantity step=".01" placeholder="Stop" [value]="limit" (valueChange)="stop=$event"></quantity>
+		</span>
+		<span>
+			<quantity step=".01" placeholder="Stop-Limit" [value]="limit" (valueChange)="stopLimit=$event"></quantity>
+		</span>
+	</div>
 	<div>
 		<mat-checkbox *ngIf="!isLiquid" class="example-margin" [(ngModel)]="outsideRth">Outside RTH</mat-checkbox>
 	</div>

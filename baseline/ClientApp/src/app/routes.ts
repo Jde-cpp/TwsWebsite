@@ -3,7 +3,7 @@ import { Routes, RouterModule } from '@angular/router';
 import {OrderComponent} from './pages/tws/orders/orders';
 import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
 import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
-import {TradeComponent} from './pages/tws/trades/trades.component';
+import {TradeComponent} from './pages/tws/trades/trades';
 
 export const routes: Routes =
 [

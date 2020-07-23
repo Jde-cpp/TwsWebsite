@@ -28,6 +28,7 @@ import * as IbRequests from 'src/app/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
+import { load } from 'protobufjs';
 
 export class SymbolSettings implements IAssignable<SymbolSettings>
 {
@@ -52,20 +53,36 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	ngOnInit()
 	{
-		const symbol = this._symbol;
-		this.settingsSymbolContainer = new Settings<SymbolSettings>(SymbolSettings, `SnapshotComponent.${symbol}`, this.profileService );
+		console.log( `(${this.symbol})SnapshotContentComponent::ngOnInit` );
+		this.settingsSymbolContainer = new Settings<SymbolSettings>(SymbolSettings, `SnapshotComponent.${this.symbol}`, this.profileService );
 		// var contract = new IB.Contract();
 		// contract.symbol = symbol;
 		// contract.securityType = "STK";
 		// contract.exchange = "SMART";
 		// contract.currency = "USD";
-		let contract = { 'symbol': symbol, securityType: "STK", exchange: "SMART", currency: "USD" };
-		this.settingsSymbolContainer.load().subscribe({ complete:()=>{this.tws.reqContractDetails( contract ).subscribe( {next: value=>{this.onContractDetails(value);}, error: e=>{this.onError(e);} });} });
-
 	}
 	ngAfterViewInit():void
 	{
-		this.tabEvents.next( this.tabs ? this.tabs.selectedIndex : 0 );
+		console.log( `(${this.symbol})SnapshotContentComponent::ngAfterViewInit` );
+		this.run();
+	}
+	run()
+	{
+		const initialized = this.indexSelectedSymbol==this.index;
+		console.log( `(${this.symbol})SnapshotContentComponent::run initialized=${initialized}` );
+		if( !initialized )
+			return;
+		this.settingsSymbolContainer.loadedPromise.then( ()=>
+		{
+			let contract = { 'symbol': this.symbol, securityType: "STK", exchange: "SMART", currency: "USD" };
+			let details:Results.IContractDetails[] = [];
+			this.tws.reqContractDetails( contract ).subscribe(
+			{
+				next: value=>{ details.push(value);},
+				complete: ()=>{ if(details.length==1)this.onContractDetails(details[0]); else this.onError({ message: `${this.symbol} return ${details.length} records.`} ); },
+				error: e=>{this.onError(e);}
+			});
+		});
 	}
 	ngOnDestroy()
 	{
@@ -88,12 +105,9 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		this.details = details;
 		const isMarketOpen = MarketUtilities.isMarketOpen( this.details );
 		let tick = this.tick = new TickEx( details.contract, isMarketOpen );
+		this.loadedResolve( true );
 		//this.contractEvents.next( tick );
-		this.tws.reqFundamentals( details.contract.id ).subscribe( {next: value=>
-		{
-			this.fundamentals = new Fundamentals( value );
-		//	console.log( this.symbolSettings.shortInterest/this.fundamentals.sharesOutstanding );
-		}} );
+		this.tws.reqFundamentals( details.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} );
 		const now = new Date();
 	/*	if( this.symbol=="TSLA" )
 			this.setShortInterest( 13958518, new Date(2020,6,30) );
@@ -129,6 +143,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 				if( !tick.close )
 					console.log( `No previous day close for '${details.contract.symbol}'` );
 				this.showChart();
+				this.tabEvents.next( this.tabs?.selectedIndex ?? this.settingsSymbolContainer.value.tabIndex ?? 0 );
 			},
 			error: e=>
 			{
@@ -313,19 +328,22 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 					load: !isMarketOpen ? null : function ()
 					{
 						var series:Highcharts.Series = this.series[0];
-						setInterval(function ()
+						if( series.data )
 						{
-							const data = series.data, length = series.data.length;
-							let value = length>1 ? data[length-2].y : null;
-							var time = length>1 ? data[length-2].x : (new Date()).getTime();
-							if( value && tick.currentPrice && (value!=tick.currentPrice || time<(new Date()).getTime()-60000) )
+							setInterval(function ()
 							{
-								data[length-1].update( {x:(new Date()).getTime(), y:tick.currentPrice} );
-								let [min, max] = getMinMax();
-								series.addPoint( [max, null], true, false );
-								//series.addPoint( [x, y], true, true );
-							}
-						}, 5000);
+								const data = series.data, length = series.data?.length;
+								let value = length>1 ? data[length-2].y : null;
+								var time = length>1 ? data[length-2].x : (new Date()).getTime();
+								if( value && tick.currentPrice && (value!=tick.currentPrice || time<(new Date()).getTime()-60000) )
+								{
+									data[length-1].update( {x:(new Date()).getTime(), y:tick.currentPrice} );
+									let [min, max] = getMinMax();
+									series.addPoint( [max, null], true, false );
+									//series.addPoint( [x, y], true, true );
+								}
+							}, 5000);
+						}
 					}
 				}
 			},
@@ -363,11 +381,15 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	//get chartSettings(){ return this.settingsSymbol.chartSettings; }
 	details: Results.IContractDetails;
 	fundamentals:Fundamentals;
+	@Input() index:number;
+	@Input() set indexSelectedSymbol(value){ this._indexSelectedSymbol=value; /*if( this.index==this.indexSelectedSymbol ) this.run();*/ } get indexSelectedSymbol(){ return this._indexSelectedSymbol;} private _indexSelectedSymbol:number;
+	loadedPromise = new Promise<boolean>( (resolve) => {this.loadedResolve = resolve;} );
+	private loadedResolve: Function|null;
 	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
 	settingsSymbolContainer:Settings<SymbolSettings>;
 	get settingsSymbol():SymbolSettings{ return this.settingsSymbolContainer.value; }
 	@Input() pageSettings:Settings<PageSettings>;
-	@Input() set symbol(value){ this._symbol=value; } get symbol():string{ return this.contract ? this.contract.symbol : ''; } private _symbol;
+	@Input() set symbol(value){ this._symbol=value; } get symbol():string{ return this._symbol; } private _symbol;
 	@Output() symbolEvent = new EventEmitter<string>();
 	subscription:TickObservable;
 	tabEvents = new Subject<number>();

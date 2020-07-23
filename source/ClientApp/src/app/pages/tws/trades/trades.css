@@ -15,14 +15,3 @@ table
 }
 
 
-.numberField
-{
-	flex: 0 0 45px;
-	padding-right:10px;
-	justify-content: flex-end;
-}
-
-.symbolField
-{
-	flex: 0 0 75px;
-}

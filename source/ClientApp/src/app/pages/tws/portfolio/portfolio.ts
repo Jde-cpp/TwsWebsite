@@ -35,10 +35,9 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 
 	ngAfterViewInit():void
 	{
-		this.profileService.get<Settings>( PortfolioComponent.profileKey ).subscribe(
+		this.profileService.get<Settings>( PortfolioComponent.profileKey ).then( (value)=>
 		{
-			next: value =>{ this.settings = value; this.onSettingsLoaded(); },
-			error: e =>{ console.log(e); this.onSettingsLoaded(); }
+			this.settings = value; this.onSettingsLoaded();
 		});
 	}
 

@@ -52,7 +52,7 @@ import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
 import {ConfigurationDialog} from './pages/tws/snapshot/configuration'
 import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
 import {SnapshotContentComponent} from './pages/tws/snapshot/snapshot-content';
-import {TradeComponent} from './pages/tws/trades/trades.component'
+import {TradeComponent} from './pages/tws/trades/trades'
 
 import {LocalStorageProfile} from './services/profile/localStorageProfile.service'
 import {DefaultErrorService } from './services/error/DefaultError.service'

@@ -32,7 +32,7 @@
 				<tr style="padding:10px"><td class="rowHeader">Equity</td><td class="number">{{state.equityWithLoanBefore | number:'1.0-0'}}</td><td class="number">{{state.equityWithLoanChange | number:'1.0-0'}}</td><td class="number">{{state.equityWithLoanAfter | number:'1.0-0'}}</td></tr>
 				<tr style="padding:10px"><td class="rowHeader">Initial</td><td class="number">{{state.initMarginBefore | number:'1.0-0'}}</td><td class="number">{{state.initMarginChange | number:'1.0-0'}}</td><td class="number">{{state.initMarginAfter | number:'1.0-0'}}</td></tr>
 				<tr style="padding:10px"><td class="rowHeader">Maintenance</td><td class="number">{{state.maintMarginBefore | number:'1.0-0'}}</td><td class="number">{{state.maintMarginChange | number:'1.0-0'}}</td><td class="number">{{state.maintMarginAfter | number:'1.0-0'}}</td></tr>
-				<tr style="padding:10px"><td class="rowHeader">Position</td><td class="number">{{position | number:'1.0-0'}}</td><td class="number">{{order.quantity | number:'1.0-0'}}</td><td class="number">{{position+order.quantity | number:'1.0-0'}}</td></tr>
+				<tr style="padding:10px"><td class="rowHeader">Position</td><td class="number">{{position | number:'1.0-0'}}</td><td class="number">{{orderQuantity | number:'1.0-0'}}</td><td class="number">{{position+orderQuantity | number:'1.0-0'}}</td></tr>
 			</table>
 		</fieldset>
 	</div>

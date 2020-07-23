@@ -41,35 +41,38 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{}
 	ngAfterViewInit():void
 	{
-		this.settingsContainer.load().subscribe(
+	/*	this.settingsContainer.load().then( (value)=>
 		{
-			complete: ()=>
+			if( this.settings.selectedIndex!=0 )
 			{
-				if( this.settings.selectedIndex!=0 )
-				{
-					const symbol = this.settings.previousSymbols[this.settings.selectedIndex];
-					this.previousSymbols.splice( this.settings.selectedIndex, 1 );
-					this.previousSymbols.unshift( symbol );
-					this.settings.selectedIndex = 0;
-					this.settingsContainer.save();
-				}
-				//this.previousSymbols[0] = "SHOP";
-				//this.settingsContainer.save();
+				const symbol = this.settings.previousSymbols[this.settings.selectedIndex];
+				this.previousSymbols.splice( this.settings.selectedIndex, 1 );
+				this.previousSymbols.unshift( symbol );
+				this.settings.selectedIndex = 0;
+				this.settingsContainer.save();
+			}
+			//this.previousSymbols[0] = "SHOP";
+			//this.settingsContainer.save();
+			setTimeout( ()=>
+			{
 				if( this.symbolTabs.selectedIndex != this.settings.selectedIndex )
 					this.symbolTabs.selectedIndex = this.settings.selectedIndex;
-				setTimeout( ()=>{});//screws up the selected tab.
-			},
-			error: e =>{console.log(e)}
+				this.initialized = true;
+			});//screws up the selected tab.
+		});*/
+		this.selected.valueChanges.subscribe( value=>
+		{
+			if( this.settings.selectedIndex != value )
+			{
+			    this.settings.selectedIndex = value;
+			    this.settingsContainer.save();
+			}
 		});
 	}
 	ngOnDestroy()
 	{
 		this.settings.selectedIndex = this.selected.value;
 		this.settingsContainer.save();
-	}
-	onIndexChange(newIndex)
-	{
-		this.settings.selectedIndex = newIndex;
 	}
 	onSymbol( symbol:string )
 	{
@@ -111,6 +114,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	}*/
 //	get treeSettings(){ return this.symbolSettings.treeSettings; } set treeSettings( value:ITreeSettings ){this.symbolSettings.treeSettings = value;this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );}
 	selected = new FormControl(0);
+	get selectedIndex(){ return this.selected.value; }
 	settingsContainer:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
 	get settings():PageSettings{ return this.settingsContainer ? this.settingsContainer.value : null; }
 

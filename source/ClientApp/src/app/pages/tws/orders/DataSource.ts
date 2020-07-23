@@ -21,6 +21,7 @@ export class Order extends TickEx
 	//get bid(){ return this.tick ? this.tick.bid : null; }
 	//get symbol(){ return this.openOrder.contract.symbol; }
 	get isBuy(){ return this.openOrder.order.isBuy; }
+	get isActive(){ return this.statusString!="Filled"; }
 	//get last(){ return this.tick ? this.tick.price : null; }
 	get limit(){ return this.openOrder.order.limit; }
 	set limitNew(value){ this.#limitNew = this.quantityDisplay==value ? null : value; } get limitNew(){return this.#limitNew;} #limitNew:number|null=null;

@@ -85,29 +85,25 @@ export class OptionTabComponent implements OnInit, OnDestroy
 		if( !this.isActive || !contractId )
 			return;
 		this.settingsContainer.reset( contractId.toString() );
-		JoinSettings( this.pageSettings, this.settingsContainer ).subscribe(
+		JoinSettings( this.pageSettings, this.settingsContainer ).then( ()=>
 		{
-			complete: ()=>
+			this.tws.reqOptionParams( contractId ).subscribe(
 			{
-				this.tws.reqOptionParams( contractId ).subscribe(
+				next: ( params:Results.IOptionParams ) =>
 				{
-					next: ( params:Results.IOptionParams ) =>
+					if( params.exchange!="SMART" )
+						return;
+					this.strikes = params.strikes;
+					this.expirationDisplays = [];
+					this.expirations = [];
+					for( let expiration of params.expirations )
 					{
-						if( params.exchange!="SMART" )
-							return;
-						this.strikes = params.strikes;
-						this.expirationDisplays = [];
-						this.expirations = [];
-						for( let expiration of params.expirations )
-						{
-							this.expirations.push( expiration );
-							this.expirationDisplays.push( MarketUtilities.optionDisplayFromDays(expiration) );
-						}
-					},
-					error:  e=>{ console.error(e); this.cnsl.error(`Could not retrieve Options '${e.message}'.`, e); }
-				} );
-			},
-			error:  e=>{ debugger;console.error(e); }
+						this.expirations.push( expiration );
+						this.expirationDisplays.push( MarketUtilities.optionDisplayFromDays(expiration) );
+					}
+				},
+				error:  e=>{ console.error(e); this.cnsl.error(`Could not retrieve Options '${e.message}'.`, e); }
+			} );
 		} );
 	}
 	changeType = (event:MatRadioChange):void=>

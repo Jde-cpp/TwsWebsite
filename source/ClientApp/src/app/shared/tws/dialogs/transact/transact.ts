@@ -25,7 +25,7 @@ export class Data
 export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : TwsService, details:Results.IContractDetails, tick:TickEx, isBuy:boolean, quantity: number=null, showStop:boolean=true )
 {
 	let settingsContainer = new Settings<DialogSettings>( DialogSettings, "TransactDialog", profile );
-	settingsContainer.load().subscribe({ complete: ()=>
+	settingsContainer.load().then( ()=>
 	{
 		tws.reqManagedAccts().subscribe( (numbers)=>
 		{
@@ -46,7 +46,7 @@ export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : Tw
 			});
 
 		});
-	} });
+	} );
 
 }
 

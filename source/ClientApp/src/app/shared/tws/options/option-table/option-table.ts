@@ -161,8 +161,8 @@ export class OptionTableComponent implements OnInit, OnDestroy
 					},
 					complete:()=>
 					{
-						if( !tick.close )
-							console.log( `No previous day close for '${details.contract.symbol}'` );
+						if( !option.close )
+							console.log( `No previous day close for '${option.contract.symbol}'` );
 					},
 					error: e=>{ if( e.code!=162 ) console.error( e ); }
 				});
@@ -190,9 +190,9 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			// }
 		}
 		if( !foundSelected )
-		this._selectedOption = null;
+		    this._selectedOption = null;
 		//if( this._table._data )
-		    this._table.renderRows();
+		this._table.renderRows();
 		//else
 		 //   console.log('no data');
 	}

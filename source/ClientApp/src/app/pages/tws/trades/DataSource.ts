@@ -20,7 +20,7 @@ export class Trade
 		this.price = params.price ? params.price : 0;
 		this.commission = params.commission ? params.commission : 0;
 	}
-	static fromTws( tws:Results.ITrade ):Trade{ return new Trade( {id:tws.id, orderId:tws.orderId,date:new Date(tws.time*1000),quantity:tws.shares,price:tws.price,commission:tws.commission} ); }
+	static fromTws( tws:Results.ITrade ):Trade{ return new Trade( {id:tws.id, orderId:tws.orderId,date:new Date(tws.time*1000),quantity:tws.shares,price:tws.price,commission:Math.abs(tws.commission)} ); }
 	id: number;
 	orderId:number;
 	date: Date;
@@ -78,7 +78,7 @@ export class TradeResult
 	get salesCommissions(){    let trades = this.isLong ? this.offsetTrades : this.openTrades; return trades ? Jde.sum(trades, (a)=>a.commission) : null; }
 	get purchaseCommissions(){ let trades = this.isLong ? this.openTrades : this.offsetTrades; return trades ? Jde.sum(trades, (a)=>a.commission) : null; }
 	get commissions(){ return this.salesCommissions+this.purchaseCommissions; }
-	get return_():number{ return this.proceeds==null ? null : this.proceeds/this.cost; }
+	get return_():number{ return this.proceeds==null || this.cost==null ? null : this.proceeds/this.cost; }
 
 
 	private get first():Trade{ return this.openTrades[0]; }
@@ -89,7 +89,7 @@ export class TradeResult
 
 export class DataSource implements IData
 {
-	constructor( flex:Results.Flex, executions:Results.IExecution[], sortOptions:Sort )
+	constructor( flex:Results.Flex, executions:ITradeCommon[], sortOptions:Sort )
 	{
 		var contractTrades = new Map<number,TradeResult>();
 		let proceeds = 0; let cost = 0;

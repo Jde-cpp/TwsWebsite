@@ -1,8 +1,10 @@
-.mat-chip-list /deep/.mat-chip-list-wrapper 
+.mat-chip-list /deep/.mat-chip-list-wrapper
 {
-	display: inline; 
+	display: inline;
 	flex-direction: row;
 	flex-wrap: wrap;
 	align-items: center;
 	margin: -4px;
 }
+/*.highcharts-point-up{ background-color: green;}
+.highcharts-point-up{ background-color: green;}*/

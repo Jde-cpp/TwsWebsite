@@ -47,11 +47,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngAfterViewInit():void
 	{
-		this.profile.load().subscribe(
-		{
-			complete: ()=>{this.load();},
-			error: e =>{console.log(e);}
-		});
+		this.profile.load().then( (value)=>{this.load();} );
 	}
 	load()
 	{

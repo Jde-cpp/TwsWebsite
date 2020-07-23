@@ -13,8 +13,9 @@ import { DateUtilities, Day } from 'src/app/utilities/dateUtilities';
 
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
+import { ITradeCommon } from 'src/app/services/tws/ExecutionObserver';
 
-@Component( {selector: 'trades', styleUrls: ['trades.component.css'], templateUrl: './trades.component.html'} )
+@Component( {selector: 'trades', styleUrls: ['trades.css'], templateUrl: './trades.html'} )
 export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
@@ -42,7 +43,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		const currentTradingDay = MarketUtilities.currentTradingDay();
 		const today = DateUtilities.toDays( new Date() );
-		let requests = 0, executions = [], flexResult;
+		let requests = 0, executions:ITradeCommon[] = [], flexResult;
 		let setDataSource = ()=>
 		{
 			this.data = new DataSource( flexResult, executions, this.sort );
@@ -53,8 +54,8 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 			this.tws.reqExecutions().subscribe2(
 			{
 				execution: (value:Results.IExecution)=>{ console.log( `${value.execId} price=${value.price}` ); executions.push(value); },
-				commissionReport: ( value:Results.ICommissionReport )=>{ console.log( `${value.execId} commissions=${value.commission}` ); },
-				error: (e)=>{ console.error( `error=${e.message}` ); },
+				commissionReport: ( value:Results.ICommissionReport )=>{ executions.find((x)=>{return x.execId==value.execId}).commission=value.commission; /*console.log( `${value.execId} commissions=${value.commission}` );*/ },
+				error: (e)=>{ debugger;console.error( `error=${e.message}` ); },
 				complete: ()=>{  --requests; if( !requests ) setDataSource();  },
 			});
 		}
@@ -64,7 +65,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 			this.tws.flexExecutions( "act", DateUtilities.fromDays(this.start), DateUtilities.fromDays(this.end) ).subscribe(
 			{
 				next:	flex =>{ flexResult = flex },
-				error:  e=>{console.error(e); this.cnsle.error(e,null); },
+				error:  e=>{ debugger;console.error(e); this.cnsle.error(e,null); },
 				complete: ()=>{  --requests; if( !requests ) setDataSource();  },
 			});
 		}
@@ -74,8 +75,11 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		this.data.sort( sort );
 		this.sort = sort;
 	}
-	get end():Day{ const time:Date = this._end.value; return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000));} set end(day:Day){ const time=DateUtilities.fromDays(day); this._end.setValue( new Date(time.getTime()+time.getTimezoneOffset()*60000)); } _end = new FormControl();
-	get start():Day{ const time:Date = this._start.value; return DateUtilities.toDays( new Date(time.getTime()-time.getTimezoneOffset()*60000));} set start(day:Day){ const time=DateUtilities.fromDays(day); this._start.setValue( new Date(time.getTime()+time.getTimezoneOffset()*60000)); } _start = new FormControl();
+	//set start( value:Day ){ this._start = value;} get start():Day|null{ return this.settingsContainer.value.start; }
+	//set end(value:Day){ this.settingsContainer.value.end = value;} get end():Day|null{ return this.settingsContainer.value.end; }
+	start:Day;
+	end:Day;
+
 	private data:DataSource;
 	settingsContainer:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "TradeComponent", this.profileService );
 	get sort():Sort{ return this.settingsContainer.value.sort; } set sort(value){this.settingsContainer.value.sort = value;}
@@ -86,4 +90,6 @@ class PageSettings implements IAssignable<PageSettings>
 {
 	assign(other){this.sort=other.sort;}
 	sort:Sort;
+	//start:number|null;
+	//end:Day|null;
 }

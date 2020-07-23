@@ -64,6 +64,7 @@ export class ConfirmationDialog
 	details:Results.IContractDetails;
 	get isBuy(){return this.order.isBuy;}
 	get order(){ return this.status.order; }
+	get orderQuantity(){ return this.order.quantity*(this.isBuy ? 1 : -1); }
 	get orderType(){ return IB.EOrderType[this.order.type]; }
 	//get orderDescription(){ return }
 	get state(){ return this.status.state; }

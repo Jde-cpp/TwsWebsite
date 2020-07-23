@@ -1,4 +1,4 @@
-<div style="display: flex;">
+<div *ngIf="settingsContainer?.loadedPromise | async" style="display: flex;">
 	<span style="margin-top: 22px;">
 		<date-range [(start)]="start" [(end)]="end"></date-range>
 	</span>
@@ -13,7 +13,8 @@
 			<mat-chip (click)="setGrouping(9)">All</mat-chip>
 		</mat-chip-list>
 	</fieldset>
-	<link-select placeholder="Candle Stick Length" options="candleSticks" selected="candleStickSelected" links=''  ></link-select>
+	<link-select style="margin-top: 15px;" placeholder="Candle Stick Length" (selectChange)="candleStickChange($event)" [options]="candleSticks"></link-select>
+	<mat-checkbox [(ngModel)]="settings.showVolume" (ngModelChange)=run();>Volume</mat-checkbox>
 	<!-- <fieldset>
 		<legend>Candle Stick Length</legend>
 		<mat-chip-list style="padding-left:20px;">

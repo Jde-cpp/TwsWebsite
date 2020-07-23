@@ -252,7 +252,7 @@ class Connection
 			else if( message.positionMulti )
 				this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
 			else if( message.flex )
-				this.handleReceive( message.flex, this.flexCallbacks, "flex" );
+				this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
 			else if( message.stringResult )
 			{
 				console.error( "message.stringResult not implemented" );
@@ -280,11 +280,15 @@ class Connection
 		//const tokens = msg.data.split( '\0' );
 		return bytearray;
 	}
-	handleReceive( data, callbacks, what:string )
+	handleReceive( data, callbacks, what:string, complete:boolean=false )
 	{
 		const callback = callbacks.get( data.id );
 		if( callback )
+		{
 			callback.next( data );
+			if( complete )
+				callback.complete();
+		}
 		else
 			console.error( `no callbacks for '${what}' reqId='${data.id}'` );//todo stop request.
 	}
@@ -308,8 +312,8 @@ class Connection
 		const callback = this.fundamentalCallbacks.get( id );
 		if( callback )
 		{
-			callback.next( data.values );
-			callback.complete();
+			callback[0]( data.values );
+			this.fundamentalCallbacks.delete( id );
 		}
 		else
 			console.error( `no callbacks for Fundamentals reqId='${id}'` );
@@ -327,7 +331,7 @@ class Connection
 		for( const [_, callback] of this.flexCallbacks.entries() )
 		{
 			callback.error( "Connection to Tws Websocket failed." );
-			callback.complete();
+			//callback.complete();
 		}
 		this.flexCallbacks.clear();
 	}
@@ -475,13 +479,14 @@ class Connection
 		this.executionCallbacks.set( query.id, callback );
 		return callback;
 	}
-	reqFundamentals( contractId:number ):Observable<{ [k: string]: number }>
+	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>
 	{
 		const id = this.getRequestId();
 		this.send( new Requests.RequestUnion({"genericRequests": {"requestId": id,"type": Requests.ERequests.RequestFundamentalData, "ids":[contractId]}}) );
-		const callback = new Subject<{ [k: string]: number }>();
-		this.fundamentalCallbacks.set( id, callback );
-		return callback;
+		return new Promise<{ [k: string]: number }>( (resolve,reject)=>
+		{
+			this.fundamentalCallbacks.set( id, [resolve,reject] );
+		});
 	}
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Bar>
 	{
@@ -681,7 +686,7 @@ class Connection
 	private positionCallbacks = new Map<number,Subject<Results.IPositionMulti>>();
 	private contractCallbacks = new Map<number, Subject<Results.IContractDetails>>();
 	private executionCallbacks = new Map<number,ExecutionSubject>();
-	private fundamentalCallbacks = new Map<number, Subject<{ [k: string]: number }>>();
+	private fundamentalCallbacks = new Map<number, [(x:{ [k: string]: number })=>void,(x:Results.IError)=>void]>(); //[({ [k: string]: number })=>void, (Results.IError)=>void]>();
 	private historicalCallbacks = new Map<number, Subject<Bar>>();
 	//private contractMultiCallbacks = new Map<number, Subject<Results.IContractDetails>>();
 	private optionSummaryCallbacks  = new Map<number, Subject<Results.IOptionValues>>();
@@ -710,7 +715,7 @@ export class TwsService
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
 	reqExecutions( query:Requests.IRequestExecutions=new Requests.RequestExecutions() ):ExecutionObservable{ return this.connection.reqExecutions( query ); }
-	reqFundamentals( contractId:number ):Observable<{ [k: string]: number }>{ return this.connection.reqFundamentals( contractId ); }
+	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>{ return this.connection.reqFundamentals( contractId ); }
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Bar>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
 	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Observable<Results.IOptionValues>{ return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike); }
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }

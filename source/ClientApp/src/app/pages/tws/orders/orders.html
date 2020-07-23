@@ -74,9 +74,11 @@
 			<ng-container matColumnDef="buttons" stickyEnd>
 				<mat-header-cell *matHeaderCellDef></mat-header-cell>
 				<mat-cell *matCellDef="let element">
-					<button mat-icon-button *ngIf="hasChanges(element)" (click)="submit(element)"><mat-icon>publish</mat-icon></button>
-					<button mat-icon-button *ngIf="hasChanges(element)" (click)="undo(element)"><mat-icon>undo</mat-icon></button>
-					<button mat-icon-button (click)="cancel(element.id)"><mat-icon>cancel</mat-icon></button>
+					<span *ngIf="element.isActive">
+						<button mat-icon-button *ngIf="hasChanges(element)" (click)="submit(element)"><mat-icon>publish</mat-icon></button>
+						<button mat-icon-button *ngIf="hasChanges(element)" (click)="undo(element)"><mat-icon>undo</mat-icon></button>
+						<button mat-icon-button (click)="cancel(element.id)"><mat-icon>cancel</mat-icon></button>
+					</span>
 				</mat-cell>
 			</ng-container>
 			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>

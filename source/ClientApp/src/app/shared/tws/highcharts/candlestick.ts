@@ -29,36 +29,32 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 	ngAfterViewInit():void
 	{
 		this.addTheme();
+		this.tabSubscription = this.tabEvents.subscribe( {next: value=>{this.indexParentTab = value; this.run();}} );
+		this.settingsContainer = new Settings<ChartSettings>( ChartSettings, `Candlestick.${this.contract.symbol}`, this.profile );
+		this.settingsContainer.loadedPromise.then( ()=>{this.run();} );
 	}
 	ngOnDestroy()
 	{
-		this.settingsContainer.save();
+		if( this.tick )
+		    this.settingsContainer.save();
+		this.tabSubscription.unsubscribe();
+		this.tabSubscription = null;
 	}
 
-	run()
+	run = ():void =>
 	{
 		if( !this.isActive )
 			return;
 
-		if( this.settingsContainer.isLoaded )
-			this.onSettingsLoaded();
-		else
-			this.settingsContainer.loadThen( this.onSettingsLoaded );
-
-	}
-	onSettingsLoaded = ():void =>
-	{
+		console.log( `candlestick.start=${this.start}` );
 		var end = this.end || MarketUtilities.currentTradingDay();
-		var days = this.start ? this.end-this.start : 1;
+		var days = this.start ? end-this.start : 1;
 		if( days>5 )
 			days = Math.round( days*5/7 );
 		let bars:Bar[] = [];
-		this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(this.end)), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).subscribe(
+		this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(end)), days, this.settingsContainer.value.candleSticks.selected, Requests.Display.Trades, true, false ).subscribe(
 		{
-			next: ( bar:Bar ) =>
-			{
-				bars.push( bar );
-			},
+			next: ( bar:Bar ) =>{ bars.push( bar ); },
 			complete:()=>{ this.onHistoricalData(bars); },
 			error:  e=>{console.error(e);}
 		});
@@ -66,91 +62,29 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 	onHistoricalData = ( bars: Bar[] ):void=>
 	{
 		var ohlc = [], volume = [];
-		var groupingUnits = [['week', [1]], ['month',[1, 2, 3, 4, 6]]];
+	//	var groupingUnits = [['week', [1]], ['month',[1, 2, 3, 4, 6]]];
 		bars.forEach( bar=>
 		{
 			//var time = new Date( (<number>bar.time)*1000);
 			//console.log( `${time} - ${bar.open} ${bar.low} ${bar.high} ${bar.close}` );
-			let milliseconds = 1000*parseInt(bar.time.toString());
+			let milliseconds = bar.time.getTime();
 			ohlc.push( [milliseconds, bar.open, bar.high, bar.low, bar.close] );
 			volume.push( [milliseconds,bar.volume] );
 		});
-		var options = <SeriesCandlestickOptions>{type: 'candlestick',name: 'AAPL', data: ohlc, dataGrouping: { units: groupingUnits } };
-		var volumeOptions = <SeriesColumnOptions>{type: 'column',name: 'Volume',data: volume,yAxis: 1,dataGrouping: { units: groupingUnits }};
+		let series:Highstock.SeriesOptionsType[] = [ <SeriesCandlestickOptions>{type: 'candlestick',name: this.contract.symbol, data: ohlc, color:"red", upColor:"green" } ];//, dataGrouping: { units: groupingUnits }
+		let yAxis:Highstock.YAxisOptions[] = [{ labels: {align: 'right', x: -3 }, title:{text: ''}, height: this.settings.showVolume ? '60%' : '100%', lineWidth: 2, resize: {enabled: true } } ];
+		if( this.settings.showVolume )
+		{
+			series.push( <SeriesColumnOptions>{type: 'column',name: 'Volume',data: volume,yAxis: 1} );//,dataGrouping: { units: groupingUnits }
+			yAxis.push( {labels: { align: 'right', x: -3 }, title: {text: 'Volume'}, top: '65%', height: '35%', offset: 0, lineWidth: 2} );
+		}
 		Highstock.stockChart('container',
 		{
 			rangeSelector: {enabled:false},
-			//title: {text: 'AAPL Historical'},
-			yAxis: [{
-				labels: {align: 'right', x: -3 },
-				title:{text: 'OHLC'},
-				height: '60%',
-				lineWidth: 2,
-				resize: {enabled: true }
-			}, {
-				labels: { align: 'right', x: -3 },
-				title: {text: 'Volume'},
-				top: '65%',
-				height: '35%',
-				offset: 0,
-				lineWidth: 2
-			}],
-			  tooltip: {split: true },
-			  series:  [options,volumeOptions]
-			//series: [{type: 'candlestick', name: 'AAPL', data: ohlc, dataGrouping: { units: groupingUnits } },
-			//			{type: 'column',name: 'Volume',data: volume,yAxis: 1,dataGrouping: { units: groupingUnits }}]
+			yAxis: yAxis,
+			tooltip: {split: true },
+			series:  series
 		});
-
-		//$.getJSON('https://www.highcharts.com/samples/data/aapl-ohlcv.json', function (data)
-/*		http.get( 'https://cors.io/?https://www.highcharts.com/samples/data/aapl-ohlcv.json').subscribe( (data)=>
-		{
-			var ohlc = [], volume = [], dataLength = data.length;
-			var groupingUnits = [['week', [1]], ['month',[1, 2, 3, 4, 6]]];
-			for( var i = 0; i < dataLength; i += 1 )
-			{
-				 ohlc.push([
-					  data[i][0], // the date
-					  data[i][1], // open
-					  data[i][2], // high
-					  data[i][3], // low
-					  data[i][4]]); // close
-				 volume.push([
-					 data[i][0], // the date
-					 data[i][5]]); // the volume
-			}
-			Highcharts.stockChart('container',
-			{
-				 rangeSelector: {selected: 1},
-				 title: {text: 'AAPL Historical'},
-				 yAxis: [{
-					  labels: {align: 'right', x: -3 },
-					  title:{text: 'OHLC'},
-					  height: '60%',
-					  lineWidth: 2,
-					  resize: {enabled: true }
-				 }, {
-					  labels: { align: 'right', x: -3 },
-					  title: {text: 'Volume'},
-					  top: '65%',
-					  height: '35%',
-					  offset: 0,
-					  lineWidth: 2
-				 }],
-	  			 tooltip: {split: true },
-				 series: [{
-					  type: 'candlestick',
-					  name: 'AAPL',
-					  data: ohlc,
-					  dataGrouping: { units: groupingUnits }
-				 }, {
-					  type: 'column',
-					  name: 'Volume',
-					  data: volume,
-					  yAxis: 1,
-					  dataGrouping: { units: groupingUnits }
-				 }]
-			});
-		});*/
 	}
 	addTheme():void
 	{
@@ -354,29 +288,38 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 	{
 
 	}
+	candleStickChange( _:BarSize )
+	{
+		console.log( `value=${this.settingsContainer.value.candleSticks.selected}` );
+		this.settingsContainer.save();
+		this.run();
+	}
 	loaded:boolean;
-	candleSticks = new LinkSelectOptions<BarSize>( new Map([[BarSize.Minute, '1 min'],[BarSize.Minute2, '2 min'],[BarSize.Minute3, '3 min'], [BarSize.Minute5, '15 min'][BarSize.Minute15, '1 min'], [BarSize.Minute30, '30 min'],[BarSize.Hour, 'Hour'],[BarSize.Week, 'Week'],[BarSize.Month, 'Month'][BarSize.Month3, '3 Months'],[BarSize.Year, 'year']]), 3 );
 	get contract(){return this.tick.contract;}
-	set start( value:Day ){ this.settingsContainer.value.start = value;this.run();} get start():Day|null{ return this.settingsContainer.value.start; }
+	set start( value:Day ){ this.settingsContainer.value.dayCount = this.endDate-value;this.run();} get start():Day{ return this.endDate-this.settingsContainer.value.dayCount; }
 	set end(value:Day){ this.settingsContainer.value.end = value;this.run();} get end():Day|null{ return this.settingsContainer.value.end; }
+	get endDate():Day{ return this.settingsContainer.value.end || MarketUtilities.currentTradingDay(); }
 	set zoomHours(value:number){this._zoomHours=value;this.run();} get zoomHours(){return this._zoomHours;} private _zoomHours: number;
-	set barSize(value){this._barSize=value;this.run();} get barSize(){return this._barSize;} private _barSize: Requests.BarSize=Requests.BarSize.Minute;
-	settingsContainer:Settings<ChartSettings> = new Settings<ChartSettings>( ChartSettings, 'Candlestick.', this.profile );
-
-	set isActive(value:boolean){ if( this._isActive=value )this.run();} get isActive(){return this._isActive;} private _isActive: boolean;
-	//@Input() set contract(value:IB.IContract){this.run(value);} get contract(){return this._contract;} private _contract: IB.IContract;
-	@Input() index:number;
+	//set barSize(value){this._barSize=value;this.run();} get barSize(){return this._barSize;} private _barSize: Requests.BarSize=Requests.BarSize.Minute;
+	get settings(){ return this.settingsContainer.value; }
+	settingsContainer:Settings<ChartSettings>;
+	get isActive(){return this.index==this.indexParentTab && this.tick && this.settingsContainer.isLoaded;}
+	get candleSticks(){ return this.settingsContainer.value.candleSticks; }
+	@Input() index:number; indexParentTab:number;
 	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickEx;
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 }
 
 export class ChartSettings implements IAssignable<ChartSettings>
 {
-	assign( other:ChartSettings ){this.start=other.start; this.end=other.end; this.zoomHours=other.zoomHours; this.barSize=other.barSize;}
-	start: Day = MarketUtilities.currentTradingDay()-7;
+	assign( other:ChartSettings ){ this.dayCount=other.dayCount ?? 7; this.end=other.end; this.zoomHours=other.zoomHours; this.candleSticks.assign(other.candleSticks); }
+
+//	barSize: Requests.BarSize = Requests.BarSize.Minute30;
+	candleSticks = new LinkSelectOptions<BarSize>( new Map([[BarSize.Minute, '1 min'],[BarSize.Minute2, '2 min'],[BarSize.Minute3, '3 min'], [BarSize.Minute15, '15 min'], [BarSize.Minute30, '30 min'], [BarSize.Hour, 'Hour'], [BarSize.Week, 'Week'], [BarSize.Month, 'Month'], [BarSize.Month3, '3 Months'], [BarSize.Year, 'year']]), 3 );
+	dayCount:number = 7;
 	end: Day | null=null;
+	showVolume:boolean=false;
 	zoomHours: number=24;
-	barSize: Requests.BarSize = Requests.BarSize.Minute30;
 	//barStart?:Date|null;
 	//barEnd?:Date|null;
 }

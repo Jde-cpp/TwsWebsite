@@ -1,9 +1,9 @@
-<mat-tab-group #symbolTabs [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)">
+<mat-tab-group *ngIf="settingsContainer?.loadedPromise | async" #symbolTabs [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)">
 	<!-- [(selectedIndex)]="settings.selectedIndex" -->
-	<mat-tab *ngFor="let m of previousSymbols;">
-		<ng-template mat-tab-label>{{m}}</ng-template>
+	<mat-tab *ngFor="let symbol of previousSymbols; let i = index">
+		<ng-template mat-tab-label>{{symbol}}</ng-template>
 		<ng-template matTabContent>
-			<snapshot-content (symbolEvent)="onSymbol($event)" [symbol]="m" [pageSettings]="settingsContainer"></snapshot-content>
+			<snapshot-content (symbolEvent)="onSymbol($event)" [symbol]="symbol" [index]="i" [indexSelectedSymbol]="selectedIndex" [pageSettings]="settingsContainer"></snapshot-content>
 		</ng-template>
 	</mat-tab>
 </mat-tab-group>

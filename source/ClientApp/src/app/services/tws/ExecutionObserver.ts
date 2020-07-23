@@ -8,14 +8,15 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 
 export interface ITradeCommon
 {
-	orderId:number;
-	accountNumber:string;
-	time:number;
-	side:string;
-	shares:number;
-	price:number;
-	execId:string;
-	contract:IB.Contract;
+	orderId?:number;
+	accountNumber?:string;
+	time?:number;
+	side?:string;
+	shares?:number;
+	price?:number;
+	execId?:string;
+	contract?:IB.IContract;
+	commission?:number;
 }
 
 //https://stackoverflow.com/questions/46151594/how-to-handle-progress-update-using-reactivex-observables-subjects

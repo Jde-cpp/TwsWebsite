@@ -36,7 +36,7 @@
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
 			<ng-template matTabContent>
-				<candlestick [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></candlestick>
+				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></candlestick>
 			</ng-template>
 		</mat-tab>
 		<mat-tab>

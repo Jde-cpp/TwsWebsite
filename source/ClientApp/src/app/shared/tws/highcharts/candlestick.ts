@@ -20,6 +20,7 @@ import * as IbResults from 'src/app/proto/results'; import Results = IbResults.J
 import * as IbRequests from 'src/app/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests; import BarSize = Requests.BarSize;
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import { LinkSelectOptions } from '../../framework/link-select/link-select';
+import { TimeFrame,DateRangeSettings } from '../../framework/date-range/date-range';
 
 @Component({ selector: 'candlestick', styleUrls: ['candlestick.css'], templateUrl: './candlestick.html' })
 export class CandlestickComponent implements AfterViewInit, OnDestroy
@@ -28,10 +29,10 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 	{}
 	ngAfterViewInit():void
 	{
-		this.addTheme();
 		this.tabSubscription = this.tabEvents.subscribe( {next: value=>{this.indexParentTab = value; this.run();}} );
 		this.settingsContainer = new Settings<ChartSettings>( ChartSettings, `Candlestick.${this.contract.symbol}`, this.profile );
 		this.settingsContainer.loadedPromise.then( ()=>{this.run();} );
+		//Highstock.setOptions( { global: {useUTC: false}} );
 	}
 	ngOnDestroy()
 	{
@@ -46,9 +47,8 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 		if( !this.isActive )
 			return;
 
-		console.log( `candlestick.start=${this.start}` );
 		var end = this.end || MarketUtilities.currentTradingDay();
-		var days = this.start ? end-this.start : 1;
+		var days = this.start ? end-this.start+1 : 1;
 		if( days>5 )
 			days = Math.round( days*5/7 );
 		let bars:Bar[] = [];
@@ -78,227 +78,55 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 			series.push( <SeriesColumnOptions>{type: 'column',name: 'Volume',data: volume,yAxis: 1} );//,dataGrouping: { units: groupingUnits }
 			yAxis.push( {labels: { align: 'right', x: -3 }, title: {text: 'Volume'}, top: '65%', height: '35%', offset: 0, lineWidth: 2} );
 		}
-		Highstock.stockChart('container',
+		this.chart = Highstock.stockChart( 'container',
 		{
+			chart:
+			{
+				backgroundColor:{linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },stops: [[0, '#2a2a2b'],[1, '#3e3e40']]},
+				style: {fontFamily: '\'Unica One\', sans-serif'},
+				plotBorderColor: '#606063'
+        	},
 			rangeSelector: {enabled:false},
 			yAxis: yAxis,
 			tooltip: {split: true },
-			series:  series
+			series:  series,
+			time: {useUTC:false}
 		});
 	}
-	addTheme():void
+	zoomChange( value:number ):void
 	{
-		Highcharts.createElement('link', {href: 'https://fonts.googleapis.com/css?family=Unica+One', rel: 'stylesheet', type: 'text/css'}, null, document.getElementsByTagName('head')[0]);
-		var theme =
+		console.log( `value=${this.settingsContainer.value.zoom.selected}` );
+		let min = null, max = null, end = DateUtilities.fromDays( this.end );
+		switch( value )
 		{
-			colors: ['#2b908f', '#90ee7e', '#f45b5b', '#7798BF', '#aaeeee', '#ff0066', '#eeaaee', '#55BF3B', '#DF5353', '#7798BF', '#aaeeee'],
-			chart:
-			{
-				 backgroundColor:{linearGradient: { x1: 0, y1: 0, x2: 1, y2: 1 },stops: [[0, '#2a2a2b'],[1, '#3e3e40']]},
-				 style: {fontFamily: '\'Unica One\', sans-serif'},
-				 plotBorderColor: '#606063'
-			},
-			title: {
-				 style: {
-					  color: '#E0E0E3',
-					  textTransform: 'uppercase',
-					  fontSize: '20px'
-				 }
-			},
-			subtitle: {
-				 style: {
-					  color: '#E0E0E3',
-					  textTransform: 'uppercase'
-				 }
-			},
-			xAxis: {
-				 gridLineColor: '#707073',
-				 labels: {
-					  style: {
-							color: '#E0E0E3'
-					  }
-				 },
-				 lineColor: '#707073',
-				 minorGridLineColor: '#505053',
-				 tickColor: '#707073',
-				 title: {
-					  style: {
-							color: '#A0A0A3'
-
-					  }
-				 }
-			},
-			yAxis: {
-				 gridLineColor: '#707073',
-				 labels: {
-					  style: {
-							color: '#E0E0E3'
-					  }
-				 },
-				 lineColor: '#707073',
-				 minorGridLineColor: '#505053',
-				 tickColor: '#707073',
-				 tickWidth: 1,
-				 title: {
-					  style: {
-							color: '#A0A0A3'
-					  }
-				 }
-			},
-			tooltip: {
-				 backgroundColor: 'rgba(0, 0, 0, 0.85)',
-				 style: {
-					  color: '#F0F0F0'
-				 }
-			},
-			plotOptions: {
-				 series: {
-					  dataLabels: {
-							color: '#B0B0B3'
-					  },
-					  marker: {
-							lineColor: '#333'
-					  }
-				 },
-				 boxplot: {
-					  fillColor: '#505053'
-				 },
-				 candlestick: {
-					  lineColor: 'white'
-				 },
-				 errorbar: {
-					  color: 'white'
-				 }
-			},
-			legend: {
-				 itemStyle: {
-					  color: '#E0E0E3'
-				 },
-				 itemHoverStyle: {
-					  color: '#FFF'
-				 },
-				 itemHiddenStyle: {
-					  color: '#606063'
-				 }
-			},
-			credits: {
-				 style: {
-					  color: '#666'
-				 }
-			},
-			labels: {
-				 style: {
-					  color: '#707073'
-				 }
-			},
-
-			drilldown: {
-				 activeAxisLabelStyle: {
-					  color: '#F0F0F3'
-				 },
-				 activeDataLabelStyle: {
-					  color: '#F0F0F3'
-				 }
-			},
-
-			navigation: {
-				 buttonOptions: {
-					  symbolStroke: '#DDDDDD',
-					  theme: {
-							fill: '#505053'
-					  }
-				 }
-			},
-
-			// scroll charts
-			rangeSelector: {
-				 buttonTheme: {
-					  fill: '#505053',
-					  stroke: '#000000',
-					  style: {
-							color: '#CCC'
-					  },
-					  states: {
-							hover: {
-								 fill: '#707073',
-								 stroke: '#000000',
-								 style: {
-									  color: 'white'
-								 }
-							},
-							select: {
-								 fill: '#000003',
-								 stroke: '#000000',
-								 style: {
-									  color: 'white'
-								 }
-							}
-					  }
-				 },
-				 inputBoxBorderColor: '#505053',
-				 inputStyle: {
-					  backgroundColor: '#333',
-					  color: 'silver'
-				 },
-				 labelStyle: {
-					  color: 'silver'
-				 }
-			},
-
-			navigator: {
-				 handles: {
-					  backgroundColor: '#666',
-					  borderColor: '#AAA'
-				 },
-				 outlineColor: '#CCC',
-				 maskFill: 'rgba(255,255,255,0.1)',
-				 series: {
-					  color: '#7798BF',
-					  lineColor: '#A6C7ED'
-				 },
-				 xAxis: {
-					  gridLineColor: '#505053'
-				 }
-			},
-
-			scrollbar: {
-				 barBackgroundColor: '#808083',
-				 barBorderColor: '#808083',
-				 buttonArrowColor: '#CCC',
-				 buttonBackgroundColor: '#606063',
-				 buttonBorderColor: '#606063',
-				 rifleColor: '#FFF',
-				 trackBackgroundColor: '#404043',
-				 trackBorderColor: '#404043'
-			},
-
-			// special colors for some of the
-			legendBackgroundColor: 'rgba(0, 0, 0, 0.5)',
-			background2: '#505053',
-			dataLabelsColor: '#B0B0B3',
-			textColor: '#C0C0C0',
-			contrastTextColor: '#F0F0F3',
-			maskColor: 'rgba(255,255,255,0.3)'
-	  };
-
-	  // Apply the theme
-	  //Highcharts.setOptions(theme);
-	}
-	setGrouping(value:number):void
-	{
-
+			case ZoomSize.Day: min = end.getTime()-24*60*60000; break;
+			case ZoomSize.Week: min = end.getTime()-7*24*60*60000; break;
+			case ZoomSize.Month: min = new Date(end.getUTCFullYear(), end.getUTCMonth()-1, end.getUTCDate()).getTime(); break;
+			case ZoomSize.Quarter: min = new Date(end.getUTCFullYear(), end.getUTCMonth()-3, end.getUTCDate()).getTime(); break;
+			case ZoomSize.HalfYear: min = new Date(end.getUTCFullYear(), end.getUTCMonth()-6, end.getUTCDate()).getTime(); break;
+			case ZoomSize.Year: min = new Date(end.getUTCFullYear()-1, end.getUTCMonth(), end.getUTCDate()).getTime(); break;
+		}
+		let axis = this.chart.xAxis[0];
+		axis.setExtremes( min, max );
+		this.chart.showResetZoom();
+		this.settingsContainer.save();
 	}
 	candleStickChange( _:BarSize )
 	{
-		console.log( `value=${this.settingsContainer.value.candleSticks.selected}` );
+		//console.log( `timeFrame = ${this.settingsContainer.value.candleSticks.selected}` );
+		this.settingsContainer.save();
+		this.run();
+	}
+	onDateRangeChange( value )
+	{
 		this.settingsContainer.save();
 		this.run();
 	}
 	loaded:boolean;
 	get contract(){return this.tick.contract;}
-	set start( value:Day ){ this.settingsContainer.value.dayCount = this.endDate-value;this.run();} get start():Day{ return this.endDate-this.settingsContainer.value.dayCount; }
-	set end(value:Day){ this.settingsContainer.value.end = value;this.run();} get end():Day|null{ return this.settingsContainer.value.end; }
-	get endDate():Day{ return this.settingsContainer.value.end || MarketUtilities.currentTradingDay(); }
+	chart:Highstock.Chart;
+	get start():Day|null{ return this.settingsContainer.value.dateRange.start; }
+	get end():Day|null{ return this.settingsContainer.value.dateRange.end ?? this.settingsContainer.value.dateRange.max; }
 	set zoomHours(value:number){this._zoomHours=value;this.run();} get zoomHours(){return this._zoomHours;} private _zoomHours: number;
 	//set barSize(value){this._barSize=value;this.run();} get barSize(){return this._barSize;} private _barSize: Requests.BarSize=Requests.BarSize.Minute;
 	get settings(){ return this.settingsContainer.value; }
@@ -310,16 +138,23 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 }
 
+enum ZoomSize
+{
+	None=0,
+	Day=1,
+	Week=7,
+	Month=31,
+	Quarter=92,
+	HalfYear=183,
+	Year=366
+}
 export class ChartSettings implements IAssignable<ChartSettings>
 {
-	assign( other:ChartSettings ){ this.dayCount=other.dayCount ?? 7; this.end=other.end; this.zoomHours=other.zoomHours; this.candleSticks.assign(other.candleSticks); }
+	assign( other:ChartSettings ){ if( other.dateRange )this.dateRange.assign( other.dateRange ); if( other.zoom ) this.zoom.assign( other.zoom ); this.candleSticks.assign(other.candleSticks); }
 
-//	barSize: Requests.BarSize = Requests.BarSize.Minute30;
-	candleSticks = new LinkSelectOptions<BarSize>( new Map([[BarSize.Minute, '1 min'],[BarSize.Minute2, '2 min'],[BarSize.Minute3, '3 min'], [BarSize.Minute15, '15 min'], [BarSize.Minute30, '30 min'], [BarSize.Hour, 'Hour'], [BarSize.Week, 'Week'], [BarSize.Month, 'Month'], [BarSize.Month3, '3 Months'], [BarSize.Year, 'year']]), 3 );
-	dayCount:number = 7;
-	end: Day | null=null;
+	candleSticks = new LinkSelectOptions<BarSize>( new Map([[BarSize.Minute, '1 min'],[BarSize.Minute2, '2 min'],[BarSize.Minute3, '3 min'],[BarSize.Minute5, '5 min'], [BarSize.Minute15, '15 min'], [BarSize.Minute30, '30 min'], [BarSize.Hour, 'Hour'], [BarSize.Day, 'Day'], [BarSize.Week, 'Week'], [BarSize.Month, 'Month']]), 4 );
+	dateRange:DateRangeSettings = new DateRangeSettings( TimeFrame.Week, MarketUtilities.currentTradingDay(), (x)=>{return !MarketUtilities.isHoliday(x);} );
 	showVolume:boolean=false;
-	zoomHours: number=24;
-	//barStart?:Date|null;
-	//barEnd?:Date|null;
+	zoom = new LinkSelectOptions<ZoomSize>( new Map([[ZoomSize.None, 'All'],[ZoomSize.Day, 'Day'],[ZoomSize.Week, 'Week'],[ZoomSize.Month, 'Month'],[ZoomSize.Quarter, 'Quarter'], [ZoomSize.HalfYear, '½ Year'], [ZoomSize.Year, 'Year']]), 3, (key,_)=>{return key<this.dateRange.dayCount && ( key==ZoomSize.None || key>ChartSettings.ToZoom(this.candleSticks.selected));} );
+	static ToZoom(x:BarSize):ZoomSize{let y=ZoomSize.Day; if(x==BarSize.Day)y=ZoomSize.Day; else if(x==BarSize.Week)y=ZoomSize.Week; else if( x==BarSize.Year )y=ZoomSize.Year; return y; }
 }

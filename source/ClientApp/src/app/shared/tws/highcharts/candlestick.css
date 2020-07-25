@@ -1,3 +1,4 @@
+/*
 .mat-chip-list /deep/.mat-chip-list-wrapper
 {
 	display: inline;
@@ -6,5 +7,5 @@
 	align-items: center;
 	margin: -4px;
 }
-/*.highcharts-point-up{ background-color: green;}
+.highcharts-point-up{ background-color: green;}
 .highcharts-point-up{ background-color: green;}*/

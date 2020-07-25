@@ -493,6 +493,7 @@ class Connection
 		const id = this.getRequestId();
 		const param = new Requests.RequestHistoricalData( {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000} );
 		const msg = new Requests.RequestUnion(); msg.historicalData = param;
+		console.log( `(${id})RequestHistoricalData( '${contract.id} - end:${date} for ${days}D ${Requests.BarSize[barSize]} ${Requests.Display[display]} useRth:${useRth}, keepUpToDate:${keepUpToDate}` );
 		this.send( msg );
 		const callback = new Subject<Bar>();
 		this.historicalCallbacks.set( id, callback );

@@ -14,30 +14,12 @@ import * as IbRequests from '../../proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from '../../proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbWatch from '../../proto/watch';
+import Watch = IbWatch.Jde.Markets.Proto.Watch;
 
 
 type ResolveGeneric = (any) => void;
 type ClientId = number;
-/*interface IDeferred
-{
-	resolveGeneric:ResolveGeneric;
-	reject:  (reason?: any) => void;
-}
-
-class Deferred<T> implements IDeferred
-{
-	constructor()
-	{
-		this.promise = new Promise<T>( (resolve, reject) =>{ this.resolve = resolve; this.reject = reject; } );
-	}
-	promise: Promise<T>;
-	resolve: (value?: T | PromiseLike<T>) => void;
-	resolveGeneric: ResolveGeneric = function(value?:any)
-	{
-		this.resolve( value );
-	};
-	reject:  (reason?: any) => void;
-}*/
 
 export interface Bar
 {
@@ -59,7 +41,14 @@ export interface ITicker
 	onStringTick( reqId:number, type:Results.ETickType, value:string ):void;
 	complete(reqId:number):void;
 }
-
+type GetResult = (result:Results.IMessageUnion)=>any;
+type Resolve = (x:any)=>void;
+type Reject = (x:Results.IError)=>void;
+export class RequestPromise
+{
+	constructor( public result:GetResult, public resolve:Resolve, public reject:Reject )
+	{}
+};
 
 export type ErrorCallback = (error: Results.IError)=>any;
 export type JsonCallback<T> = ( reqId: number, result:T ) => any;
@@ -70,7 +59,7 @@ type AccountUpdateType = [Observable<Results.IAccountUpdate>,Observable<Results.
 type ContractDetailsCallback = (details: Results.IContractDetails)=>any;
 class Connection
 {
-	constructor( private cnsl: IErrorService )
+	constructor( /*private cnsl: IErrorService*/ )
 	{
 		//console.log( 'Connection::Connection' );
 		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6811', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
@@ -138,7 +127,7 @@ class Connection
 					{
 						const display = original.setStatus( message.orderStatus );
 						if( display )
-							this.cnsl.info( display );
+							console.info( display );
 					}
 				}
 				if( this.openOrders.length )
@@ -246,6 +235,11 @@ class Connection
 					if( !this.complete(this.contractCallbacks, message.message.intValue) )
 						this.complete( this.previousDayCallbacks, message.message.intValue );
 				}
+				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
+				{
+					this.testCallbacks.get( message.message.intValue ).resolve( true );
+					this.testCallbacks.delete( message.message.intValue );
+				}
 				else
 					console.error( "unknown message:  "+(<Results.MessageUnion>message).toJSON() );
 			}
@@ -253,6 +247,18 @@ class Connection
 				this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
 			else if( message.flex )
 				this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
+			else if( message.stringList )
+			{
+				const id = message.stringList.requestId;
+				const callback = this.generalCallbacks.get( id );
+				if( callback )
+				{
+					callback[0]( message.stringList.values );
+					this.generalCallbacks.delete( id );
+				}
+				else
+					console.error( `no callbacks for stringList reqId='${id}'` );
+			}
 			else if( message.stringResult )
 			{
 				console.error( "message.stringResult not implemented" );
@@ -275,7 +281,21 @@ class Connection
 				}
 			}
 			else
-				console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
+			{
+				let found = false;
+				for( let [id,requestPromise] of this.testCallbacks )
+				{
+					let testValue = requestPromise.result ? requestPromise.result( message ) : null;
+					found = testValue && testValue["requestId"]==id;
+					if( found )
+					{
+						testValue.resolve( testValue );
+						break;
+					}
+				}
+				if( !found )
+					console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
+			}
 		}
 		//const tokens = msg.data.split( '\0' );
 		return bytearray;
@@ -346,7 +366,7 @@ class Connection
 				if( this.orders.get(id).callback )
 					this.orders.get(id).callback.error( error );
 				else
-					this.cnsl.error( error.message, error );
+					console.error( error.message, error );
 			}
 			else if( this.historicalCallbacks.has(id) )
 			{
@@ -364,10 +384,20 @@ class Connection
 				this.previousDayCallbacks.get( id )?.error( error );
 				this.previousDayCallbacks.delete( id );
 			}
+			else if( this.generalCallbacks.has(id) )
+			{
+				this.generalCallbacks.get( id )[1]( error );
+				this.generalCallbacks.delete( id );
+			}
+			else if( this.testCallbacks.has(id) )
+			{
+				this.testCallbacks.get( id ).reject( error );
+				this.testCallbacks.delete( id );
+			}
 			else
 			{
 				console.error( `error code='${error.code}' message='${error.message}'` );//todo stop request.
-				this.cnsl.error( error.message, error );
+//				console.error( error.message, error );
 			}
 		}
 	}
@@ -411,8 +441,8 @@ class Connection
 	{
 		debugger;
 		this.sessionId = null;
-		this.cnsl.error( "No longer connected to TWS.", err );
-		console.error( err );
+		console.error( "No longer connected to TWS.", err );
+		//console.error( err );
 		this.handleConnectionError( err );
 	}
 	socketComplete():void
@@ -518,7 +548,7 @@ class Connection
 		const id = this.getRequestId();
 		const param = new Requests.RequestContractDetails( {"id": id} );
 		for( const id of contractIds )
-			param.contracts.push( new IB.Contract({"id": id, "securityType": "STK", "exchange": "SMART", "currency": "USD"}) );
+			param.contracts.push( new IB.Contract({"id": id, "securityType": IB.SecurityType.Stock, "exchange": IB.Exchanges.Smart, "currency": "USD"}) );
 
 		const msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
 		this.contractCallbacks.set( id, callback );
@@ -675,6 +705,41 @@ class Connection
 		this.previousDayCallbacks.set( requestId, callback );
 		return callback;
 	}
+/*	sendPromise<TInput,TResult>( param:string, value:TInput ):Promise<TResult>
+	{
+		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{param: value}) );
+		return new Promise<TResult>( (resolve,reject)=>
+		{
+			this.generalCallbacks.set( value["requestId"], [resolve,reject] );
+		});
+	}*/
+	sendPromise2<TInput,TResult>( param:string, value:TInput, result:GetResult ):Promise<TResult>
+	{
+		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{param: value}) );
+		return new Promise<TResult>( (resolve,reject)=>
+		{
+			this.testCallbacks.set( value["requestId"], new RequestPromise(result, resolve, reject) );
+		});
+	}
+
+	sendGenericPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult ):Promise<TResult>
+	{
+		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"requestId": this.getRequestId(), "type": type, "ids": ids}, result );
+	}
+	sendStringPromise2<TResult>( name:string, type:Requests.ERequests, result:GetResult=null ):Promise<TResult>
+	{
+		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {"requestId": this.getRequestId(), "type": type, "name": name}, result );
+	}
+	StringRequest( type:Requests.ERequests, name:string ):Requests.IStringRequest
+	{
+		return {"requestId": this.getRequestId(), "type": type, "name": name};
+	}
+	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList} ); };
+	portfolios():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.Portfolios, [], (result)=>{return result.stringList} ); };
+	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise2<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}); };
+	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
+	editWatch( file:Watch.File ):Promise<void>{ return this.sendPromise2<Requests.IEditWatchListRequest,void>( "editWatchList", {"requestId": this.getRequestId(), "file": file}, null ); };
+
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
 	private socket:WebSocketSubject<protobuf.Buffer>;
 	private sessionId:number|Long|null;
@@ -688,6 +753,8 @@ class Connection
 	private contractCallbacks = new Map<number, Subject<Results.IContractDetails>>();
 	private executionCallbacks = new Map<number,ExecutionSubject>();
 	private fundamentalCallbacks = new Map<number, [(x:{ [k: string]: number })=>void,(x:Results.IError)=>void]>(); //[({ [k: string]: number })=>void, (Results.IError)=>void]>();
+	private generalCallbacks = new Map<number, [(x:any)=>void,(x:Results.IError)=>void]>();
+	private testCallbacks = new Map<number, RequestPromise>();
 	private historicalCallbacks = new Map<number, Subject<Bar>>();
 	//private contractMultiCallbacks = new Map<number, Subject<Results.IContractDetails>>();
 	private optionSummaryCallbacks  = new Map<number, Subject<Results.IOptionValues>>();
@@ -702,7 +769,7 @@ class Connection
 @Injectable( {providedIn: 'root'} )
 export class TwsService
 {
-	constructor( @Inject('IErrorService') private cnsl: IErrorService )
+	constructor( /*@Inject('IErrorService') private cnsl: IErrorService*/ )
 	{}
 	reqManagedAccts(): Observable<{ [k: string]: string }>{ return TwsService.accounts ? of( TwsService.accounts ) : this.connection.reqManagedAccts(); }
 
@@ -720,7 +787,6 @@ export class TwsService
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Bar>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
 	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Observable<Results.IOptionValues>{ return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike); }
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
-	//request<T>( requestType:Requests.ERequests ):Promise<T>{ return this.connection.request<T>(requestType); }
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
@@ -728,6 +794,12 @@ export class TwsService
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
+	watchs():Promise<string[]>{ return this.connection.watchs(); };
+	portfolios():Promise<string[]>{ return this.connection.portfolios(); };
+	watch( name:string ):Promise<Watch.File>{ return this.connection.watch(name); };
+	deleteWatch( name:string ):Promise<void>{ return this.connection.deleteWatch(name); };
+	editWatch( file:Watch.File ):Promise<void>{ return this.connection.editWatch(name); };
+
 	static get accounts():{ [k: string]: string }{return this._accounts;} static set accounts(value:{ [k: string]: string }){this._accounts=value;} private static _accounts:{ [k: string]: string };
-	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( this.cnsl); return this._connection;} private _connection:Connection;
+	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( /*this.cnsl*/); return this._connection;} private _connection:Connection;
 }

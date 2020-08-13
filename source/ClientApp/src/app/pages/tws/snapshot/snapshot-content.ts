@@ -74,7 +74,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			return;
 		this.settingsSymbolContainer.loadedPromise.then( ()=>
 		{
-			let contract = { 'symbol': this.symbol, securityType: "STK", exchange: "SMART", currency: "USD" };
+			let contract = { 'symbol': this.symbol, securityType: IB.SecurityType.Stock, exchange: IB.Exchanges.Smart, currency: "USD" };
 			let details:Results.IContractDetails[] = [];
 			this.tws.reqContractDetails( contract ).subscribe(
 			{

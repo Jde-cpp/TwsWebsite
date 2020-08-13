@@ -85,12 +85,12 @@ export class MarketUtilities
 		return MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDay(now, tradingHours) );
 	}
 
-	static isMarketOpen2( exchange:string, secType:string )
+	static isMarketOpen2( exchange:IB.Exchanges, secType:IB.SecurityType )
 	{
 		const etString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
 		const et = new Date( etString );
 		return !MarketUtilities.isDateHoliday( et )
-			&& ( secType=="STK" ? et.getHours()>3 && et.getHours()<19 : (et.getHours()==9 && et.getMinutes()>29) || (et.getHours()>9 && et.getHours()<16) );
+			&& ( secType==IB.SecurityType.Stock ? et.getHours()>3 && et.getHours()<19 : (et.getHours()==9 && et.getMinutes()>29) || (et.getHours()>9 && et.getHours()<16) );
 	}
 	static isMarketOpen( details:Results.IContractDetails )
 	{
@@ -125,29 +125,29 @@ export class MarketUtilities
 	static startTrading( date:Date, contract:IB.IContract ):Date
 	{
 		const exchange = contract.exchange;
-		if( exchange!="Nasdaq" && exchange!="Nyse" )
+		if( exchange!=IB.Exchanges.Nasdaq && exchange!=IB.Exchanges.Nyse )
 			console.error( `need to implement exchange '${exchange}` );
 
 		const etString = date.toLocaleString( "en-US", {timeZone: "America/New_York"} );
 		const et = new Date( etString );
-		et.setHours( contract.securityType=="STK" ? 3 : 9.5 );
+		et.setHours( contract.securityType==IB.SecurityType.Stock ? 3 : 9.5 );
 		return et;
 	}
 	static endTrading( date:Date, contract:IB.IContract ):Date
 	{
 		const exchange = contract.primaryExchange;
-		if( exchange!="Nasdaq" && exchange!="Nyse" && exchange!="Arca" )
+		if( exchange!=IB.Exchanges.Nasdaq && exchange!=IB.Exchanges.Nyse && exchange!=IB.Exchanges.Arca )
 			console.error( `need to implement exchange '${exchange}` );
 
 		const etString = date.toLocaleString( "en-US", {timeZone: "America/New_York"} );
 		const et = new Date( etString );
-		et.setHours( contract.securityType=="STK" ? 20 : 4, 0, 0, 0 );
+		et.setHours( contract.securityType==IB.SecurityType.Stock ? 20 : 4, 0, 0, 0 );
 		return et;
 	}
 	static endLiquid( date:Date, contract:IB.IContract ):Date
 	{
 		const liquid = this.endTrading( date, contract );
-		if( contract.securityType=="STK" )
+		if( contract.securityType==IB.SecurityType.Stock )
 			liquid.setHours( 16 );
 		return liquid;
 	}

@@ -59,8 +59,8 @@ export class OptionTableComponent implements OnInit, OnDestroy
 						var optionContract = new IB.Contract( this.contract );
 						optionContract.localSymbol = null;
 						optionContract.expiration = day.expirationDays;
-						optionContract.securityType = "OPT";
-						optionContract.right = day.isCall ? "CALL" : "PUT";
+						optionContract.securityType = IB.SecurityType.Option;
+						optionContract.right = day.isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put;
 						optionContract.strike = option.strike;
 						optionContract.id = option.id;
 						var value = this.setPrices ? new Option( optionContract, option, option.bid, option.ask, option.last, option.volume ) : new Option( optionContract, option );//, index++
@@ -114,7 +114,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	{
 		this.pageContent = new Array<Option>();
 		let foundSelected = !this._selectedOption;
-		const marketOpen = MarketUtilities.isMarketOpen2( "", "OPT" );
+		const marketOpen = MarketUtilities.isMarketOpen2( IB.Exchanges.Smart, IB.SecurityType.Option );
 		//for( var i=this.pageInfo.startIndex; i<Math.min(this.pageInfo.startIndex+this.pageInfo.pageSize, this.options.length); ++i )
 		let cancelSubscriptions = new Map<number,TickObservable>(); let subscriptions = new Array<Option>();
 		for( var i=0; i<this.options.length; ++i )

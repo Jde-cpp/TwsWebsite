@@ -61,15 +61,15 @@ export class OptionEntryDialog implements OnDestroy
 		if( this.option )
 			this.strikes.set( this.strike, [this.option.isCall ? this.option.contractId : null, !this.option.isCall ? this.option.contractId : null ] );
 		let tempStrikes = new Map<number,[number,number]>();
-		let contract:IB.IContract = { exchange: "SMART", securityType: "OPT", right: isCall ? "CALL" : "PUT", expiration: expiration, symbol: this.underlying.contract.symbol };
+		let contract:IB.IContract = { exchange: IB.Exchanges.Smart, securityType: IB.SecurityType.Option, right: isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put, expiration: expiration, symbol: this.underlying.contract.symbol };
 		this.tws.reqContractDetails( contract ).subscribe(
 		{
 			next: value=>
 			{
 				let callPut:[number,number] = tempStrikes.has(value.contract.strike) ? tempStrikes.get( value.contract.strike ) : [0,0];
-				if( value.contract.right=="C" )
+				if( value.contract.right==IB.SecurityRight.Call )
 					callPut = [value.contract.id, callPut[1]];
-				else if( value.contract.right=="P" )
+				else if( value.contract.right==IB.SecurityRight.Put )
 					callPut = [callPut[0], value.contract.id];
 				tempStrikes.set( value.contract.strike, callPut );
 			},
@@ -87,7 +87,7 @@ export class OptionEntryDialog implements OnDestroy
 							break;
 					}
 				}
-				let contract = new IB.Contract( {id:this.strikes.get(strike)[isCall ? 0 : 1], strike: strike, expiration: expiration, right: isCall ? "CALL" : "PUT"} );
+				let contract = new IB.Contract( {id:this.strikes.get(strike)[isCall ? 0 : 1], strike: strike, expiration: expiration, right: isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put} );
 				this.option = new TickEx( contract, null );
 
 				//option:Results.IOption, public expiration:number, public isCall:boolean

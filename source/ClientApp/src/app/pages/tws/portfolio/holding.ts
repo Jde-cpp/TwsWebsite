@@ -92,7 +92,7 @@ export class Holding extends TickEx
 	//volume:number=0;
 	//get last():number{ return this.current.last || this.previousDay.last; }
 	get isLong():boolean{ return this.position>0; }
-	get isOption():boolean{ return this.contract.securityType=="OPT"; }
+	get isOption():boolean{ return this.contract.securityType==IB.SecurityType.Option; }
 	get pnl():number{ return this.change*this.position*this.contract.multiplier; }
 	get change():number
 	{

@@ -29,7 +29,7 @@ export class Option extends TickEx
 	}
 	size( type:Results.ETickType, size:number ):void
 	{
-		if( MarketUtilities.isMarketOpen2("SMART", "OPT") )
+		if( MarketUtilities.isMarketOpen2(IB.Exchanges.Smart, IB.SecurityType.Option) )
 			super.size( type, size );
 	}
 /*	subscribe()

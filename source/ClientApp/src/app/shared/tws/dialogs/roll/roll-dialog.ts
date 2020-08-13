@@ -5,7 +5,8 @@ import { TwsService } from '../../../../services/tws/tws.service';
 import * as IbResults from '../../../../proto/results';
 import { Holding } from 'src/app/pages/tws/portfolio/holding';
 
-import Results = IbResults.Jde.Markets.Proto.Results;
+import * as ib2 from 'src/app/proto/ib';
+import IB = ib2.Jde.Markets.Proto;
 
 export class Data
 {
@@ -39,7 +40,7 @@ export class RollDialog
 	get contract(){ return this.holding.contract; }
 	get holding(){ return this.data.holding; }
 	get isBuy(){return true;}
-	get isCall(){ return this.contract.securityType=="CALL"; }
+	get isCall(){ return this.contract.right==IB.SecurityRight.Call; }
 	get startExpiration(){ return this.contract.expiration+1; }
 	get strike(){ return this.contract.strike; }
 /*	quantity:number;

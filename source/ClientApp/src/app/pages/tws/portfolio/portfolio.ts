@@ -135,7 +135,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}) )
 		{
 			//this.tws.reqContractDetails( contract ).subscribe( {next: contract2=>{
-			const barSize:Requests.BarSize = contract.securityType=="OPT" ? Requests.BarSize.Hour : Requests.BarSize.Day;
+			const barSize:Requests.BarSize = contract.securityType==IB.SecurityType.Option ? Requests.BarSize.Hour : Requests.BarSize.Day;
 
 			const holding = new Holding( value );
 			(holding.isLong ? this.long : this.short).add( holding );
@@ -254,7 +254,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	}
 	onTransactClick( buy:boolean )
 	{
-		if( this.selected.contract.securityType=="OPT" )
+		if( this.selected.contract.securityType==IB.SecurityType.Option )
 		{
 			const dialogRef = this.dialog.open(OptionEntryDialog, { width: '600px', data: { option: this.selected, isBuy: buy, expirations: [], underlying: null } });
 			dialogRef.afterClosed().subscribe(result =>

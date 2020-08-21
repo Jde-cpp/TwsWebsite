@@ -9,7 +9,7 @@ import { TickEx } from 'src/app/services/tws/Tick';
 
 import {IErrorService} from 'src/app/services/error/IErrorService'
 import { IProfile } from 'src/app/services/profile/IProfile';
-import { TwsService, Bar } from 	'src/app/services/tws/tws.service';
+import { TwsService, IBar } from 	'src/app/services/tws/tws.service';
 //import {Highcharts} from 'highcharts/es-modules/parts/Globals.js'
 //import * as Highcharts from 'highcharts'
 import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
@@ -51,15 +51,9 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 		var days = this.start ? end-this.start+1 : 1;
 		if( days>5 )
 			days = Math.round( days*5/7 );
-		let bars:Bar[] = [];
-		this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(end)), days, this.settingsContainer.value.candleSticks.selected, Requests.Display.Trades, true, false ).subscribe(
-		{
-			next: ( bar:Bar ) =>{ bars.push( bar ); },
-			complete:()=>{ this.onHistoricalData(bars); },
-			error:  e=>{console.error(e);}
-		});
+		this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(end)), days, this.settingsContainer.value.candleSticks.selected, Requests.Display.Trades, true, false ).then( this.onHistoricalData ).catch( (e)=>{console.error(e);} );
 	}
-	onHistoricalData = ( bars: Bar[] ):void=>
+	onHistoricalData = ( bars: IBar[] ):void=>
 	{
 		var ohlc = [], volume = [];
 	//	var groupingUnits = [['week', [1]], ['month',[1, 2, 3, 4, 6]]];

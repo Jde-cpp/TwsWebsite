@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import {RouterModule} from '@angular/router';
@@ -33,7 +34,10 @@ import {PaginatorComponent} from './shared/framework/paginator/paginator';
 import{ CandlestickComponent } from './shared/tws/highcharts/candlestick';
 import{ OptionTableComponent } from './shared/tws/options/option-table/option-table';
 import{ OptionTabComponent } from './shared/tws/options/option-tab/option-tab';
+import {SmallChartComponent} from './shared/tws/small-chart/small-chart';
 import {SummaryComponent} from './shared/tws/summary/summary';
+import {WatchTableComponent} from './shared/tws/watch-table/watch-table';
+import {WatchRowComponent} from './shared/tws/watch-table/watch-row/watch-row';
 
 import {ConfirmationDialog} from './shared/tws/dialogs/transact/confirmation'
 import {OptionEntryDialog} from './shared/tws/dialogs/option-entry/option-entry';
@@ -48,6 +52,8 @@ import {routes} from './routes';
 import { AppComponent } from './app.component';
 
 import {OrderComponent} from './pages/tws/orders/orders'
+import {WatchComponent} from './pages/tws/watch/watch'
+import {WatchContentComponent} from './pages/tws/watch/watch-content';
 import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
 import {ConfigurationDialog} from './pages/tws/snapshot/configuration'
 import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
@@ -61,12 +67,14 @@ import {CanActivateComponentSidenav} from './pages/material-site/component-siden
 import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/theme-storage';
 
 
+
 @NgModule({
   declarations: [
 	 AppComponent,
-	 OrderComponent,PortfolioComponent,ConfigurationDialog,SnapshotComponent,SnapshotContentComponent,TradeComponent,
+	 OrderComponent,PortfolioComponent,ConfigurationDialog,WatchComponent, WatchContentComponent, SnapshotComponent,SnapshotContentComponent,TradeComponent,
 	 PaginatorComponent,
-	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SummaryComponent,
+	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SmallChartComponent, SummaryComponent,
+	 WatchTableComponent, WatchRowComponent,
 	 ConfirmationDialog, OptionEntryDialog, RollDialog, TransactDialog,
 	 LinkSelectComponent, DateRangeComponent, QuantityComponent],
   imports: [
@@ -78,7 +86,7 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
   providers: [
 		{provide: 'IProfile', useClass: LocalStorageProfile},
 		{provide: 'IErrorService', useClass: DefaultErrorService},
-		CanActivateComponentSidenav, StyleManager, ThemeStorage
+		CanActivateComponentSidenav, StyleManager, ThemeStorage, DecimalPipe
 	],
 	bootstrap: [AppComponent]
 })

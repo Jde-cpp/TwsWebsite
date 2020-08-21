@@ -1,0 +1,20 @@
+<ng-container *ngIf="viewPromise | async">
+	<mat-toolbar>
+		<span>
+			<button mat-raised-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="onTransactClick(true)">Buy</button>
+			<button mat-raised-button color="warn" [disabled]="selected==null" (click)="onTransactClick(false)" >Sell</button>
+			<span></span>
+			<button mat-icon-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="lineAdd()"><mat-icon>playlist_add</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="lineRemove()"><mat-icon>remove</mat-icon></button>
+			<span></span>
+			<button mat-icon-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="cut()"><mat-icon>content_cut</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="copy()"><mat-icon>content_copy</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="paste()"><mat-icon>content_paste</mat-icon></button>
+			<span></span>
+			<mat-checkbox [(ngModel)]="portfolio">Portfolio</mat-checkbox>
+		</span>
+	</mat-toolbar>
+	<watch-table [file]="file"></watch-table>
+		<!-- style="display: flex; flex-direction: row;" -->
+		<!-- <watch-row style="display: flex; flex-direction: row; flex-wrap:wrap;justify-content: flex-start; align-items: flex-start;" *ngFor="let contract of details" [details]="contract" ></watch-row> -->
+	</ng-container>

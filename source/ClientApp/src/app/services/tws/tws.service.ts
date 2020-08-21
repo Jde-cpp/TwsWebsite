@@ -6,6 +6,7 @@ import {Order,OrderSubject,OrderObservable} from './IOrderObserver'
 import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'
 import {IErrorService} from '../error/IErrorService'
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
+import {ObservableUtilities} from 'src/app/utilities/ObservableUtilities';
 
 
 import * as ib2 from '../../proto/ib';
@@ -16,12 +17,13 @@ import * as IbResults from '../../proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from '../../proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
+import { ThemeStorage } from 'src/app/shared/material-site/theme-picker/theme-storage/theme-storage';
 
 
 type ResolveGeneric = (any) => void;
 type ClientId = number;
 
-export interface Bar
+export interface IBar
 {
 	time:Date;
 	high:number;
@@ -44,9 +46,10 @@ export interface ITicker
 type GetResult = (result:Results.IMessageUnion)=>any;
 type Resolve = (x:any)=>void;
 type Reject = (x:Results.IError)=>void;
+type TransformInput = (x:any)=>any;
 export class RequestPromise
 {
-	constructor( public result:GetResult, public resolve:Resolve, public reject:Reject )
+	constructor( public result:GetResult, public resolve:Resolve, public reject:Reject, public transformInput:TransformInput=null )
 	{}
 };
 
@@ -198,8 +201,8 @@ class Connection
 				this.previousDayCallbacks.get( message.daySummary.requestId ).next( message.daySummary );
 			else if( message.fundamentals )
 				this.handleFundamentals( message.fundamentals );
-			else if( message.historicalData )
-				this.handleHistoricalData( message.historicalData );
+			//else if( message.historicalData )
+			//	this.handleHistoricalData( message.historicalData );
 			else if( message.execution )
 				this.executionCallbacks.get( message.execution.id )?.execution( message.execution );
 			else if( message.optionParameters )
@@ -247,18 +250,18 @@ class Connection
 				this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
 			else if( message.flex )
 				this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
-			else if( message.stringList )
+/*			else if( message.stringList )
 			{
 				const id = message.stringList.requestId;
-				const callback = this.generalCallbacks.get( id );
+				const callback = this.testCallbacks.get( id );
 				if( callback )
 				{
-					callback[0]( message.stringList.values );
-					this.generalCallbacks.delete( id );
+					callback.resolve( message.stringList.values );
+					this.testCallbacks.delete( id );
 				}
 				else
 					console.error( `no callbacks for stringList reqId='${id}'` );
-			}
+			}*/
 			else if( message.stringResult )
 			{
 				console.error( "message.stringResult not implemented" );
@@ -285,13 +288,13 @@ class Connection
 				let found = false;
 				for( let [id,requestPromise] of this.testCallbacks )
 				{
-					let testValue = requestPromise.result ? requestPromise.result( message ) : null;
-					found = testValue && testValue["requestId"]==id;
-					if( found )
-					{
-						testValue.resolve( testValue );
-						break;
-					}
+					let messageValue = requestPromise.result ? requestPromise.result( message ) : null;
+					found = messageValue && messageValue["requestId"]==id;
+					if( !found )
+						continue;
+
+					requestPromise.resolve( requestPromise.transformInput ? requestPromise.transformInput(messageValue) : messageValue );
+					break;
 				}
 				if( !found )
 					console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
@@ -313,10 +316,10 @@ class Connection
 			console.error( `no callbacks for '${what}' reqId='${data.id}'` );//todo stop request.
 	}
 
-	handleHistoricalData( data:Results.IHistoricalData )
+	/*handleHistoricalData( data:Results.IHistoricalData )
 	{
 		const id = data.requestId;
-		const callback = this.historicalCallbacks.get( id );
+		const callback = this.historicalCallbacks.get( id );~~~
 		if( callback )
 		{
 			for( const bar of data.bars )
@@ -325,7 +328,7 @@ class Connection
 		}
 		else
 			console.error( `no callbacks for historicalData reqId='${id}'` );
-	}
+	}*/
 	handleFundamentals( data:Results.IFundamentals )
 	{
 		const id = data.requestId;
@@ -368,12 +371,12 @@ class Connection
 				else
 					console.error( error.message, error );
 			}
-			else if( this.historicalCallbacks.has(id) )
+/*			else if( this.historicalCallbacks.has(id) )
 			{
 				this.historicalCallbacks.get( id ).error( error );
 				//this.historicalCallbacks.get( id ).complete();
 				this.historicalCallbacks.delete( id );
-			}
+			}*/
 			else if( this.optionParamCallbacks.has(id) )
 			{
 				this.optionParamCallbacks.get( id ).error( error );
@@ -512,22 +515,24 @@ class Connection
 	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>
 	{
 		const id = this.getRequestId();
-		this.send( new Requests.RequestUnion({"genericRequests": {"requestId": id,"type": Requests.ERequests.RequestFundamentalData, "ids":[contractId]}}) );
+		this.send( new Requests.RequestUnion({"genericRequests": {"id": id,"type": Requests.ERequests.RequestFundamentalData, "ids":[contractId]}}) );
 		return new Promise<{ [k: string]: number }>( (resolve,reject)=>
 		{
 			this.fundamentalCallbacks.set( id, [resolve,reject] );
 		});
 	}
-	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Bar>
+	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Promise<IBar[]>
 	{
 		const id = this.getRequestId();
-		const param = new Requests.RequestHistoricalData( {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000} );
-		const msg = new Requests.RequestUnion(); msg.historicalData = param;
 		console.log( `(${id})RequestHistoricalData( '${contract.id} - end:${date} for ${days}D ${Requests.BarSize[barSize]} ${Requests.Display[display]} useRth:${useRth}, keepUpToDate:${keepUpToDate}` );
-		this.send( msg );
-		const callback = new Subject<Bar>();
-		this.historicalCallbacks.set( id, callback );
-		return callback;
+		let toBars = ( ib:Results.Bar[] )=>
+		{
+			let myBars:IBar[] = [];
+			for( const bar of ib )
+				myBars.push( { time:new Date(bar.time*1000), high:ProtoUtilities.toNumber(bar.high), low:ProtoUtilities.toNumber(bar.low), open:ProtoUtilities.toNumber(bar.open), close:ProtoUtilities.toNumber(bar.close), wap:ProtoUtilities.toNumber(bar.wap), volume:ProtoUtilities.toNumber(bar.volume), count:ProtoUtilities.toNumber(bar.count)} );
+			return myBars;
+		}
+		return this.sendPromise2<Requests.IRequestHistoricalData,IBar[]>( "historicalData", {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000}, (result)=>{return result.historicalData}, toBars );
 	}
 	reqContractDetails( contract:IB.IContract ):Observable<Results.IContractDetails>
 	{
@@ -700,7 +705,7 @@ class Connection
 	reqPreviousDay( ids:number[] ):Observable<Results.IDaySummary>
 	{
 		const requestId = this.getRequestId();
-		this.send( new Requests.RequestUnion({"genericRequests": {"requestId": requestId, "type": Requests.ERequests.RequsetPrevOptionValues, "ids": ids}}) );
+		this.send( new Requests.RequestUnion({"genericRequests": {"id": requestId, "type": Requests.ERequests.RequsetPrevOptionValues, "ids": ids}}) );
 		const callback = new Subject<Results.IDaySummary>();
 		this.previousDayCallbacks.set( requestId, callback );
 		return callback;
@@ -710,35 +715,36 @@ class Connection
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{param: value}) );
 		return new Promise<TResult>( (resolve,reject)=>
 		{
-			this.generalCallbacks.set( value["requestId"], [resolve,reject] );
+			this.generalCallbacks.set( value["id"], [resolve,reject] );
 		});
 	}*/
-	sendPromise2<TInput,TResult>( param:string, value:TInput, result:GetResult ):Promise<TResult>
+	sendPromise2<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput:TransformInput ):Promise<TResult>
 	{
-		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{param: value}) );
+		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
 		return new Promise<TResult>( (resolve,reject)=>
 		{
-			this.testCallbacks.set( value["requestId"], new RequestPromise(result, resolve, reject) );
+			this.testCallbacks.set( value["id"], new RequestPromise(result, resolve, reject, transformInput) );
 		});
 	}
 
-	sendGenericPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult ):Promise<TResult>
+	sendGenericPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
-		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"requestId": this.getRequestId(), "type": type, "ids": ids}, result );
+		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"id": this.getRequestId(), "type": type, "ids": ids}, result, transform );
 	}
 	sendStringPromise2<TResult>( name:string, type:Requests.ERequests, result:GetResult=null ):Promise<TResult>
 	{
-		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {"requestId": this.getRequestId(), "type": type, "name": name}, result );
+		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, null );
 	}
 	StringRequest( type:Requests.ERequests, name:string ):Requests.IStringRequest
 	{
-		return {"requestId": this.getRequestId(), "type": type, "name": name};
+		return {id: this.getRequestId(), "type": type, "name": name};
 	}
-	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList} ); };
-	portfolios():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.Portfolios, [], (result)=>{return result.stringList} ); };
+	static transformStringList( result:Results.IStringList ){ return result.values; }
+	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList) };
+	portfolios():Promise<string[]>{ return this.sendGenericPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
 	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise2<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}); };
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
-	editWatch( file:Watch.File ):Promise<void>{ return this.sendPromise2<Requests.IEditWatchListRequest,void>( "editWatchList", {"requestId": this.getRequestId(), "file": file}, null ); };
+	editWatch( file:Watch.File ):Promise<void>{ return this.sendPromise2<Requests.IEditWatchListRequest,void>( "editWatchList", {"id": this.getRequestId(), "file": file}, null, null ); };
 
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
 	private socket:WebSocketSubject<protobuf.Buffer>;
@@ -755,7 +761,7 @@ class Connection
 	private fundamentalCallbacks = new Map<number, [(x:{ [k: string]: number })=>void,(x:Results.IError)=>void]>(); //[({ [k: string]: number })=>void, (Results.IError)=>void]>();
 	private generalCallbacks = new Map<number, [(x:any)=>void,(x:Results.IError)=>void]>();
 	private testCallbacks = new Map<number, RequestPromise>();
-	private historicalCallbacks = new Map<number, Subject<Bar>>();
+	//private historicalCallbacks = new Map<number, Subject<Bar>>();
 	//private contractMultiCallbacks = new Map<number, Subject<Results.IContractDetails>>();
 	private optionSummaryCallbacks  = new Map<number, Subject<Results.IOptionValues>>();
 	//private callbacks = new Map<number,IDeferred>();
@@ -775,6 +781,8 @@ export class TwsService
 
 	reqContractDetails( contract:IB.IContract ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetails(contract); }
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetailsMulti(contractIds); }
+	reqSymbolDetails( symbol:string ):Promise<Results.IContractDetails>{ return ObservableUtilities.toPromise( ()=>{return this.reqContractDetails({symbol: symbol});}, false); }
+
 	reqAccountUpdates( accountNumber: string ):AccountUpdateType{ return this.connection.reqAccountUpdates( accountNumber ); }
 	reqPositions( accountNumber: string ):Observable<Results.IPositionMulti>{ return this.connection.reqPositions( accountNumber ); }
 	cancelPositions( subscription: Observable<Results.IPositionMulti> ):void{ return this.connection.cancelPositions( subscription ); }
@@ -782,9 +790,10 @@ export class TwsService
 	accountUpdateUnsubscribe( accountId:string, request:AccountUpdateType ){ this.connection.accountUpdateUnsubscribe(accountId,request); };
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
+	cancelMktDataSingle( x:TickObservable ):void{ new Map<number,TickObservable>( [[0,x]]).values(); }
 	reqExecutions( query:Requests.IRequestExecutions=new Requests.RequestExecutions() ):ExecutionObservable{ return this.connection.reqExecutions( query ); }
 	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>{ return this.connection.reqFundamentals( contractId ); }
-	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Observable<Bar>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
+	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Promise<IBar[]>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
 	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Observable<Results.IOptionValues>{ return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike); }
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit); }
@@ -792,6 +801,7 @@ export class TwsService
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Observable<Results.IOptionParams>{ return this.connection.reqOptionParams(underlyingId); }
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
+	//reqPreviousDaySingle( id:number ):Promise<Results.IDaySummary>{ return ObservableUtilities.toPromise( ()=>{return this.reqPreviousDay([id]);} ); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
 	watchs():Promise<string[]>{ return this.connection.watchs(); };
@@ -799,6 +809,25 @@ export class TwsService
 	watch( name:string ):Promise<Watch.File>{ return this.connection.watch(name); };
 	deleteWatch( name:string ):Promise<void>{ return this.connection.deleteWatch(name); };
 	editWatch( file:Watch.File ):Promise<void>{ return this.connection.editWatch(name); };
+
+	// {
+	// 	return new Promise<Results.IContractDetails>( (resolve,reject)=>
+	// 	{
+	// 		let details = new Array<Results.IContractDetails>();
+	// 		this.reqContractDetails( {symbol: symbol} ).subscribe(
+	// 		{
+	// 			next: value=>{ details.push(value); },
+	// 			complete: ()=>
+	// 			{
+	// 				if( details.length==1 )
+	// 					resolve( details[0] );
+	// 				else
+	// 					reject( {details: details, error:null} );
+	// 			},
+	// 			error: e=>{ reject( {details: details, error:e} ); }
+	// 		});
+	// 	});
+	// }
 
 	static get accounts():{ [k: string]: string }{return this._accounts;} static set accounts(value:{ [k: string]: string }){this._accounts=value;} private static _accounts:{ [k: string]: string };
 	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( /*this.cnsl*/); return this._connection;} private _connection:Connection;

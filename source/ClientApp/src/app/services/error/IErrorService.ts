@@ -1,7 +1,7 @@
 ﻿
 export abstract class IErrorService
 {
-	abstract error( message:string, error: any ):void;
+	abstract error( message:string, error?: any ):void;
 	abstract assert( condition:boolean ):void;
 	abstract warn( message: string ):void;
 	abstract info( message:string):void;

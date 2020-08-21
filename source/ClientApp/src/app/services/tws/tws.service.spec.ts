@@ -7,7 +7,7 @@ import IB = ib2.Jde.Markets.Proto;
 import * as IbWatch from '../../proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
 
-describe('TwsServiceTest', () =>
+describe('TwsService', () =>
 {
 	//beforeEach(async(() => { TestBed.configureTestingModule( {declarations: [TwsService]} ).compileComponents(); }));
 	let service: TwsService;
@@ -16,14 +16,15 @@ describe('TwsServiceTest', () =>
 	beforeEach(() =>
 	{
 		console.log( 'beforeEach' );
+		service = new TwsService();
 		//const cnsl2:IErrorService =  new ErrorService();
 
-		TestBed.configureTestingModule({
+/*		TestBed.configureTestingModule({
 		  // Provide both the service-to-test and its (spy) dependency
 		  //providers: [TwsService, { provide:IErrorService, useValue: cnsl2 } ]
 		});
 		// Inject both the service-to-test and its (spy) dependency
-		service = TestBed.inject(TwsService);
+		service = TestBed.inject(TwsService);*/
 		//cnsl = TestBed.inject<IErrorService>( ErrorService );
 	});
 	it('should create the service', () =>

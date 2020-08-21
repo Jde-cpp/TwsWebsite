@@ -48,7 +48,7 @@ export class Option extends TickEx
 	unsubscribe()
 	{
 		if( this.subscription )
-			this.tws.cancelMktData( new Map<number,TickObservable>([[0,this.subscription]]) );
+			this.tws.cancelMktData( this.subscription );
 	}*/
 	// askSize:number;
 	// ask:number;

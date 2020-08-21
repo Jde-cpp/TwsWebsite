@@ -1,4 +1,4 @@
-<mat-tab-group *ngIf="settingsContainer?.loadedPromise | async" #symbolTabs [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)">
+<mat-tab-group *ngIf="profile?.loadedPromise | async" #symbolTabs [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)">
 	<!-- [(selectedIndex)]="settings.selectedIndex" -->
 	<mat-tab *ngFor="let symbol of previousSymbols; let i = index">
 		<ng-template mat-tab-label>{{symbol}}</ng-template>

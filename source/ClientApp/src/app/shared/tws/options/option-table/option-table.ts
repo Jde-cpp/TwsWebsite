@@ -3,7 +3,7 @@ import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import { Observable, Subscription } from 'rxjs';
 import {IErrorService} from 'src/app/services/error/IErrorService'
-import { TwsService, Bar } from 'src/app/services/tws/tws.service';
+import { TwsService, IBar } from 'src/app/services/tws/tws.service';
 import{ TickObservable } from 'src/app/services/tws/ITickObserver'
 import { Tick, TickEx } from 'src/app/services/tws/Tick';
 import {Option} from './option';

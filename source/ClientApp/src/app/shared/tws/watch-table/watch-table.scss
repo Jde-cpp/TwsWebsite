@@ -1,0 +1,55 @@
+.watchRow
+{
+	display: flex;
+	text-align: right;
+	/*justify-content:center*/
+}
+
+.base
+{
+	flex-grow: 0;
+	flex-shrink: 0;
+	flex-basis:100px;
+	min-width: 100px;
+	min-height: 20px;
+}
+.amount
+{
+	@extend .base;
+}
+.change
+{
+	@extend .base;
+	flex-basis:120px;
+	min-width: 120px;
+}
+
+.range
+{
+	@extend .base;
+	flex-basis:200px;
+	min-width: 200px;
+}
+.shares
+{
+	@extend .base;
+}
+.shareCount
+{
+	@extend .base;
+}
+.size
+{
+	@extend .base;
+}
+.symbol
+{
+	@extend .base;
+	flex-basis: 80px;
+	min-width:  80px;
+	min-height: 20px;
+}
+.volume
+{
+	@extend .base;
+}

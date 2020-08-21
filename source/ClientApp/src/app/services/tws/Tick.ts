@@ -7,6 +7,9 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import { BidiModule } from '@angular/cdk/bidi';
 import { interval } from 'rxjs';
+import { TwsService } from './tws.service';
+import { Day } from 'src/app/utilities/dateUtilities';
+import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 
 /*
 export interface ITicker
@@ -147,9 +150,44 @@ export class TickEx extends Tick
 {
 	constructor( private _contract:IB.IContract, isMarketOpen:boolean )
 	{
-		super( isMarketOpen==null ? MarketUtilities.isMarketOpen2(_contract.exchange, _contract.securityType) : isMarketOpen );
-		if( !_contract.multiplier )
-			_contract.multiplier = 1;
+		super( _contract && (isMarketOpen ?? false) ? MarketUtilities.isMarketOpen2(_contract.exchange, _contract.securityType) : isMarketOpen );
+		if( _contract )
+		{
+			if( !_contract.multiplier )
+				_contract.multiplier = 1;
+		}
+	}
+	reqPrevious( tws:TwsService, previousDay:Day ):Promise<void>
+	{
+		return new Promise<void>( (resolve,reject)=>
+		{
+			tws.reqPreviousDay( [this.contract.id] ).subscribe(
+			{
+				next: ( bar:Results.IDaySummary ) =>
+				{
+					if( this.isMarketOpen && bar.day>previousDay )
+					{
+						this.high = bar.high;
+						this.low = bar.low;
+						this.open = bar.open;
+					}
+					else if( this.isMarketOpen || bar.day==previousDay )
+						this.close = bar.close;
+					else if( bar.day>previousDay )
+					{
+						this.high = bar.high;//!isMarketOpen && day>previousDay
+						this.low = bar.low;
+
+						this.bid = bar.bid;
+						this.ask = bar.ask;
+						this.volume = ProtoUtilities.toNumber( bar.volume );
+						this.last = ProtoUtilities.toNumber( bar.close );
+					}
+				},
+				complete:()=>{ if( !this.close ) console.log( `No previous day close for '${this.contract.symbol}'` ); resolve(); },
+				error: e=>{ console.error(e); reject(e); }
+			});
+		});
 	}
 
 	get contract():IB.IContract{ return this._contract; }
@@ -166,12 +204,21 @@ export class TickEx extends Tick
 	get strike():number{ return this.option.strike; }
 	get change():number
 	{
-		//if( this.contract.symbol=="AAPL" )
-		//	this._contract.multiplier = 1.0;
 		var change  = this.close>0 ? this.currentPrice-this.close : 0;
 		//if( change>5.0 )
 		//    console.log( `change=${change}` )
 		return change;
 	}
 //	isMarketOpen:boolean;
+}
+
+export class TickDetails extends TickEx
+{
+	constructor( public details:Results.IContractDetails )
+	{
+		super( null, MarketUtilities.isMarketOpen(details) );
+		if( !details.contract.multiplier )
+		details.contract.multiplier = 1;
+	}
+	get contract():IB.IContract{ return this.details.contract; }
 }

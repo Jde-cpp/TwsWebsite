@@ -2,7 +2,7 @@ import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ViewEncapsulati
 import { MatTable } from '@angular/material/table';
 import {MatDialog} from '@angular/material/dialog';
 import { Observable } from 'rxjs';//,of
-import { TwsService, Bar } from 'src/app/services/tws/tws.service';
+import { TwsService, IBar } from 'src/app/services/tws/tws.service';
 import { IProfile } from 'src/app/services/profile/IProfile';
 import {TickObservable} from 'src/app/services/tws/ITickObserver'
 import {Holding, TermHoldingSummary, Price} from './holding'

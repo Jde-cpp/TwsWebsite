@@ -166,6 +166,6 @@ export class OptionEntryDialog implements OnDestroy
 	underlying:Results.IContractDetails;
 	//get underlyingSymbol(){return this.underlying.contract.symbol;}
 	get option():TickEx{ return this._option}; set option(value){ if(!value) this.subscription=null; this._option = value; } _option:TickEx;
-	get subscription(){return this._subscription;} set subscription(value){ if( this.subscription ) this.tws.cancelMktData( new Map<number,TickObservable>( [[0,this.subscription]]).values() ); this._subscription=value;} _subscription:TickObservable;
+	get subscription(){return this._subscription;} set subscription(value){ if( this.subscription ) this.tws.cancelMktDataSingle( this.subscription ); this._subscription=value;} _subscription:TickObservable;
 	private _submitting=false;
 }

@@ -46,14 +46,10 @@ export class WatchComponent implements AfterViewInit, OnInit, OnDestroy
 		{
 			this.tws.watchs().then( (names)=>
 			{
-				if( names.length==0 )
-					names = [""];
+				names.push( "" );
 				this.names = names;
 				this.resolve( true );
-			} ).catch( (e)=>
-			{
-				this.cnsle.error( e.message, e );
-			});
+			} ).catch( (e)=>{this.cnsle.error(e.message, e); });
 		});
 	}
 	names:string[];

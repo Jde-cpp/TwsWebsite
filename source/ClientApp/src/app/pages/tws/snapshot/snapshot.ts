@@ -41,7 +41,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{}
 	ngAfterViewInit():void
 	{
-	/*	this.settingsContainer.load().then( (value)=>
+	/*	this.profile.load().then( (value)=>
 		{
 			if( this.settings.selectedIndex!=0 )
 			{
@@ -49,10 +49,10 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 				this.previousSymbols.splice( this.settings.selectedIndex, 1 );
 				this.previousSymbols.unshift( symbol );
 				this.settings.selectedIndex = 0;
-				this.settingsContainer.save();
+				this.profile.save();
 			}
 			//this.previousSymbols[0] = "SHOP";
-			//this.settingsContainer.save();
+			//this.profile.save();
 			setTimeout( ()=>
 			{
 				if( this.symbolTabs.selectedIndex != this.settings.selectedIndex )
@@ -65,14 +65,14 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 			if( this.settings.selectedIndex != value )
 			{
 			    this.settings.selectedIndex = value;
-			    this.settingsContainer.save();
+			    this.profile.save();
 			}
 		});
 	}
 	ngOnDestroy()
 	{
 		this.settings.selectedIndex = this.selected.value;
-		this.settingsContainer.save();
+		this.profile.save();
 	}
 	onSymbol( symbol:string )
 	{
@@ -90,7 +90,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		// this.settings.selectedIndex = index;
 		// if( this.symbolTabIndex.value!=index )
 		// 	this.symbolTabIndex.setValue( index );
-		// this.settingsContainer.save();
+		// this.profile.save();
 		// //this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
 		// this.setSymbol( this.previousSymbols[index] );
 	}
@@ -115,8 +115,8 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 //	get treeSettings(){ return this.symbolSettings.treeSettings; } set treeSettings( value:ITreeSettings ){this.symbolSettings.treeSettings = value;this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );}
 	selected = new FormControl(0);
 	get selectedIndex(){ return this.selected.value; }
-	settingsContainer:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
-	get settings():PageSettings{ return this.settingsContainer ? this.settingsContainer.value : null; }
+	profile:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
+	get settings():PageSettings{ return this.profile ? this.profile.value : null; }
 
 
 	@ViewChild( 'symbolTabs', {static: false} ) symbolTabs;

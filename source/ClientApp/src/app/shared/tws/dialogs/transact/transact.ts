@@ -27,7 +27,7 @@ export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : Tw
 	let settingsContainer = new Settings<DialogSettings>( DialogSettings, "TransactDialog", profile );
 	settingsContainer.load().then( ()=>
 	{
-		tws.reqManagedAccts().subscribe( (numbers)=>
+		tws.reqManagedAccts().then( (numbers)=>
 		{
 			let allAccounts = new Map<string,string>();
 			for( let account in numbers )

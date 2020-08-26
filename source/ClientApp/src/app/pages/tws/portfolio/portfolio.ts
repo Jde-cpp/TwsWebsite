@@ -51,7 +51,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 
 	onSettingsLoaded()
 	{
-		this.tws.reqManagedAccts().subscribe( (numbers)=>
+		this.tws.reqManagedAccts().then( (numbers)=>
 		{
 			this.allAccounts.clear();
 			for( let account in numbers )

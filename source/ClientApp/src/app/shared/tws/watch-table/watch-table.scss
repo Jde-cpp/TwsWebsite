@@ -27,8 +27,8 @@
 .range
 {
 	@extend .base;
-	flex-basis:200px;
-	min-width: 200px;
+	flex-basis:120px;
+	min-width: 120px;
 }
 .shares
 {
@@ -41,6 +41,8 @@
 .size
 {
 	@extend .base;
+	flex-basis:70px;
+	min-width: 70px;
 }
 .symbol
 {

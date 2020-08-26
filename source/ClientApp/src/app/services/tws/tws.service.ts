@@ -22,7 +22,7 @@ import { ThemeStorage } from 'src/app/shared/material-site/theme-picker/theme-st
 
 type ResolveGeneric = (any) => void;
 type ClientId = number;
-
+type StringMap = { [k: string]: string };
 export interface IBar
 {
 	time:Date;
@@ -146,12 +146,16 @@ class Connection
 				else if( !original )
 				{ debugger;	console.error( `(${webId}) No callbacks for ${isOrderStatus ? 'order status' : 'open order'}.` ); }
 			}
-			else if( message.accountList )
+			else if( message.stringMap )
 			{
-				TwsService.accounts = message.accountList.values;
-				if( this.reqManagedAcctsPromise )
-					this.reqManagedAcctsPromise.next( TwsService.accounts );
-				this.reqManagedAcctsPromise = null;
+				let promises = this.stringMapPromises.get( message.stringMap.result );
+				if( promises )
+				{
+					for( let promise of promises )
+						promise[0]( message.stringMap.values );
+				}
+				else
+					console.log( `no listener for stringmap ${Results[message.stringMap.result]}` );
 			}
 			else if( message.accountUpdateMulti )
 			{
@@ -458,14 +462,23 @@ class Connection
 		const writer = Requests.RequestTransmission.encode( transmission );
 		this.socket.next( writer.finish() );//'17\0'+'1\0'
 	}
-	reqManagedAccts(): Observable<{ [k: string]: string }>
+	private stringMapPromise( request:Requests.ERequests, result:Results.EResults):Promise<StringMap>
 	{
-		if( !this.reqManagedAcctsPromise )
-		{
-			this.reqManagedAcctsPromise = new Subject<{ [k: string]: string }>();
-			this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.ManagedAccounts}}) );
-		}
-		return this.reqManagedAcctsPromise;
+		console.log( Requests.ERequests[request] );
+		let promises = this.stringMapPromises.get( result );
+		if( !promises )
+			this.stringMapPromises.set( result, promises = new Array<[(x:StringMap)=>void,(x:Results.IError)=>void]>() );
+
+		this.send( new Requests.RequestUnion({"genericRequests": {"type": request}}) );
+		return new Promise<StringMap>( (resolve,reject)=>{ promises.push( [resolve,reject] ); });
+	}
+	reqManagedAccts(): Promise<StringMap>
+	{
+		return this.stringMapPromise( Requests.ERequests.ManagedAccounts, Results.EResults.ManagedAccounts );
+	}
+	reqNewsProviders():Promise<StringMap>
+	{
+		return this.stringMapPromise( Requests.ERequests.ReqNewsProviders, Results.EResults.NewsProviders );
 	}
 
 	reqMktData( contractId:number, tickList:Requests.ETickList[], snapshot:boolean ):TickObservable
@@ -525,10 +538,10 @@ class Connection
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})RequestHistoricalData( '${contract.id} - end:${date} for ${days}D ${Requests.BarSize[barSize]} ${Requests.Display[display]} useRth:${useRth}, keepUpToDate:${keepUpToDate}` );
-		let toBars = ( ib:Results.Bar[] )=>
+		let toBars = ( ib:Results.IHistoricalData )=>
 		{
 			let myBars:IBar[] = [];
-			for( const bar of ib )
+			for( const bar of ib.bars )
 				myBars.push( { time:new Date(bar.time*1000), high:ProtoUtilities.toNumber(bar.high), low:ProtoUtilities.toNumber(bar.low), open:ProtoUtilities.toNumber(bar.open), close:ProtoUtilities.toNumber(bar.close), wap:ProtoUtilities.toNumber(bar.wap), volume:ProtoUtilities.toNumber(bar.volume), count:ProtoUtilities.toNumber(bar.count)} );
 			return myBars;
 		}
@@ -731,26 +744,26 @@ class Connection
 	{
 		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"id": this.getRequestId(), "type": type, "ids": ids}, result, transform );
 	}
-	sendStringPromise2<TResult>( name:string, type:Requests.ERequests, result:GetResult=null ):Promise<TResult>
+	sendStringPromise2<TResult>( name:string, type:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
 	{
-		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, null );
+		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, transform );
 	}
 	StringRequest( type:Requests.ERequests, name:string ):Requests.IStringRequest
 	{
 		return {id: this.getRequestId(), "type": type, "name": name};
 	}
 	static transformStringList( result:Results.IStringList ){ return result.values; }
-	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList) };
+	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
 	portfolios():Promise<string[]>{ return this.sendGenericPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
-	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise2<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}); };
+	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise2<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}, (wl:Results.IWatchList)=>{return wl.file;} ); };
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
-	editWatch( file:Watch.File ):Promise<void>{ return this.sendPromise2<Requests.IEditWatchListRequest,void>( "editWatchList", {"id": this.getRequestId(), "file": file}, null, null ); };
+	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise2<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
 
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
 	private socket:WebSocketSubject<protobuf.Buffer>;
 	private sessionId:number|Long|null;
 
-	private reqManagedAcctsPromise:Subject<{ [k: string]: string }>;
+	private stringMapPromises = new Map<Results.EResults,Array<[(x:StringMap)=>void,(x:Results.IError)=>void]>>();
 	//private portfolioUpdateCallbacks = new Map<string,PortfolioUpdateCallback>();
 	private accountUpdateCallbacks = new Map <string, Array<[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>>();
 	private accountUpdateMultiCallbacks = new Map<number, [AccountUpdateCallback, EndCallback]>();
@@ -777,7 +790,10 @@ export class TwsService
 {
 	constructor( /*@Inject('IErrorService') private cnsl: IErrorService*/ )
 	{}
-	reqManagedAccts(): Observable<{ [k: string]: string }>{ return TwsService.accounts ? of( TwsService.accounts ) : this.connection.reqManagedAccts(); }
+
+	reqManagedAccts():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.accounts ) resolve( TwsService.accounts ); else this.connection.reqManagedAccts().then( (x)=>{TwsService.accounts=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
+	reqNewsProviders():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.newsProviders ) resolve( TwsService.newsProviders ); else this.connection.reqManagedAccts().then( (x)=>{TwsService.newsProviders=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
+	//reqHistoricalNews( )TODO also reqNewsArticle.
 
 	reqContractDetails( contract:IB.IContract ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetails(contract); }
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetailsMulti(contractIds); }
@@ -801,34 +817,16 @@ export class TwsService
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Observable<Results.IOptionParams>{ return this.connection.reqOptionParams(underlyingId); }
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
-	//reqPreviousDaySingle( id:number ):Promise<Results.IDaySummary>{ return ObservableUtilities.toPromise( ()=>{return this.reqPreviousDay([id]);} ); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
 	watchs():Promise<string[]>{ return this.connection.watchs(); };
 	portfolios():Promise<string[]>{ return this.connection.portfolios(); };
 	watch( name:string ):Promise<Watch.File>{ return this.connection.watch(name); };
 	deleteWatch( name:string ):Promise<void>{ return this.connection.deleteWatch(name); };
-	editWatch( file:Watch.File ):Promise<void>{ return this.connection.editWatch(name); };
+	editWatch( file:Watch.File ):Promise<void>{ return this.connection.editWatch(file); };
 
-	// {
-	// 	return new Promise<Results.IContractDetails>( (resolve,reject)=>
-	// 	{
-	// 		let details = new Array<Results.IContractDetails>();
-	// 		this.reqContractDetails( {symbol: symbol} ).subscribe(
-	// 		{
-	// 			next: value=>{ details.push(value); },
-	// 			complete: ()=>
-	// 			{
-	// 				if( details.length==1 )
-	// 					resolve( details[0] );
-	// 				else
-	// 					reject( {details: details, error:null} );
-	// 			},
-	// 			error: e=>{ reject( {details: details, error:e} ); }
-	// 		});
-	// 	});
-	// }
 
-	static get accounts():{ [k: string]: string }{return this._accounts;} static set accounts(value:{ [k: string]: string }){this._accounts=value;} private static _accounts:{ [k: string]: string };
+	private static accounts:StringMap;
+	private static newsProviders:StringMap;
 	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( /*this.cnsl*/); return this._connection;} private _connection:Connection;
 }

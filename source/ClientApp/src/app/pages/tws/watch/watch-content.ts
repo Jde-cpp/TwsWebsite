@@ -76,10 +76,42 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 		else
 			onFile( new Watch.File() );
 	}
-
-	//details = new Array<Results.IContractDetails|null>();
+	onSelectedChanged( details:Results.IContractDetails|null|undefined )
+	{
+		this.selection = details;
+	}
+	save():Promise<void>
+	{
+		return this.tws.editWatch( this.file );
+	}
+	selection:Results.IContractDetails|null|undefined;
+	get canAdd(){ return this.selection!==undefined; }
 	file:Watch.File;
-	@Input() set name(value){ this._name=value; } get name():string{ return this._name; } private _name;
-	get isPortfolio(){ return this.file.isPortfolio; } set portfolio(x){this.file.isPortfolio=x;}
+	@Input() set name(x)
+	{
+		if( !this.file )
+			this._name = x;
+		else
+		{
+			this._name = undefined;
+			const oldName = name;
+			const save = x && this.file.name!=x;
+			this.file.name=x;
+			if( save )
+			{
+				this.save().catch( (e)=>
+				{
+					this.file.name = oldName;
+				});
+			}
+		}
+	} get name():string{ return this.file?.name || this._name; } _name:string;
+	get isPortfolio()
+	{
+		return this.file.isPortfolio;
+	} set isPortfolio(x)
+	{
+		this.file.isPortfolio=x;
+	}
 	viewPromise:Promise<boolean>;
 }

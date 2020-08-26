@@ -34,15 +34,21 @@
 	<div id="chart2"></div>
 	<mat-tab-group #tabs (selectedTabChange)="onTabChange($event)" >
 		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>News</ng-template>
+			<ng-template matTabContent>
+				<news [contract]="contract" [index]="0" [tabEvents]="tabEvents.asObservable()"></news>
+			</ng-template>
+		</mat-tab>
+		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
 			<ng-template matTabContent>
-				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></candlestick>
+				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="1" [tabEvents]="tabEvents.asObservable()"></candlestick>
 			</ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Options</ng-template>
 			<ng-template matTabContent>
-				<option-tab [tick]="tick" [index]="1" [tabEvents]="tabEvents.asObservable()"></option-tab>
+				<option-tab [tick]="tick" [index]="2" [tabEvents]="tabEvents.asObservable()"></option-tab>
 			</ng-template>
 		</mat-tab>
 	</mat-tab-group>

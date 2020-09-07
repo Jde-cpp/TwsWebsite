@@ -20,13 +20,19 @@ import * as IbWatch from 'src/app//proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { subscribeOn } from 'rxjs/operators';
 import { DateUtilities } from 'src/app/utilities/dateUtilities';
+import { IProfile } from 'src/app/services/profile/IProfile';
+import { Tick } from 'highcharts';
+import { toMap } from 'src/app/utilities/collections';
 
 @Component({selector: 'watch-table', templateUrl: './watch-table.html', styleUrls:['./watch-table.scss']})
 export class WatchTableComponent implements OnInit, AfterViewInit
 {
-	constructor( private tws : TwsService, @Inject('IErrorService') private cnsle: IErrorService, private componentFactoryResolver:ComponentFactoryResolver )
+	constructor( private tws : TwsService, @Inject('IErrorService') private cnsle: IErrorService, private componentFactoryResolver:ComponentFactoryResolver, @Inject('IProfile') private profileService: IProfile )
 	{}
-	ngOnInit(){ }
+	ngOnInit()
+	{
+		this.changeTable.subscribe( this.onChangeTable );
+	}
 	ngAfterViewInit()
 	{
 		this.load();
@@ -37,8 +43,14 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	}
 	onChangeSymbol( row:WatchRowComponent, symbol:string )
 	{
-		this.tws.reqSymbolDetails( symbol ).then( (detail)=>
+		this.tws.reqSymbol( symbol ).then( (details)=>
 		{
+			if( details.length!=1 )
+			{
+				console.warn( `(${symbol}) - returned '${details.length}' records.` );
+				return;
+			}
+			const detail = details[0];
 			const constractId = detail.contract.id;
 			const existing = this.findContract( constractId );
 			if( !existing )
@@ -55,23 +67,66 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 				if( index==this.rows.length-1 )
 					this.addRow();
 			}
-		}).catch( (e)=> console.log(e.toString()) );//`${symbol} return ${e.details.length} records.`)
+		}).catch( (e)=> console.log(e.error?.message) );//`${symbol} return ${e.details.length} records.`)
 	}
-	lineAdd()
+	onChangeTable = ( x:string )=>
 	{
-		this.addRow( );
-		let previous:WatchRowComponent;
-		let i=0;
-		for( let row of this.rows )
+		if( x=="insert" )
+			this.lineAdd();
+		else if( x=="delete" )
+			this.lineDelete();
+		else if( x=="cut" )
 		{
-			let instance = row.instance;
-			const set = previous!=undefined;
+			this.profileService.put( "clipboard", {"Jde.Markets.Proto.Results.IContractDetails": this.selected.detail} );
+			this.lineDelete();
+		}
+		else if( x=="copy" )
+			this.profileService.put( "clipboard", {"Jde.Markets.Proto.Results.IContractDetails": this.selected.detail} );
+		else if( x=="paste" )
+		{
+			this.profileService.get( "clipboard" ).then( (x)=>
+			{
+				var detail = x["Jde.Markets.Proto.Results.IContractDetails"];
+				if( detail )
+				{
+					this.lineAdd();
+					this.setRowDetail( this.selected, detail );
+				}
+			});
+		}
+	}
+	lineAdd()/*:WatchRowComponent*/
+	{
+		/*let newRow =*/ this.addRow();
+		this.file.securities.push( new Watch.Entry() );
+		let previous:[number,TickDetails];
+		let i=0;
+		let change = false;
+		for( let i=0; i<this.file.securities.length; ++i )
+		{
+			let instance = this.rows[i].instance;
+			const original:[number,TickDetails] = [instance?.shares, instance?.tick];
+			const set = previous!==undefined;
 			if( set )
-				instance.set( previous.shares, previous.tick );
-			if( set || instance.rowId==this.selected.rowId )
-				previous = instance;
+			{
+				change = change || previous[1]!=null;
+				instance.set( previous[0], previous[1] );
+				this.file.securities[i].contractId = instance.contractId;
+				this.file.securities[i].shares = instance.shares;
+			}
+			const isSelected = instance.rowId==this.selected.rowId;
+			if( set || isSelected )
+				previous = original;
+			if( isSelected )
+			{
+				this.selected.clear();
+				this.file.securities[i].contractId = this.file.securities[i].shares = 0;
+			}
 		}
 		this.selected.clear();
+		if( change )
+			this.tws.editWatch( this.file );
+		//return newRow;
 	}
 	lineDelete()
 	{
@@ -91,10 +146,9 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	}
 	load()
 	{
-		var details = new Map<number,Results.IContractDetails>();
 		var ids = [];
 		this.file.securities.forEach( (entry)=>{ if( entry.contractId ) ids.push(entry.contractId); } );
-		let subscribe = ()=>
+		let subscribe = (details:Map<number,Results.IContractDetails>)=>
 		{
 			for( const entry of this.file.securities )
 			{
@@ -110,16 +164,9 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			this.viewPromise = Promise.resolve( true );//<boolean>( (resolve) => {this.resolve = resolve;} )
 		};
 		if( ids.length )
-		{
-			this.tws.reqContractDetailsMulti( ids ).subscribe(
-			{
-				next: value=>{ details.set( value.contract.id, value ); },
-				complete: ()=>{ subscribe(); },
-				error: e=>{ this.cnsle.error(e.message, e); }
-			});
-		}
+			this.tws.reqIds( ids ).then( (x)=>subscribe(toMap(x, (value)=>{return value.contract.id;})) ).catch( (e)=>this.cnsle.error(e.message, e) );
 		else
-			subscribe();
+			subscribe( new Map<number,Results.IContractDetails>() );
 	}
 	viewable( columnId:string ):boolean
 	{
@@ -168,25 +215,21 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		this.rows.push( component );
 		return instance;
 	}
+	//https://stackoverflow.com/questions/44939878/dynamically-adding-and-removing-components-in-angular
 	remove( index: number )
 	{
-		//https://stackoverflow.com/questions/44939878/dynamically-adding-and-removing-components-in-angular
-		//if( this.container.length < 1 )
-		//	return;
-
-		//let componentRef = this.components[index];
-		//let instance = componentRef.instance;
-		//let vcrIndex: number = this.container.indexOf( componentRef )
-
-		// removing component from container
 		this.container.remove( index );
-		this.rows.splice( index, 1 );// = this.components.filter( x => x.instance.index !== index );
+		this.rows.splice( index, 1 );
+		//if( this.file.securities.length>index ) should always be true?
+			this.file.securities.splice( index, 1 );
+			this.tws.editWatch( this.file );
 		for( let i=index; i<this.rows.length; ++i )
 			this.rows[i].instance.oddRow = i%2==1;
   }
+  @Input() changeTable:Subject<string>;
 	index:number=0;
 	rows = new Array<ComponentRef<WatchRowComponent>>();
-	set selected(x){ if(this._selected)this._selected.selected = false; this._selected=x; this.selectedChanged.emit( x ? x.detail || null : undefined);} _selected:WatchRowComponent;
+	set selected(x){ let previous = this._selected; this._selected=x; if( previous ) previous.selected = false; this.selectedChanged.emit( x ? x.detail || null : undefined);} get selected(){return this._selected;} private _selected:WatchRowComponent;
 	@Output() selectedChanged = new EventEmitter<Results.IContractDetails>();
 	@ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
 }

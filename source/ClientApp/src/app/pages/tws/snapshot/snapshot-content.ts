@@ -6,7 +6,7 @@ import { Subject } from 'rxjs';
 import theme from 'highcharts/themes/dark-unica';
 import * as Highcharts from 'highcharts/highstock';
 import {ConfigurationData,ConfigurationDialog} from './configuration'
-import {Fundamentals } from './fundamentals'
+import {Fundamentals } from './fundamentals/fundamentals'
 import {PageSettings} from './snapshot'
 import { TransactDoModal } from '../../../shared/tws/dialogs/transact/transact'
 //import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
@@ -15,7 +15,7 @@ import {IErrorService} from 		'src/app/services/error/IErrorService'
 import { IProfile } from 			'src/app/services/profile/IProfile';
 import { TwsService, IBar } from 	'src/app/services/tws/tws.service';
 import{ TickObservable } from 	'src/app/services/tws/ITickObserver'
-import { TickEx } from 				'src/app/services/tws/Tick';
+import { TickEx, TickDetails } from 'src/app/services/tws/Tick';
 import {DateUtilities} from 		'src/app/utilities/dateUtilities'
 import { MarketUtilities } from 	'src/app/utilities/marketUtilities';
 import {MathUtilities, StatResult} from  'src/app/utilities/mathUtilities';
@@ -53,8 +53,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	ngOnInit()
 	{
-		console.log( `(${this.symbol})SnapshotContentComponent::ngOnInit` );
-		this.settingsSymbolContainer = new Settings<SymbolSettings>(SymbolSettings, `SnapshotComponent.${this.symbol}`, this.profileService );
+		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::ngOnInit` );
+		this.settingsSymbolContainer = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
 		// var contract = new IB.Contract();
 		// contract.symbol = symbol;
 		// contract.securityType = "STK";
@@ -63,26 +63,12 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	ngAfterViewInit():void
 	{
-		console.log( `(${this.symbol})SnapshotContentComponent::ngAfterViewInit` );
-		this.run();
-	}
-	run()
-	{
+		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::ngAfterViewInit` );
 		const initialized = this.indexSelectedSymbol==this.index;
-		console.log( `(${this.symbol})SnapshotContentComponent::run initialized=${initialized}` );
+		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::run initialized=${initialized}` );
 		if( !initialized )
 			return;
-		this.settingsSymbolContainer.loadedPromise.then( ()=>
-		{
-			let contract = { 'symbol': this.symbol, securityType: IB.SecurityType.Stock, exchange: IB.Exchanges.Smart, currency: "USD" };
-			let details:Results.IContractDetails[] = [];
-			this.tws.reqContractDetails( contract ).subscribe(
-			{
-				next: value=>{ details.push(value);},
-				complete: ()=>{ if(details.length==1)this.onContractDetails(details[0]); else this.onError({ message: `${this.symbol} return ${details.length} records.`} ); },
-				error: e=>{this.onError(e);}
-			});
-		});
+		this.settingsSymbolContainer.loadedPromise.then( ()=>{this.onContractDetails();} );
 	}
 	ngOnDestroy()
 	{
@@ -92,40 +78,46 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 
 	setSymbol( symbol:string )
 	{
-		if( symbol && symbol!=this.symbol )
-			this.symbolEvent.next( symbol );
+		if( symbol && symbol!=this.detail.contract.symbol )
+		{
+			this.tws.reqSymbol( symbol ).then( (results)=>
+			{
+				if( results.length>1 )
+				{
+					for( let i=0; i<results.length && results.length>1; ++i )
+					{
+						if( results[i].contract.currency!=MarketUtilities.DefaultCurrency )
+						    results.splice( i, 1 );
+					}
+				}
+				if( results.length==1 )
+					this.symbolEvent.next( results[0] );
+			});
+		}
 	}
 	onConfigurationClick()
 	{
 		var data:ConfigurationData = { symbolSettings: this.settingsSymbolContainer, pageSettings: this.pageSettings }
 		const dialogRef = this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
 	}
-	onContractDetails = ( details: Results.IContractDetails ):void =>
+	onContractDetails():void
 	{
-		this.details = details;
-		const isMarketOpen = MarketUtilities.isMarketOpen( this.details );
-		let tick = this.tick = new TickEx( details.contract, isMarketOpen );
-		this.loadedResolve( true );
-		//this.contractEvents.next( tick );
-		this.tws.reqFundamentals( details.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} );
+		let tick = this.tick = new TickDetails( this.detail );
+		this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} );
+		this.loadedPromise = Promise.resolve( true );
 		const now = new Date();
-	/*	if( this.symbol=="TSLA" )
-			this.setShortInterest( 13958518, new Date(2020,6,30) );
-		if( this.symbol=="SPY" )//https://www.wsj.com/market-data/quotes/etf/US/ARCX/SPY
-			this.setShortInterest( 193700000, new Date(2020,6,30) );
-		*/
-		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDate(now, details.tradingHours[0]) );
+		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDate(now, this.detail.tradingHours[0]) );
 		this.tws.reqPreviousDay( [this.contract.id] ).subscribe(
 		{
 			next: ( bar:Results.IDaySummary ) =>
 			{
-				if( isMarketOpen && bar.day>previousDay )
+				if( tick.isMarketOpen && bar.day>previousDay )
 				{
 					tick.high = bar.high;
 					tick.low = bar.low;
 					tick.open = bar.open;
 				}
-				else if( isMarketOpen || bar.day==previousDay )
+				else if( tick.isMarketOpen || bar.day==previousDay )
 					tick.close = bar.close;
 				else if( bar.day>previousDay )
 				{
@@ -141,7 +133,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			complete:()=>
 			{
 				if( !tick.close )
-					console.log( `No previous day close for '${details.contract.symbol}'` );
+					console.log( `No previous day close for '${this.detail.contract.symbol}'` );
 				this.showChart();
 				this.tabEvents.next( this.tabs?.selectedIndex ?? this.settingsSymbolContainer.value.tabIndex ?? 0 );
 			},
@@ -173,7 +165,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		//}
 		if( this.subscription )
 			this.tws.cancelMktDataSingle( this.subscription );
-		const ticks = [Requests.ETickList.Inventory, (isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
+		const ticks = [Requests.ETickList.Inventory, (this.tick.isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
 /*		if( isMarketOpen )
 			ticks.push( Requests.ETickList.PlPrice );
 		else*/
@@ -193,7 +185,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	onTransactClick( buy:boolean )
 	{
-		TransactDoModal( this.dialog, this.profileService, this.tws, this.details, this.tick, buy );
+		TransactDoModal( this.dialog, this.profileService, this.tws, this.detail, this.tick, buy );
 /*		const dialogRef = this.dialog.open(TransactDialog, {
 			width: '600px', autoFocus: false,
 			data: { details: this.details, tick: this.tick, isBuy: buy }
@@ -210,20 +202,20 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	setShortInterest( value, date )
 	{
 		console.log( `setShortInterest = ${value}` );
-		this.settingsSymbol.shortInterest = value;
-		this.settingsSymbol.shortInterestDate = date;
+		//this.settingsSymbol.shortInterest = value;
+		//this.settingsSymbol.shortInterestDate = date;
 		this.settingsSymbolContainer.save();
 	}
 
 	showChart()
 	{
 		let tws = this.tws, cnsle = this.cnsle, contract = this.contract;
-		let endTime = DateUtilities.endOfDay( MarketUtilities.currentTradingDate( new Date(), MarketUtilities.contractHours(this.details.tradingHours)) );
+		let endTime = DateUtilities.endOfDay( MarketUtilities.currentTradingDate( new Date(), MarketUtilities.contractHours(this.detail.tradingHours)) );
 		tws.reqHistoricalData( contract, DateUtilities.endOfDay(MarketUtilities.previousTradingDate()), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).then( (dayBars)=>
 		{
 			let returns = dayBars.map( (bar)=>{ return (bar.close-bar.open)/bar.open;} );
 			var beginningOfDay = DateUtilities.beginningOfDay(endTime);
-			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.details) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset*60000;
+			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset*60000;
 			tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false ).then( (bars)=>
 			{
 				const openBar = bars.find( bar=>bar.time.getTime()>=openTime );
@@ -235,19 +227,19 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	showChart2( bars, statResult:StatResult )
 	{
-		const tradingHours = MarketUtilities.contractHours( this.details.tradingHours ), now = new Date();
+		const tradingHours = MarketUtilities.contractHours( this.detail.tradingHours ), now = new Date();
 		const currentDate = MarketUtilities.currentTradingDate( now, tradingHours );
 		//console.log( currentDate );
 		//var offset = MarketUtilities.getTimezoneOffset( this.contract.primaryExchange );
 		const range=23400000/*6.5 hours*/, regularEnd = new Date(currentDate);
 
-		const liquidHours = MarketUtilities.contractHours( this.details.liquidHours )
+		const liquidHours = MarketUtilities.contractHours( this.detail.liquidHours )
 		//const startTrading = now.getTime()<contractHours.start*1000 ? MarketUtilities.startTrading( currentDate, this.contract ) : contractHours.start;
-		const isMarketOpen = MarketUtilities.isMarketOpen( this.details );
+		const isMarketOpen = MarketUtilities.isMarketOpen( this.detail );
 		const liquidStart = isMarketOpen ? liquidHours.start*1000 : null;
 		//maxDate = new Date(currentDate)
-		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endLiquid( DateUtilities.endOfDay(currentDate), this.details.contract ).getTime();
-		//const endLiquid =  isMarketOpen ? new Date(liquidHours.end*1000) : MarketUtilities.endLiquid( currentDate, this.details.contract );
+		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endLiquid( DateUtilities.endOfDay(currentDate), this.detail.contract ).getTime();
+		//const endLiquid =  isMarketOpen ? new Date(liquidHours.end*1000) : MarketUtilities.endLiquid( currentDate, this.detail.contract );
 		const minDate = isMarketOpen ? tradingHours.start*1000 : endTrading-range;
 		//minDate.setHours( 4.0 ); maxDate.setHours( 19.0 ); liquidStart.setHours( 9 ); liquidStart.setMinutes( 30 );
 		let getMinMax = ()=>
@@ -351,30 +343,31 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	};
 	onTabChange( event:MatTabChangeEvent )
 	{
-		if( this.settingsSymbol.tabIndex!=event.index )
+		//if( this.settingsSymbol.tabIndex!=event.index )
 		{
 			//this.symbolTabIndex.setValue( event );
 			//this.settings.selectedIndex = event.index;
 			//this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
-			this.settingsSymbolContainer.save();
-			this.tabEvents.next( event.index );
+		//	this.settingsSymbolContainer.save();
+		//	this.tabEvents.next( event.index );
 		}
 	}
 
-	get contract():IB.IContract{ return this.details ? this.details.contract : null; }
+	get contract():IB.IContract{ return this.detail ? this.detail.contract : null; }
 	//get chartSettings(){ return this.settingsSymbol.chartSettings; }
-	details: Results.IContractDetails;
 	fundamentals:Fundamentals;
 	@Input() index:number;
 	@Input() set indexSelectedSymbol(value){ this._indexSelectedSymbol=value; /*if( this.index==this.indexSelectedSymbol ) this.run();*/ } get indexSelectedSymbol(){ return this._indexSelectedSymbol;} private _indexSelectedSymbol:number;
-	loadedPromise = new Promise<boolean>( (resolve) => {this.loadedResolve = resolve;} );
-	private loadedResolve: Function|null;
-	get primaryName():string{ return this.details ? `${this.details.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
-	settingsSymbolContainer:Settings<SymbolSettings>;
-	get settingsSymbol():SymbolSettings{ return this.settingsSymbolContainer.value; }
 	@Input() pageSettings:Settings<PageSettings>;
-	@Input() set symbol(value){ this._symbol=value; } get symbol():string{ return this._symbol; } private _symbol;
-	@Output() symbolEvent = new EventEmitter<string>();
+	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetails;
+
+	loadedPromise:Promise<boolean>;
+	get primaryName():string{ return this.detail ? `${this.detail.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
+	settingsSymbolContainer:Settings<SymbolSettings>;
+	profile:Settings<SymbolSettings> //= new Settings<SymbolSettings>( SymbolSettings, "SnapshotComponent", this.profileService );
+
+	get symbol():string{ return this.tick.contract.symbol; }
+	@Output() symbolEvent = new EventEmitter<Results.IContractDetails>();
 	subscription:TickObservable;
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;
@@ -404,4 +397,5 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		}
 		return display;
 	}
+
 }

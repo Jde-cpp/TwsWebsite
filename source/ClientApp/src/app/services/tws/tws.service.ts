@@ -547,6 +547,20 @@ class Connection
 		}
 		return this.sendPromise2<Requests.IRequestHistoricalData,IBar[]>( "historicalData", {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000}, (result)=>{return result.historicalData}, toBars );
 	}
+	reqHistoricalNews( contractId, providerCodes:string[], totalResults:number, start:Date, end:Date ):Promise<Results.HistoricalNewsCollection>
+	{
+		const id = this.getRequestId();
+		console.log( `(${id})reqHistoricalNews( ${contractId}, [${providerCodes.join()}] )` );
+		const variable = { id:id, contractId:contractId, providerCodes:providerCodes, totalResults: totalResults, start: start ? start.getTime() : 0, end: end ? end.getTime() : 0 };
+		return this.sendPromise2<Requests.IHistoricalNewsRequest,Results.HistoricalNewsCollection>( "historicalNewsRequest", variable, (x)=>{return x.historicalNews;}, null );
+	}
+	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>
+	{
+		const id = this.getRequestId();
+		console.log( `(${id})reqNewsArticle( ${providerCode}, ${articleId} )` );
+		const variable = { id:id, providerCode:providerCode, articleId: articleId };
+		return this.sendPromise2<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle!=null;}, null );
+	}
 	reqContractDetails( contract:IB.IContract ):Observable<Results.IContractDetails>
 	{
 		const callback = new Subject<Results.IContractDetails>();
@@ -566,7 +580,7 @@ class Connection
 		const id = this.getRequestId();
 		const param = new Requests.RequestContractDetails( {"id": id} );
 		for( const id of contractIds )
-			param.contracts.push( new IB.Contract({"id": id, "securityType": IB.SecurityType.Stock, "exchange": IB.Exchanges.Smart, "currency": "USD"}) );
+			param.contracts.push( new IB.Contract({"id": id, "securityType": IB.SecurityType.Stock, "exchange": IB.Exchanges.Smart, "currency": IB.Currencies.UsDollar}) );
 
 		const msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
 		this.contractCallbacks.set( id, callback );
@@ -701,6 +715,7 @@ class Connection
 		this.openOrders.push( callback );
 		return callback;
 	}
+
 	reqAllOpenOrders():OrderObservable
 	{
 		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestAllOpenOrders}}) );
@@ -708,6 +723,7 @@ class Connection
 		this.openOrders.push( callback );
 		return callback;
 	}
+
 	reqOptionParams( id:number ):Observable<Results.IOptionParams>
 	{
 		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestOptionParams, "ids": [id]}}) );
@@ -715,8 +731,10 @@ class Connection
 		this.optionParamCallbacks.set( id, callback );
 		return callback;
 	}
+
 	reqPreviousDay( ids:number[] ):Observable<Results.IDaySummary>
 	{
+		console.log( `reqPreviousDay( ${ids.join()} )` );
 		const requestId = this.getRequestId();
 		this.send( new Requests.RequestUnion({"genericRequests": {"id": requestId, "type": Requests.ERequests.RequsetPrevOptionValues, "ids": ids}}) );
 		const callback = new Subject<Results.IDaySummary>();
@@ -792,12 +810,14 @@ export class TwsService
 	{}
 
 	reqManagedAccts():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.accounts ) resolve( TwsService.accounts ); else this.connection.reqManagedAccts().then( (x)=>{TwsService.accounts=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
-	reqNewsProviders():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.newsProviders ) resolve( TwsService.newsProviders ); else this.connection.reqManagedAccts().then( (x)=>{TwsService.newsProviders=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
-	//reqHistoricalNews( )TODO also reqNewsArticle.
+	reqNewsProviders():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.newsProviders ) resolve( TwsService.newsProviders ); else this.connection.reqNewsProviders().then( (x)=>{TwsService.newsProviders=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
+	reqHistoricalNews( contractId, providerCodes:string[], totalResults:number, start:Date=null, end:Date=null ):Promise<Results.HistoricalNewsCollection>{ return this.connection.reqHistoricalNews(contractId, providerCodes, totalResults, start, end); }
+	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>{ return this.connection.reqNewsArticle(providerCode, articleId); }
 
-	reqContractDetails( contract:IB.IContract ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetails(contract); }
-	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetailsMulti(contractIds); }
-	reqSymbolDetails( symbol:string ):Promise<Results.IContractDetails>{ return ObservableUtilities.toPromise( ()=>{return this.reqContractDetails({symbol: symbol});}, false); }
+	reqContract( contract:IB.IContract ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetails(contract); }
+	reqContractSingle( contract:IB.IContract ):Promise<Results.IContractDetails>{ return ObservableUtilities.toPromiseSingle( ()=>{return this.reqContract(contract);}, false); }
+	reqIds( contractIds:number[] ):Promise<Results.IContractDetails[]>{ return ObservableUtilities.toPromise<Results.IContractDetails>( ()=>{return this.connection.reqContractDetailsMulti(contractIds);}, false); }
+	reqSymbol( symbol:string ):Promise<Results.IContractDetails[]>{ return ObservableUtilities.toPromise( ()=>{return this.reqContract({symbol: symbol});}, false); }
 
 	reqAccountUpdates( accountNumber: string ):AccountUpdateType{ return this.connection.reqAccountUpdates( accountNumber ); }
 	reqPositions( accountNumber: string ):Observable<Results.IPositionMulti>{ return this.connection.reqPositions( accountNumber ); }

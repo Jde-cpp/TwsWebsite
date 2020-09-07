@@ -1,4 +1,5 @@
 import { DateUtilities, Day } from './dateUtilities';
+import { DecimalPipe } from '@angular/common';
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
@@ -151,6 +152,8 @@ export class MarketUtilities
 			liquid.setHours( 16 );
 		return liquid;
 	}
+
+	static get DefaultCurrency(){ return IB.Currencies.UsDollar; }
 /*	static startTrading( details:Results.IContractDetails )
 	{
 		var now = new Date().getTime()/1000;
@@ -207,5 +210,26 @@ export class MarketUtilities
 		else
 			result = `${month}-${expiration.getDate()}`;
 		return result;
+	}
+//, '1.2-2'
+	static numberDisplay( value:number, decimalPipe: DecimalPipe ):string//TODO move to pipe
+	{
+		let divisor = 1;  let fixedPlaces = 0; let suffix = "";
+		let calc = ( amount:number, sffx:string ):boolean=>
+		{
+			if( value>amount )
+				divisor = amount;
+			if( divisor!=1 )
+			{
+				fixedPlaces =  value>amount*10 ? value>amount*100 ? 0 : 1 : 2;
+				suffix = sffx;
+			}
+			return divisor!=1;
+		};
+
+		calc( 1_000_000_000, "B" ) || calc( 1_000_000, "M" ) || calc( 1_000, "K" );
+		value/=divisor;
+		const display = `${decimalPipe.transform(value, `1.${fixedPlaces}-${fixedPlaces}`)}${suffix}`; //${fixedPlaces==0 ? Math.round(value) : (value).toFixed(fixedPlaces)}suffix`;
+		return display;
 	}
 }

@@ -24,7 +24,7 @@ export class ConfirmationDialog
 	constructor( public dialogRef:MatDialogRef<ConfirmationDialog>, @Inject(MAT_DIALOG_DATA) public data:ConfirmationData, private tws : TwsService )
 	{
 		console.log( 'ConfirmationDialog' );
-		this.tws.reqContractDetails(this.contract).subscribe( {next:details=>{this.details = details;}} );
+		this.tws.reqContractSingle(this.contract).then( (x)=>this.details = x );
 		let subscription = this.tws.reqPositions( this.order.account );
 		subscription.subscribe(
 		{

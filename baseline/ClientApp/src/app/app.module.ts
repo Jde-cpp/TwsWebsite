@@ -10,7 +10,8 @@ import {MatButtonModule} from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatChipsModule} from '@angular/material/chips';
 import {MatDialogModule} from '@angular/material/dialog';
-import { MatNativeDateModule } from '@angular/material/core';
+import {MatNativeDateModule} from '@angular/material/core';
+import {MatExpansionModule} from '@angular/material/expansion';
 import {MatFormFieldModule} from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
@@ -31,6 +32,8 @@ import {StyleManager} from './shared/material-site/style-manager';
 
 import {PaginatorComponent} from './shared/framework/paginator/paginator';
 
+import{ FundamentalsComponent } from './pages/tws/snapshot/fundamentals/fundamentals';
+import{ NewsComponent } from './pages/tws/snapshot/news/news';
 import{ CandlestickComponent } from './shared/tws/highcharts/candlestick';
 import{ OptionTableComponent } from './shared/tws/options/option-table/option-table';
 import{ OptionTabComponent } from './shared/tws/options/option-tab/option-tab';
@@ -73,13 +76,13 @@ import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/th
 	 AppComponent,
 	 OrderComponent,PortfolioComponent,ConfigurationDialog,WatchComponent, WatchContentComponent, SnapshotComponent,SnapshotContentComponent,TradeComponent,
 	 PaginatorComponent,
-	 CandlestickComponent, OptionTableComponent, OptionTabComponent, SmallChartComponent, SummaryComponent,
+	 FundamentalsComponent, NewsComponent, CandlestickComponent, OptionTableComponent, OptionTabComponent, SmallChartComponent, SummaryComponent,
 	 WatchTableComponent, WatchRowComponent,
 	 ConfirmationDialog, OptionEntryDialog, RollDialog, TransactDialog,
 	 LinkSelectComponent, DateRangeComponent, QuantityComponent],
   imports: [
 	 BrowserModule, RouterModule.forRoot(routes), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
-	 MatAutocompleteModule,MatButtonModule, MatDialogModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatRadioModule, MatTableModule, MatTabsModule, MatCheckboxModule,MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule,MatSnackBarModule, MatSortModule,
+	 MatAutocompleteModule,MatButtonModule, MatDialogModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatExpansionModule, MatRadioModule, MatTableModule, MatTabsModule, MatCheckboxModule,MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule,MatSnackBarModule, MatSortModule,
 	 NavBarModule, ThemePickerModule
   ],
   entryComponents: [TransactDialog, RollDialog, OptionEntryDialog],

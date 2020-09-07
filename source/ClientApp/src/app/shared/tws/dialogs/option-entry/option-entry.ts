@@ -62,7 +62,7 @@ export class OptionEntryDialog implements OnDestroy
 			this.strikes.set( this.strike, [this.option.isCall ? this.option.contractId : null, !this.option.isCall ? this.option.contractId : null ] );
 		let tempStrikes = new Map<number,[number,number]>();
 		let contract:IB.IContract = { exchange: IB.Exchanges.Smart, securityType: IB.SecurityType.Option, right: isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put, expiration: expiration, symbol: this.underlying.contract.symbol };
-		this.tws.reqContractDetails( contract ).subscribe(
+		this.tws.reqContract( contract ).subscribe(
 		{
 			next: value=>
 			{

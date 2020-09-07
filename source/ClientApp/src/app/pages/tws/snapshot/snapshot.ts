@@ -1,28 +1,26 @@
 import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBinding, ChangeDetectorRef, OnDestroy } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {MatTabGroup} from '@angular/material/tabs';
-import { Subject } from 'rxjs';
-//import { TwsService, Bar } from 'src/app/services/tws/tws.service';
+
+import { TwsService } from 'src/app/services/tws/tws.service';
 import { IProfile } from 'src/app/services/profile/IProfile';
 import {IErrorService} from 'src/app/services/error/IErrorService'
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import {Settings, IAssignable} from 'src/app/utilities/settings'
 
-import { NgAnalyzeModulesHost } from '@angular/compiler';
-//import * as Highcharts from 'highcharts';
-
+import * as IbResults from 'src/app/proto/results';
+import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class PageSettings implements IAssignable<PageSettings>
 {
 	assign( value:PageSettings )
 	{
-		this.previousSymbols.length=0;
-		for( const i of value.previousSymbols )
-			this.previousSymbols.push( i );
+		this.previousContractIds.length=0;
+		for( const i of value.previousContractIds )
+			this.previousContractIds.push( i );
 		this.selectedIndex = value.selectedIndex;
+		this.delay = value.delay;
 	}
-	previousSymbols:string[]=["SPY"];
+	previousContractIds:number[]=[756733];
 	selectedIndex:number=0;
 	delay:number=0;
 }
@@ -31,7 +29,7 @@ export class PageSettings implements IAssignable<PageSettings>
 export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	@HostBinding('class.mat-drawer-container') public highlighted: boolean = true;
-	constructor( private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( private tws:TwsService, private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{
 		//console.log( 'SnapshotComponent::SnapshotComponent' );
 //		throw 'SnapshotComponent::SnapshotComponent';
@@ -41,25 +39,10 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{}
 	ngAfterViewInit():void
 	{
-	/*	this.profile.load().then( (value)=>
+		this.profile.loadedPromise.then( (value)=>
 		{
-			if( this.settings.selectedIndex!=0 )
-			{
-				const symbol = this.settings.previousSymbols[this.settings.selectedIndex];
-				this.previousSymbols.splice( this.settings.selectedIndex, 1 );
-				this.previousSymbols.unshift( symbol );
-				this.settings.selectedIndex = 0;
-				this.profile.save();
-			}
-			//this.previousSymbols[0] = "SHOP";
-			//this.profile.save();
-			setTimeout( ()=>
-			{
-				if( this.symbolTabs.selectedIndex != this.settings.selectedIndex )
-					this.symbolTabs.selectedIndex = this.settings.selectedIndex;
-				this.initialized = true;
-			});//screws up the selected tab.
-		});*/
+			this.tws.reqIds( this.previousContractIds ).then( (x)=>{this.details = x; this.viewPromise = Promise.resolve(true);} );
+		});
 		this.selected.valueChanges.subscribe( value=>
 		{
 			if( this.settings.selectedIndex != value )
@@ -74,14 +57,15 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		this.settings.selectedIndex = this.selected.value;
 		this.profile.save();
 	}
-	onSymbol( symbol:string )
+	onSymbol( detail:Results.IContractDetails )
 	{
-		console.log( symbol );
-		let index = this.previousSymbols.indexOf( symbol );
+		//console.log( contractId );
+		let index = this.previousContractIds.indexOf( detail.contract.id );
 		if( index==-1 )
 		{
-			this.previousSymbols.unshift( symbol );
+			this.previousContractIds.unshift( detail.contract.id );
 			this.selected.setValue( 0 );
+			this.profile.save();
 			if( this.symbolTabs.selectedIndex )
 				this.symbolTabs.selectedIndex = 0;
 		}
@@ -94,7 +78,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		// //this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
 		// this.setSymbol( this.previousSymbols[index] );
 	}
-	get previousSymbols(){ return this.settings.previousSymbols;}
+	get previousContractIds(){ return this.settings.previousContractIds; }
 	// } set previousSymbols(value)
 	// {
 	//     if( this.settings )
@@ -113,6 +97,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );
 	}*/
 //	get treeSettings(){ return this.symbolSettings.treeSettings; } set treeSettings( value:ITreeSettings ){this.symbolSettings.treeSettings = value;this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );}
+	details:Results.IContractDetails[];
 	selected = new FormControl(0);
 	get selectedIndex(){ return this.selected.value; }
 	profile:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
@@ -122,5 +107,5 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	@ViewChild( 'symbolTabs', {static: false} ) symbolTabs;
 	//@ViewChild('optionTabs', {static: false} ) optionTabs;
 	//@ViewChild(MatTabGroup) tabGroup: MatTabGroup;
-	//symbolTabIndex = new FormControl(0);
+	viewPromise:Promise<boolean>;
 }

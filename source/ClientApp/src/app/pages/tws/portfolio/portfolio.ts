@@ -268,20 +268,17 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}
 		else
 		{
-			this.tws.reqContractDetails( this.selected.contract ).subscribe(
+			this.tws.reqContractSingle( this.selected.contract ).then( (details)=>
 			{
-				next: details=>
+				const dialogRef = this.dialog.open( TransactDialog, {width: '600px',	autoFocus: false, data: {tick: this.selected, isBuy: buy, quantity: this.selected.position, showStop: buy!=this.selected.position<0, details: details}} );
+				dialogRef.afterClosed().subscribe(result =>
 				{
-					const dialogRef = this.dialog.open( TransactDialog, {width: '600px',	autoFocus: false, data: {tick: this.selected, isBuy: buy, quantity: this.selected.position, showStop: buy!=this.selected.position<0, details: details}} );
-					dialogRef.afterClosed().subscribe(result =>
-					{
-						// if( result && this.settings.limit!=result.limit )
-						// {
-						// 	this.settings.limit = result.limit;
-						// 	this.subscribe( this.applicationId, this.level );
-						// }
-					});
-				}
+					// if( result && this.settings.limit!=result.limit )
+					// {
+					// 	this.settings.limit = result.limit;
+					// 	this.subscribe( this.applicationId, this.level );
+					// }
+				});
 			});
 		}
 	}

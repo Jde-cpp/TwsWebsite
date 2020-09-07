@@ -78,7 +78,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 					return;
 				}
 				let order = new Order( value );
-				this.tws.reqContractDetails( value.contract ).subscribe({ next: details=>
+				this.tws.reqContractSingle( value.contract ).then( (details)=>
 				{
 					const isMarketOpen = MarketUtilities.isMarketOpen( details );
 					var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDate(new Date(), details.tradingHours[0]) );
@@ -113,7 +113,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 						subscription.subscribe2( order );
 						this.mktDataSubscriptions.set( value.contract.id, subscription );
 					}
-				}});
+				});
 				orders.push( order );
 			},
 			complete: ()=>

@@ -23,6 +23,7 @@ import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from 'src/app//proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
+import { Subject } from 'rxjs';
 
 
 @Component( {selector: 'watch-content', styleUrls: ['watch.css'], templateUrl: './watch-content.html'} )
@@ -45,45 +46,14 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 		{
 			this.file = file;
 			this.viewPromise = Promise.resolve(true);
-//			this.resolve();
-//			console.log('resolved');
 		};
 		if( this.name )
-		{
-			this.tws.watch( this.name ).then( (file)=>
-			{
-				onFile( file );
-	/*			var results = new Map<number,Results.IContractDetails>();
-				var ids = file.securities.map( (entry)=>{ return entry.contractId; } );
-				this.tws.reqContractDetailsMulti( ids ).subscribe(
-				{
-					next: value=>{ results.set( value.contract.id, value ); },
-					complete: ()=>
-					{
-						for( const entry of file.securities )
-							this.details.push( entry.contractId ? results.get(entry.contractId) : null );
-						if( this.details.length==0 )
-							this.details.push( null );
-						this.resolve();
-					},
-					error: e=>{ this.cnsle.error(e.message, e); }
-				});*/
-			}).catch( (e)=>
-			{
-				this.cnsle.error( e.message, e );
-			});
-		}
+			this.tws.watch( this.name ).then( (file)=>{ onFile( file ); }).catch( (e)=>{this.cnsle.error( e.message, e ); });
 		else
 			onFile( new Watch.File() );
 	}
-	onSelectedChanged( details:Results.IContractDetails|null|undefined )
-	{
-		this.selection = details;
-	}
-	save():Promise<void>
-	{
-		return this.tws.editWatch( this.file );
-	}
+	onSelectedChanged( details:Results.IContractDetails|null|undefined ){ this.selection = details; }
+	save():Promise<void>{ return this.tws.editWatch( this.file ); }
 	selection:Results.IContractDetails|null|undefined;
 	get canAdd(){ return this.selection!==undefined; }
 	file:Watch.File;
@@ -106,12 +76,7 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 			}
 		}
 	} get name():string{ return this.file?.name || this._name; } _name:string;
-	get isPortfolio()
-	{
-		return this.file.isPortfolio;
-	} set isPortfolio(x)
-	{
-		this.file.isPortfolio=x;
-	}
+	get isPortfolio(){return this.file.isPortfolio;} set isPortfolio(x){this.file.isPortfolio=x;}
+	changeTable: Subject<string> = new Subject();
 	viewPromise:Promise<boolean>;
 }

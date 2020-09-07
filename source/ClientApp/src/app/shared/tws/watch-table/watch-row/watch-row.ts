@@ -27,7 +27,7 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	constructor( private tws : TwsService, @Inject('IErrorService') private cnsle: IErrorService, private decimalPipe: DecimalPipe )
 	{
 		this.index = WatchRowComponent.i++;
-		console.log( `row( ${this.index} )` );
+		//console.log( `row( ${this.index} )` );
 	}
 	//class="watchRow"
 	ngOnInit(){}
@@ -152,12 +152,12 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	showMenu=false;
 	get symbol():string|null{ return this.tick?.details.contract.symbol; }
 	@ViewChild("symbolInput") symbolInput: ElementRef;
-	set tick( x ){ this._tick = x; console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );/*if( this._tick ) this.subscribe(); else this.unsubscribe();*/ } get tick(){ return this._tick; } private _tick:TickDetails;
+	set tick( x ){ this._tick = x; /*console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );if( this._tick ) this.subscribe(); else this.unsubscribe();*/ } get tick(){ return this._tick; } private _tick:TickDetails;
 	get selected(){ return this._selected;} set selected( x )
 	{
 		if( x )
 			this.parent.selected = this;
-		else if( this.parent?.selected.rowId == this.rowId )
+		else if( this.parent.selected?.rowId == this.rowId )
 			this.parent.selected = null;
 		this._selected = x;
 	} _selected:boolean;

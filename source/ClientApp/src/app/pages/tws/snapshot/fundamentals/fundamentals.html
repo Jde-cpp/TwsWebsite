@@ -1,0 +1,21 @@
+<ng-container>
+	<div *ngIf="viewPromise | async" style="display:flex; justify-content: center;">
+		<div style="width: 250px;">
+			<div class="row"><span class="description">Open</span><span class="value">{{open | number:'1.2-2'}}</span></div>
+			<div class="row"><span class="description">Previous Close</span><span class="value">{{ previousClose | number:'1.2-2' }}</span></div>
+			<div class="row"><span class="description">Avg. Volume</span><span class="value">{{averageVolume}}</span></div>
+			<div class="row"><span class="description">Market Cap</span><span class="value">{{marketCapDisplay}}</span></div>
+			<div class="row"><span class="description">52-Week Range</span><span class="value"><span>{{value.low52Week | number:'1.2-2'}}</span>-<span>{{value.high52Week | number:'1.2-2'}}</span></span></div>
+		</div>
+		<div style="width: 250px;margin-left: 30px;">
+			<div class="row"><span class="description">Shares Outstanding</span><span class="value">{{sharesDisplay}}</span></div>
+			<div class="row"><span class="description">Beta</span><span class="value">{{value.beta | number:'1.1-1'}}</span></div>
+			<div class="row"><span class="description">P/E</span><span class="value">{{priceEarnings | number:'1.1-1' }}</span></div>
+			<div class="row"><span class="description">EPS</span><span class="value">{{value.eps | number:'1.2-2' }}</span></div>
+			<div class="row"><span class="description">Div/Yield</span><span class="value">{{value.dividendNext | number:'1.2-2'}}/{{value.yield  | number:'1.1-1'}}</span></div>
+			<div class="row"><span class="description">Ex-Dividend Date</span><span class="value">{{value.exDividendDate | date:'mediumDate'}}</span></div>
+			<div class="row"><span class="description">Dividend Payable Date</span><span class="value">{{value.dividendPayableDate}}</span></div>
+			<div class="row"><span class="description">Next Earnings Date</span><span class="value">{{value.nextEarningsDate}}</span></div>
+		</div>
+	</div>
+</ng-container>

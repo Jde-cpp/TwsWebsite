@@ -87,3 +87,5 @@ source/ClientApp/src/app/shared/framework/date-range/date-range.*
 source/ClientApp/src/app/shared/framework/severity-picker/*
 source/ClientApp/src/app/utilities/collections.ts
 source/ClientApp/src/app/app.component.spec._ts
+source/ClientApp/src/app/services/error/IErrorService.ts
+source/ClientApp/src/app/services/error/DefaultError.service.ts

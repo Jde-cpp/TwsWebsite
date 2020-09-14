@@ -2,11 +2,13 @@ import {Component, Inject} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Tick } from '../../../../services/tws/Tick';
 import { TwsService } from '../../../../services/tws/tws.service';
-import * as IbResults from '../../../../proto/results';
 import { Holding } from 'src/app/pages/tws/portfolio/holding';
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
+
+import * as IbResults from 'src/app/proto/results';
+import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Data
 {
@@ -15,8 +17,35 @@ export class Data
 @Component( { templateUrl: 'roll-dialog.html', styleUrls:["roll-dialog.css"]} )
 export class RollDialog
 {
-	constructor( public dialogRef:MatDialogRef<RollDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private twsService : TwsService )
+	constructor( public dialogRef:MatDialogRef<RollDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private tws : TwsService )
 	{
+		const underlyingSet = ()=>
+		{
+			this.viewPromise = Promise.resolve( true );
+		};
+		if( this.contract.underlyingId )
+			underlyingSet();
+		else
+		{
+			this.tws.reqContractSingle( {id: this.contract.id} ).then( (details)=>
+			{
+				this.contract.underlyingId = details.underConId;
+				underlyingSet();
+			} );
+		}
+
+
+		//this.tws.reqContractSingle( {id: this.contract.underlyingId} ).then( (underlying)=>{this.underlying = underlying;} );
+/*		let contract = {id: this.contract.id, securityType: IB.SecurityType.Option, strike:this.strike };
+		twsService.reqContract( contract ).subscribe(
+		{
+			next: value=>
+			{
+				this.subsequent.push( value );
+			},
+			complete: ()=>{},
+			error: e=>{console.log(e.Message);}
+		});*/
 /*		this.quantity = 100;
 		this._submitting = false;
 		this.limit = data.isBuy ? data.tick.bid : data.tick.ask;
@@ -43,6 +72,10 @@ export class RollDialog
 	get isCall(){ return this.contract.right==IB.SecurityRight.Call; }
 	get startExpiration(){ return this.contract.expiration+1; }
 	get strike(){ return this.contract.strike; }
+	//get underlying(){ return this._underlying; } _underlying:Results.IContractDetails;
+	get underlyingContract(){ return {id:this.contract.underlyingId}; }
+	viewPromise:Promise<boolean>;
+	//get subsequent():Results.IContractDetails[] = [];
 /*	quantity:number;
 	limit:number;
 	stop:number;

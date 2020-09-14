@@ -29,12 +29,12 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	{}
 	ngOnInit()
 	{
-		this._pageSubscription = this.pageEvents.subscribe( {next: value=>{this.pageInfo=value;this.setPageContent();}} );
+		//this._pageSubscription = this.pageEvents.subscribe( {next: value=>{this.pageInfo=value;this.setPageContent();}} );
 		this.run();
 	}
 	ngOnDestroy()
 	{
-		this._pageSubscription.unsubscribe();
+		//this._pageSubscription?.unsubscribe();
 		this.tws.cancelMktData( this.subscriptions.values() );
 	}
 	run():void
@@ -45,36 +45,32 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			this.lengthChange.emit( 0 );
 		this.options = new Array<Option>();
 		const currentDate = MarketUtilities.currentTradingDay();
-		this.tws.optionSummary( this.contract.id, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike ).subscribe(
+		this.tws.optionSummary( this.contract.id, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike ).then( (values:Results.IOptionValues)=>
 		{
-			next: ( values:Results.IOptionValues ) =>
+			let index = 0;
+			const dayValue = values.day;
+			this.setPrices = values.day==currentDate;
+			for( let day of values.optionDays )
 			{
-				let index = 0;
-				const dayValue = values.day;
-				this.setPrices = values.day==currentDate;
-				for( let day of values.optionDays )
+				for( let option of day.values )
 				{
-					for( let option of day.values )
-					{
-						var optionContract = new IB.Contract( this.contract );
-						optionContract.localSymbol = null;
-						optionContract.expiration = day.expirationDays;
-						optionContract.securityType = IB.SecurityType.Option;
-						optionContract.right = day.isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put;
-						optionContract.strike = option.strike;
-						optionContract.id = option.id;
-						var value = this.setPrices ? new Option( optionContract, option, option.bid, option.ask, option.last, option.volume ) : new Option( optionContract, option );//, index++
-						//value.oi = option.openInterest;
-						//value.oiChange = option.oiChange;
-						this.options.push( value );
-					}
+					var optionContract = new IB.Contract( this.contract );
+					optionContract.localSymbol = null;
+					optionContract.expiration = day.expirationDays;
+					optionContract.securityType = IB.SecurityType.Option;
+					optionContract.right = day.isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put;
+					optionContract.strike = option.strike;
+					optionContract.id = option.id;
+					var value = this.setPrices ? new Option( optionContract, option, option.bid, option.ask, option.last, option.volume ) : new Option( optionContract, option );//, index++
+					//value.oi = option.openInterest;
+					//value.oiChange = option.oiChange;
+					this.options.push( value );
 				}
-				if( this.options.length!=0 )
-					this.lengthChange.emit( this.options.length );
-				this.setPageContent();
-			},
-			error:  e=>{ console.error(e); this.cnsl.error("Could not connect to Tws.", e); }
-		} );
+			}
+			if( this.options.length!=0 )
+				this.lengthChange.emit( this.options.length );
+			this.setPageContent();
+		}).catch( (e)=>{debugger;console.error(e); this.cnsl.error("Could not connect to Tws.", e);} );
 	}
 
 	sortData(sort: Sort)

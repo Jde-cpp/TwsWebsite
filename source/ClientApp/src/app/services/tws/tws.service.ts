@@ -9,13 +9,13 @@ import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 import {ObservableUtilities} from 'src/app/utilities/ObservableUtilities';
 
 
-import * as ib2 from '../../proto/ib';
+import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
-import * as IbRequests from '../../proto/requests';
+import * as IbRequests from 'src/app/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import * as IbResults from '../../proto/results';
+import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbWatch from '../../proto/watch';
+import * as IbWatch from 'src/app/proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { ThemeStorage } from 'src/app/shared/material-site/theme-picker/theme-storage/theme-storage';
 
@@ -830,7 +830,9 @@ export class TwsService
 	reqExecutions( query:Requests.IRequestExecutions=new Requests.RequestExecutions() ):ExecutionObservable{ return this.connection.reqExecutions( query ); }
 	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>{ return this.connection.reqFundamentals( contractId ); }
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Promise<IBar[]>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
-	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Observable<Results.IOptionValues>{ return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike); }
+
+	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Promise<Results.IOptionValues>{ return ObservableUtilities.toPromiseSingle( ()=>{return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike);}, false); }
+
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }

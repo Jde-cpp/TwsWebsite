@@ -194,6 +194,7 @@ export class TickEx extends Tick
 	//get marketValue():number{return this.last*this.position;}
 	get contractId(){ return this.contract.id; }
 	get currentPrice():number{ return this.isOption ? super.currentPrice : this.last>=this.bid && this.last<=this.ask ? this.last : this.last<this.bid ? this.bid : this.ask; }
+
 	get display():string{var contract = this.contract; return this.isOption ? `${contract.symbol} ${MarketUtilities.optionDisplayFromDays(contract.expiration)} ${contract.strike} ${contract.right}` : contract.symbol; }
 	get expiration():number{ return this.contract.expiration; }
 	get isCall(){ return this.contract.right==IB.SecurityRight.Call; }

@@ -12,7 +12,8 @@
 	</span>
 	<span>
 		<button mat-raised-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="onTransactClick(true)">Buy</button>
-		<button mat-raised-button color="warn" [disabled]="selected==null" (click)="onTransactClick(false)" >Sell</button>
+		<button mat-raised-button color="warn" style="margin-right:10px" [disabled]="selected==null" (click)="onTransactClick(false)" >Sell</button>
+		<button mat-raised-button [disabled]="!selectedIsOption" (click)="roll()" >Roll</button>
 	</span>
 	<mat-form-field style="display:inline; margin-left: 100px;">
 		<mat-select [(ngModel)]="selectedAccounts" name="accounts" ngDefaultControl (selectionChange)="accountChange($event.value)" multiple>

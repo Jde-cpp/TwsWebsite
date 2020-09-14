@@ -43,7 +43,9 @@ export class Fundamentals
 	get dividendNext():number|null{ return this.get("DIV_NEXT"); }
 	get avgDividend5Years():number|null{ return this.get("ADIV5YAVG"); }//Average of the Annual Dividends Per Share for the last 5 years.
 	get payoutRatio():number|null{ return this.get("TTMPAYRAT"); }
-
+	get dividendYield5YrAvg():number|null{ return this.get("YLD5YAVG"); }//
+	get dividendGrowthRate():number|null{ return this.get("DIVGRPCT"); }//3 years whenever 4 years of dividends are available.
+	get dividendRate():number|null{ return this.get("IAD"); }//his value is the total of the expected dividend payments over the next twelve months
 
 	get nextEarningsDate():number|null{ return -1; }
 
@@ -54,35 +56,70 @@ export class Fundamentals
 
 	//assets
 	get cashSTInvestments():number|null{ return this.get("​QCASH"); } //ST Cash+Investments
-	get capitalExpenditures():number|null{ return this.get("ASCEX"); } //FY
+	get capitalExpendituresFy():number|null{ return this.get("ASCEX"); } //FY
+	get capitalExpenditures():number|null{ return this.get("QSCEX"); }
 	get tangibleValuePerShare():number|null{ return this.get("QTANBVPS"); }
 	get investingCashFlows():number|null{ return this.get("ASICF"); }
 	get inventoryTurnover():number|null{ return this.get("TTMINVTURN"); }
+	get totalAssets():number|null{ return this.get("QTA"); }
+	get currentAssetsMRY():number|null{ return this.get("AATCA"); }
+	get currentAssets():number|null{ return this.get("QATCA"); }//current assets - MRQ
+	get receivablesTurnover():number|null{ return this.get("TTMRECTURN"); }//TTM Revenue/Average Accounts Receivables. Average Receivables is calculated by adding the Accounts Receivables for the 5 most recent quarters and dividing by 5.
 
 	//Liabilities
 	get netDebt():number|null{ return this.get("NetDebt_I"); } //short term debt, and notes payables, Long Term debt, minority	interest, and preferred equity minus the total cash and equivalents and short term investments
 	get netIssuanceOfDebt():number|null{ return this.get("QFPRD"); }
+	get totalCurrentLiabilitiesMRY():number|null{ return this.get("ALTCL"); }
+	get currentLiabilities():number|null{ return this.get("QLTCL"); }
+	get notesPayableSTDebt():number|null{ return this.get("QLSTD"); }//Notes payable/short term debt for the most recent interim period
+	get netDebtIssuance():number|null{ return this.get("AFPRD"); }//Net issuance of debt for the most recent fiscal year
+	get notesPayableSTDebtMry():number|null{ return this.get("ALSTD"); }//Notes payable/short term debt for the most recent fiscal year
+	get totalLiabilities():number|null{ return this.get("QTL"); }
+	get ltDebt():number|null{ return this.get("QTOTLTD"); }//sum of all Long Term Debt and Capitalized Lease Obligations for the most recent interim period.
 
 	//balance sheet
 	get currentRatio():number|null{ return this.get("QCURRATIO"); } //Current Assets/Current Liabilities.
+	get quickRatio():number|null{ return this.get("QQUICKRATI"); }//[Cash+Short Term Investments+AR]/Current Liabilities
+	get ltDebtToEquity():number|null{ return this.get("QLTD2EQ"); }//LT Debt/Equity
+	get debtEquityRatio():number|null{ return this.get("QTOTD2EQ"); }//Debt/Equity for the most recent interim period
+
 	//Revenue
 	get revenuePerShare():number|null{ return this.get("TTMREVPS"); }
 	get revenue():number|null{ return this.get("TTMREV"); } //revenue for the most recent TTM period
+	get revenuChangeTtm():number|null{ return this.get("TTMREVCHG"); }
+	get revenueGrowthRate():number|null{ return this.get("REVTRENDGR"); }//Five Year Revenue Growth Rate is the annual compounded growth rate of Revenues over the last 5 years
+	get revenueChangeYoY():number|null{ return this.get("REVCHNGYR"); }//This value is calculated as the most recent interim period Sales minus the Sales for the same interim period 1 year ago divided by the Sales for the same interim period one year ago, multiplied by 100.
 
 	//earnings
 	get operatingIncome():number|null{ return this.get("QSOPI"); }
 	get operatingInconeMRY():number|null{ return this.get("ASOPI"); }//MRY=most recent year
+	get incomeNormalized():number|null{ return this.get("ANIACNORM"); }//annual amount accruing to common shareholders for dividends and re-tained earnings excluding the impact of all unusual/one-time/special charges items.
 	get ebitMRY():number|null{ return this.get("AEBIT"); }
+	get EbitdTtm():number|null{ return this.get("TTMEBITD"); }
+	get Ebitd():number|null{ return this.get("QEBITDA"); }//Mrq
 	get earningsBeforeTaxes():number|null{ return this.get("TTMEBT"); }
 	get earningsBeforeTaxesNormalizedFY():number|null{ return this.get("AEBTNORM"); }
 	get epsExcludingExtraordinary():number|null{ return this.get("AEPSXCLXOR"); }//EPS excluding extraordinary items - MRY
 	get epsNormalized():number|null{ return this.get("AEPSNORM"); }
+	get epsGrowthRate():number|null{ return this.get("EPSTRENDGR"); }
+	get freeCashFlowPerShare():number|null{ return this.get("TTMFCFSHR"); }
 	get analystForcast():number|null{ return this.get("AFEEPSNTM"); }//Analyst Forecast of EPS - N12
+	get epsChange():number|null{ return this.get("TTMEPSCHG"); }//This is the percent change in the TTM EPS as compared to the same TTM period one year ago.
+	get returnOnAverageAssets():number|null{ return this.get("TTMROAPCT"); }//Income After Taxes TTM/Average Total Assets
+	get netIncomeAvailableToCommon():number|null{ return this.get("TTMNIAC"); }
+	get returnOnAssets():number|null{ return this.get("AROAPCT"); }//his value is calculated as the Income After Taxes for the most recent fiscal year divided by the Average Total Assets, expressed as a percentage. Average Total Assets is the average of the Total Assets at the beginning and the end of the year.
+	get returnOnInvestment():number|null{ return this.get("TTMROIPCT"); }//This value is the trailing twelve month Income After Taxes divided by the average Total Long Term Debt, Other Long Term Liabilities and Shareholders Equity, expressed as a percentage.
+	get returnOnInvestmentMry():number|null{ return this.get("AROIPCT"); }//This value is the annual Income After Taxes divided by the average Total Long Term Debt, Other Long Term Liabilities, and Shareholders Equity, expressed as a percentage.
+	get ebitMrq():number|null{ return this.get("QEBIT"); }
+	get peNoralized():number|null{ return this.get("APENORM"); }//Price/ annual normalized eps.
+	get epsChangeYoY():number|null{ return this.get("EPSCHNGYR"); }//Most recent interim period EPS minus the EPS for the same interim period 1 year ago divided by the EPS for the same interim period one year ago, multiplied by 100.
 
 	//margin
 	get profitMarginPercent():number|null{ return this.get("TTMNPMGN"); }
 	get operatingMargin():number|null{ return this.get("TTMOPMGN"); }//revenues after operating expenses.
-	get pretaxMargin():number|null{ return this.get("TTMPTMGN"); }
+	get pretaxMarginTtm():number|null{ return this.get("TTMPTMGN"); }
+	get pretaxMarginMry():number|null{ return this.get("APTMGNPCT"); }
+
 	get grossMargin():number|null{ return this.get("TTMGROSMGN"); }//percent of revenue left after paying all direct production expenses.
 
 	get priceToCashFlowTtm():number|null{ return this.get("TTMPRCFPS"); }
@@ -90,21 +127,39 @@ export class Fundamentals
 	get enterpriseValueToEbitda():number|null{ return this.get("EV2EBITDA_Cur"); }
 
 	get freeCashFlow():number|null{ return this.get("TTMFCF"); }
-	get cashFromOperatingActivities():number|null{ return this.get("AOTLO"); }
+	get cashFromOperationsMry():number|null{ return this.get("AOTLO"); }
+	get cashFromOperations():number|null{ return this.get("QOTLO"); }//Cash from operating activities - MRQ
+	get financingCashFlowItemsMry():number|null{ return this.get("ASFCF"); }//MRY
+	get financingCashFlowItems():number|null{ return this.get("QSFCF"); }
+	get investingCashFlowItems():number|null{ return this.get("QSICF"); }
 
 	//shares
 	get sharesOutstanding():number|null{ return this.marketCap/this.nPrice; }
-	get netIssuanceOfStock():number|null{ return this.get("AFPSS"); }
+	get netStockIssuanceMry():number|null{ return this.get("AFPSS"); }
+	get netStockIssuance():number|null{ return this.get("QFPSS"); } //Net issuance of stock for the most recent interim period
+	get cashFlowPerShare():number|null{ return this.get("TTMCFSHR"); }
+	get cashPerShare():number|null{ return this.get("QCSHPS"); }//Total Cash plus Short Term Investments divided by the Shares Outstanding at the end of the most recent interim period
+	get revenuePerShareMry():number|null{ return this.get("AREVPS"); }//Revenue for the most recent fiscal year divided by the Average Diluted Shares Outstanding.
 
 
 	get returnOnEquity():number|null{ return this.get("TTMROEPCT"); }//Return on average equity % Income /Common Equity
 
 	//per employee
 	get niPerEmployee():number|null{ return this.get("TTMNIPEREM"); }//TTM
-
+	get revenuePerEmployee():number|null{ return this.get("TTMREVPERE"); }
 	//price
 	get price13Week():number|null{ return this.get("PR13WKPCT"); }
 	get relativeSnPPrice():number|null{ return this.get("PRYTDPCTR"); }//Relative (S&P500) price percent change - YTD
+	get priceToBook():number|null{ return this.get("PRICE2BK"); }
+	get priceToCashFlow():number|null{ return this.get("QPRCFPS"); }//
+	get frac52Wk():number|null{ return this.get("Frac52Wk"); }//(Last - 52 week low) / (52 week high - 52 week low).
+	get price4WeekPctChange():number|null{ return this.get("PR4WKPCT"); }//Price - 4 week price percent change
+	get priceToTangibleBook():number|null{ return this.get("PR2TANBK"); }
+	get priceToRevenuesTtm():number|null{ return this.get("TTMPR2REV"); }
+	get priceToRevenues():number|null{ return this.get("QPR2REV"); } //current Price divided by the Sales Per Share for MRQ or announcement.
+
+	get priceChange52Weeks():number|null{ return this.get("PR52WKPCT"); }
+	get priceChange1Week():number|null{ return this.get("PR1WKPCT"); }//percentage change in the company's stock price over the last week.
 
 	//Interest
 	get netInterestCoverage():number|null{ return this.get("TTMINTCOV"); } //EBIT/interest
@@ -116,63 +171,7 @@ export class Fundamentals
 	get currentEnterpriseValue():number|null{ return this.get("EV_Cur"); }//Market Capitalization and Net Debt.
 	get bookValue():number|null{ return this.get("QBVPS"); }
 
-
-/*get niPerEmployee():number|null{ return this.get("QQUICKRATI"); }
-get niPerEmployee():number|null{ return this.get("PRICE2BK"); }
-get niPerEmployee():number|null{ return this.get("TTMFCFSHR"); }
-get niPerEmployee():number|null{ return this.get("TTMEBITD"); }
-get niPerEmployee():number|null{ return this.get("ASFCF"); }
-get niPerEmployee():number|null{ return this.get("QPRCFPS"); }
-get niPerEmployee():number|null{ return this.get("EPSTRENDGR"); }
-get niPerEmployee():number|null{ return this.get("LATESTADATE"); }
-get niPerEmployee():number|null{ return this.get("QLTD2EQ"); }
-get niPerEmployee():number|null{ return this.get("TTMEPSCHG"); }
-get niPerEmployee():number|null{ return this.get("YLD5YAVG"); }
-get niPerEmployee():number|null{ return this.get("TTMREVCHG"); }
-get niPerEmployee():number|null{ return this.get("Frac52Wk"); }
-get niPerEmployee():number|null{ return this.get("PR4WKPCT"); }
-get niPerEmployee():number|null{ return this.get("QTA"); }
-get niPerEmployee():number|null{ return this.get("PR2TANBK"); }
-get niPerEmployee():number|null{ return this.get("TTMROAPCT"); }
-get niPerEmployee():number|null{ return this.get("QSFCF"); }
-get niPerEmployee():number|null{ return this.get("TTMPR2REV"); }
-get niPerEmployee():number|null{ return this.get("AATCA"); }
-get niPerEmployee():number|null{ return this.get("PR52WKPCT"); }
-get niPerEmployee():number|null{ return this.get("REVTRENDGR"); }
-get niPerEmployee():number|null{ return this.get("APTMGNPCT"); }
-get niPerEmployee():number|null{ return this.get("TTMCFSHR"); }
-get niPerEmployee():number|null{ return this.get("ALTCL"); }
-get niPerEmployee():number|null{ return this.get("QLTCL"); }
-get niPerEmployee():number|null{ return this.get("DIVGRPCT"); }
-get niPerEmployee():number|null{ return this.get("QLSTD"); }
-get niPerEmployee():number|null{ return this.get("QCSHPS"); }
-get niPerEmployee():number|null{ return this.get("QSICF"); }
-get niPerEmployee():number|null{ return this.get("TTMNIAC"); }
-get niPerEmployee():number|null{ return this.get("TTMROIPCT"); }
-get niPerEmployee():number|null{ return this.get("AFPRD"); }
-get niPerEmployee():number|null{ return this.get("AREVPS"); }
-get niPerEmployee():number|null{ return this.get("IAD"); }
-get niPerEmployee():number|null{ return this.get("TTMRECTURN"); }
-get niPerEmployee():number|null{ return this.get("QEBIT"); }
-get niPerEmployee():number|null{ return this.get("ALSTD"); }
-get niPerEmployee():number|null{ return this.get("QTOTD2EQ"); }
-get niPerEmployee():number|null{ return this.get("APENORM"); }
-get niPerEmployee():number|null{ return this.get("PR1WKPCT"); }
-get niPerEmployee():number|null{ return this.get("QOTLO"); }
-get niPerEmployee():number|null{ return this.get("QPR2REV"); }
-get niPerEmployee():number|null{ return this.get("QATCA"); }
-get niPerEmployee():number|null{ return this.get("QFPSS"); }
-get niPerEmployee():number|null{ return this.get("EPSCHNGYR"); }
-get niPerEmployee():number|null{ return this.get("QTL"); }
-get niPerEmployee():number|null{ return this.get("REVCHNGYR"); }
-get niPerEmployee():number|null{ return this.get("ANIACNORM"); }
-get niPerEmployee():number|null{ return this.get("TTMREVPERE"); }
-get niPerEmployee():number|null{ return this.get("QSCEX"); }
-get niPerEmployee():number|null{ return this.get("QEBITDA"); }
-get niPerEmployee():number|null{ return this.get("AROIPCT"); }
-get niPerEmployee():number|null{ return this.get("QTOTLTD"); }
-get niPerEmployee():number|null{ return this.get("AROAPCT"); }
-	*/
+	get lastAvailableDate():number|null{ return this.get("LATESTADATE"); }//Date when the ratio data was last updated
 
 	//https://usermanual.wiki/Document/apireferenceguide.225602080/help
 }

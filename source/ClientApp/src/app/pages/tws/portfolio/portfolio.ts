@@ -234,13 +234,15 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		}*/
 		console.log( `trade( '${event.toString()}' )` );
 	}
-	roll( holding:Holding, event:MouseEvent ):void
+
+	roll()
 	{
 		console.log( `roll( '${event.toString()}' )` );
 		const dialogRef = this.dialog.open(RollDialog,
 		{
 			width: '600px',
-			data: { holding: holding }
+			height: '600px',
+			data: { holding: this.selected }
 		});
 		dialogRef.afterClosed().subscribe(result =>
 		{
@@ -250,11 +252,10 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			// 	this.subscribe( this.applicationId, this.level );
 			// }
 		});
-
 	}
 	onTransactClick( buy:boolean )
 	{
-		if( this.selected.contract.securityType==IB.SecurityType.Option )
+		if( this.selectedIsOption )
 		{
 			const dialogRef = this.dialog.open(OptionEntryDialog, { width: '600px', data: { option: this.selected, isBuy: buy, expirations: [], underlying: null } });
 			dialogRef.afterClosed().subscribe(result =>
@@ -331,6 +332,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	mktDataSubscriptions = new Map<number,TickObservable>();
 	requests = new Map <string, [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>]>();
 	private selected:Holding|null=null;
+	get selectedIsOption(){ return this.selected?.contract.securityType==IB.SecurityType.Option; }
 
 	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'bidSize', 'bid', 'ask', 'askSize', 'volume', 'last', 'change' ];
 

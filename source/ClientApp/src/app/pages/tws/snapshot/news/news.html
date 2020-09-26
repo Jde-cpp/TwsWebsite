@@ -1,5 +1,5 @@
 <ng-container *ngIf="viewPromise | async">
-	<mat-expansion-panel *ngFor="let entry of collection.values" hideToggle>
+	<mat-expansion-panel *ngFor="let entry of collection" hideToggle>
 		<mat-expansion-panel-header>
 			<mat-panel-title>{{display(entry)}}</mat-panel-title>
 			<!-- <mat-panel-description>This is a summary of the content</mat-panel-description> -->

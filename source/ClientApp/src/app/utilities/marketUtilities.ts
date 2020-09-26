@@ -24,7 +24,7 @@ export class MarketUtilities
 		}
 		return isHoliday;
 	}
-	static isHoliday( day:Day )
+	static isHoliday( day:Day, contract?:IB.IContract )
 	{
 		const mod = day%7;
 		return mod==2 || mod==3 || [18512,18592,18621].indexOf(day)!=-1;
@@ -42,6 +42,23 @@ export class MarketUtilities
 		while( MarketUtilities.isDateHoliday(copy) );
 		return DateUtilities.beginningOfDay( copy );
 	}
+	static previous( contract:IB.IContract, reference?:Day ):Day
+	{
+		let day = reference;
+		if( !day )
+		{
+			let now = new Date();
+			day = DateUtilities.toDays( now );
+			if( !this.isMarketOpen2(contract.exchange, contract.securityType, now) )
+				--day;
+		}
+		while( MarketUtilities.isHoliday(day, contract) )
+			--day;
+		do
+			--day;
+		while( MarketUtilities.isHoliday(day, contract) );
+		return day;
+	}
 	static previousTradingDay( reference?:Day, tradingHours?:Results.IContractHours ):Day
 	{
 		let day = 0;
@@ -55,7 +72,6 @@ export class MarketUtilities
 			do
 				--day;
 			while( MarketUtilities.isHoliday(day) );
-
 		}
 		return day;
 	}
@@ -86,9 +102,9 @@ export class MarketUtilities
 		return MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDay(now, tradingHours) );
 	}
 
-	static isMarketOpen2( exchange:IB.Exchanges, secType:IB.SecurityType )
+	static isMarketOpen2( exchange:IB.Exchanges, secType:IB.SecurityType, date:Date=new Date() )
 	{
-		const etString = new Date().toLocaleString("en-US", {timeZone: "America/New_York"});
+		const etString = date.toLocaleString( "en-US", {timeZone: "America/New_York"} );
 		const et = new Date( etString );
 		return !MarketUtilities.isDateHoliday( et )
 			&& ( secType==IB.SecurityType.Stock ? et.getHours()>3 && et.getHours()<19 : (et.getHours()==9 && et.getMinutes()>29) || (et.getHours()>9 && et.getHours()<16) );

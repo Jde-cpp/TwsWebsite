@@ -7,7 +7,7 @@ import { IProfile } from 'src/app/services/profile/IProfile';
 import {TickObservable} from 'src/app/services/tws/ITickObserver'
 import {Holding, TermHoldingSummary, Price} from './holding'
 import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
-import {TransactDialog} from 'src/app/shared/tws/dialogs/transact/transact'
+import {TransactDialog, TransactDoModal} from 'src/app/shared/tws/dialogs/transact/transact'
 import {DateUtilities} from 'src/app/utilities/dateUtilities'
 
 import * as ib from 'src/app/proto/ib';
@@ -68,7 +68,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		var callbacks = this.tws.reqAccountUpdates( accountId );
 		this.requests.set( accountId, callbacks );
 		callbacks[0].subscribe( {next:accountUpdate =>{this.onAccountUpdate(accountUpdate);}, error:  e=>{console.error(e);}} );
-		callbacks[1].subscribe( {next:portfolioUpdate =>{this.onPortfolioUpdate(portfolioUpdate);}, error:  e=>{console.error(e);}} );
+		callbacks[1].subscribe( {next:x =>{ if(x) this.onPortfolioUpdate(x); else if( !this.viewPromise ) this.initialLoad();}, error:  e=>{console.error(e);}} );
 	}
 	accountChange( _:string )
 	{
@@ -152,44 +152,32 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 					this.mktDataSubscriptions.set( contractId, subscription );
 					subscription.subscribe2( holding );
 				}
-				const day = MarketUtilities.previousTradingDay();
-				this.loadPreviousDay( contract, isMarketOpen, holding, day );
+				if( this.viewPromise )
+					this.loadPreviousDay( contract, isMarketOpen, holding, MarketUtilities.previous(contract) );
 			}
 		}
 	};
+	initialLoad()
+	{
+		this.tws.reqPreviousDay( this.holdings.map(x=>x.contract.id) ).subscribe(
+		{
+			next: ( bar:Results.IDaySummary ) =>
+			{
+				var holding = this.holdings.find( x=>x.contractId==bar.contractId );
+				holding.setDaySummary( bar,  MarketUtilities.previous(holding.contract) );
+			},
+		});
+		this.viewPromise = Promise.resolve( true );
+	}
 	loadPreviousDay( contract:IB.IContract, isMarketOpen:boolean, holding:Holding, day:number )
 	{
 //		if( contract.symbol=="AXE" )
 //			console.log( `AXE day=${day}` );
-		this.tws.reqPreviousDay( [contract.id] ).subscribe(
+		holding.reqPrevious( this.tws, day ).catch( (e)=>
 		{
-			next: ( bar:Results.IDaySummary ) =>
-			{
-			//	if( contract.symbol=="ALGT" )
-			//		console.log( `${contract.symbol} close=${bar.close}` );
-
-				if( isMarketOpen || bar.day!=day )
-					holding.previousDay = new Price( bar );
-				else
-				{
-					holding.bid = bar.bid;
-					holding.ask = bar.ask;
-					holding.last = holding.close = ProtoUtilities.toNumber( bar.close );
-				}
-			},
-			complete:()=>
-			{
-				if( !holding.previousDay.last )
-				    console.log( `No previous day close for '${contract.symbol}'` );
-			},
-			error: e=>
-			{
-				if( e.code==322 )
-					setTimeout( ()=> this.loadPreviousDay(contract,isMarketOpen,holding,day), 5000 );
-				else
-					console.error(e);
-			}
-		});
+			if( e.code==322 )
+				setTimeout( ()=> this.loadPreviousDay(contract,isMarketOpen,holding,day), 5000 );
+		} );
 	}
 
 /*	onGenericTick( reqId:number, type:Results.ETickType, value:number ):void
@@ -271,15 +259,17 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		{
 			this.tws.reqContractSingle( this.selected.contract ).then( (details)=>
 			{
-				const dialogRef = this.dialog.open( TransactDialog, {width: '600px',	autoFocus: false, data: {tick: this.selected, isBuy: buy, quantity: this.selected.position, showStop: buy!=this.selected.position<0, details: details}} );
-				dialogRef.afterClosed().subscribe(result =>
-				{
+				TransactDoModal( this.dialog, this.profileService, this.tws, details, this.selected, buy, this.selected.position, false );
+
+				//const dialogRef = this.dialog.open( TransactDialog, {width: '600px',	autoFocus: false, data: {tick: this.selected, isBuy: buy, quantity: this.selected.position, showStop: buy!=this.selected.position<0, details: details}} );
+				//dialogRef.afterClosed().subscribe(result =>
+				//{
 					// if( result && this.settings.limit!=result.limit )
 					// {
 					// 	this.settings.limit = result.limit;
 					// 	this.subscribe( this.applicationId, this.level );
 					// }
-				});
+				//});
 			});
 		}
 	}
@@ -339,6 +329,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	@ViewChild('mainTable',{static: false}) _table:MatTable<Holding>;
 	@ViewChild('accountButtons',{static: false}) accountButtons;
 	get settings(){return this._settings || (this.settings=new Settings());} set settings(value){ this._settings = value;} private _settings:Settings;
+	viewPromise:Promise<boolean>;
 	private static profileKey="PortfolioComponent";
 	//public objectKeys = Object.keys;
 }

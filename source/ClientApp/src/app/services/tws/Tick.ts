@@ -8,7 +8,7 @@ import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import { BidiModule } from '@angular/cdk/bidi';
 import { interval } from 'rxjs';
 import { TwsService } from './tws.service';
-import { Day } from 'src/app/utilities/dateUtilities';
+import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 
 /*
@@ -150,11 +150,35 @@ export class TickEx extends Tick
 {
 	constructor( private _contract:IB.IContract, isMarketOpen:boolean )
 	{
-		super( _contract && (isMarketOpen ?? false) ? MarketUtilities.isMarketOpen2(_contract.exchange, _contract.securityType) : isMarketOpen );
+		super( _contract && (isMarketOpen ?? false) ? isMarketOpen : MarketUtilities.isMarketOpen2(_contract.exchange, _contract.securityType) );
 		if( _contract )
 		{
 			if( !_contract.multiplier )
 				_contract.multiplier = 1;
+		}
+	}
+	setPreviousDay( bar:Results.IDaySummary ){ this.close = bar.close; }
+	setDaySummary( bar:Results.IDaySummary, previousDay:Day )
+	{
+		if( this.contract.symbol=="BGGSQ" )
+			console.log( `${this.contract.symbol} - ${DateUtilities.fromDays(bar.day)}` );
+		if( this.isMarketOpen && bar.day>previousDay )
+		{
+			this.high = bar.high;
+			this.low = bar.low;
+			this.open = bar.open;
+		}
+		else if( this.isMarketOpen || bar.day==previousDay )
+			this.setPreviousDay( bar );
+		else if( bar.day>previousDay )
+		{
+			this.high = bar.high;//!isMarketOpen && day>previousDay
+			this.low = bar.low;
+
+			this.bid = bar.bid;
+			this.ask = bar.ask;
+			this.volume = ProtoUtilities.toNumber( bar.volume );
+			this.last = ProtoUtilities.toNumber( bar.close );
 		}
 	}
 	reqPrevious( tws:TwsService, previousDay:Day ):Promise<void>
@@ -163,28 +187,13 @@ export class TickEx extends Tick
 		{
 			tws.reqPreviousDay( [this.contract.id] ).subscribe(
 			{
-				next: ( bar:Results.IDaySummary ) =>
+				next: ( bar:Results.IDaySummary ) =>{ this.setDaySummary(bar, previousDay); },
+				complete:()=>
 				{
-					if( this.isMarketOpen && bar.day>previousDay )
-					{
-						this.high = bar.high;
-						this.low = bar.low;
-						this.open = bar.open;
-					}
-					else if( this.isMarketOpen || bar.day==previousDay )
-						this.close = bar.close;
-					else if( bar.day>previousDay )
-					{
-						this.high = bar.high;//!isMarketOpen && day>previousDay
-						this.low = bar.low;
-
-						this.bid = bar.bid;
-						this.ask = bar.ask;
-						this.volume = ProtoUtilities.toNumber( bar.volume );
-						this.last = ProtoUtilities.toNumber( bar.close );
-					}
+					if( !this.close )
+						console.log( `No previous day close for '${this.contract.symbol}'` );
+					resolve();
 				},
-				complete:()=>{ if( !this.close ) console.log( `No previous day close for '${this.contract.symbol}'` ); resolve(); },
 				error: e=>{ console.error(e); reject(e); }
 			});
 		});
@@ -217,7 +226,7 @@ export class TickDetails extends TickEx
 {
 	constructor( public details:Results.IContractDetails )
 	{
-		super( null, MarketUtilities.isMarketOpen(details) );
+		super( details.contract, MarketUtilities.isMarketOpen(details) );
 		if( !details.contract.multiplier )
 		details.contract.multiplier = 1;
 	}

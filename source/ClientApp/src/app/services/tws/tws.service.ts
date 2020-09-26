@@ -242,6 +242,17 @@ class Connection
 					if( !this.complete(this.contractCallbacks, message.message.intValue) )
 						this.complete( this.previousDayCallbacks, message.message.intValue );
 				}
+				else if( typeId==Results.EResults.ACCT_DOWNLOAD_END )
+				{
+					const accountNumber = message.message.stringValue;
+					if( this.accountUpdateCallbacks.has(accountNumber) )
+					{
+						for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
+							callback[1].next( null );//message.portfolioUpdate
+					}
+					else
+						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
+				}
 				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
 				{
 					this.testCallbacks.get( message.message.intValue ).resolve( true );
@@ -364,7 +375,7 @@ class Connection
 	}
 	handleError( error:Results.IError )
 	{
-		debugger;
+		//debugger;
 		const id = error.requestId;
 		if( !Connection.errorIfPresent(id, this.contractCallbacks, error) )
 		{

@@ -53,7 +53,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	ngOnInit()
 	{
-		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::ngOnInit` );
+		console.log( `(${this.detail && this.detail.contract ? this.detail.contract.symbol : 'null'})SnapshotContentComponent::ngOnInit` );
 		this.settingsSymbolContainer = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
 		// var contract = new IB.Contract();
 		// contract.symbol = symbol;

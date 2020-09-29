@@ -77,6 +77,8 @@ if [ $link -eq 1 ]; then
 	addLink $baseDir/baseline/ClientApp angular.json;
 	cd src;
 	addLink $baseDir/baseline/ClientApp/src main.ts;
+	addLink $baseDir/baseline/ClientApp/src styles.scss;
+	addLink $baseDir/baseline/ClientApp/src _app-theme.scss;
 	cd app;
 	ln -s $baseDir/baseline/ClientApp/src/app/app.* .
 	ln -s $baseDir/baseline/ClientApp/src/app/routes.ts .

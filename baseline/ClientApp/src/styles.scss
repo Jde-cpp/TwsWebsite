@@ -1,0 +1,82 @@
+@import './app-theme';
+@import './styles/api';
+@import './styles/markdown';
+@import './styles/tables';
+@import './styles/general';
+
+// Include material core styles.
+@include mat-core();
+
+@include angular-material-theme($theme);
+@include material-docs-app-theme($theme);
+
+.negativeValue
+{
+	background: rgba(255, 0, 0, 0.5);
+}
+.positiveValue
+{
+	background: rgba(0, 255, 0, 0.5);
+}
+
+.number
+{
+	flex: 0 0 100px;
+	padding-right:10px;
+}
+.numberHeader
+{
+	@extend .number;
+	justify-content: center;
+}
+.numberField
+{
+	@extend .number;
+	justify-content: flex-end;
+}
+
+.numberFieldValue
+{
+	margin: default;
+}
+
+.dateTime
+{
+	flex: 0 0 130px;
+	padding-right:10px;
+}
+
+.dateTimeHeader
+{
+	@extend .dateTime;
+	justify-content: center;
+}
+
+.dateTimeField
+{
+	@extend .dateTime;
+	justify-content: flex-end;
+}
+.symbolField
+{
+	flex: 0 0 75px;
+}
+
+.highlight
+{
+	/* background-color: aqua;
+	color: black; */
+	border-color: orange;
+	border-width: 1px;
+	border-style: solid;
+}
+
+td.numberCell
+{
+	text-align: right;
+}
+
+thead>tr>td
+{
+	text-align: center;
+}

@@ -87,13 +87,15 @@ export class OptionEntryDialog implements OnDestroy
 							break;
 					}
 				}
-				let contract = new IB.Contract( {id:this.strikes.get(strike)[isCall ? 0 : 1], strike: strike, expiration: expiration, right: isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put} );
-				this.option = new TickEx( contract, null );
-
-				//option:Results.IOption, public expiration:number, public isCall:boolean
+				this.setOption( strike, expiration, isCall );
 			},
 			error: e=>{console.log(e.Message);}
 		});
+	}
+	setOption( strike, expiration, isCall )
+	{
+		let contract = new IB.Contract( {id:this.strikes.get(strike)[isCall ? 0 : 1], strike: strike, expiration: expiration, right: isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put} );
+		this.option = new TickEx( contract, null );
 	}
 	autoValues( quantity:number )
 	{
@@ -154,7 +156,7 @@ export class OptionEntryDialog implements OnDestroy
 	//get expirationDay(){ return this._expirationDay;} set expirationDay(value){ this._expirationDay=value; } private _expirationDay:number;
 	get expiration(){ return this.option && this.option.expiration || 0; }
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){ if( this.isBuy!=value ){ this.limit = value ? this.bid : this.ask; this._isBuy=value ? "Buy" : "Sell";} } _isBuy:string;
-	get isCall(){ return this.option.isCall; }
+	get isCall(){ return this.option.isCall; } set isCall(x){ this.setOption( this.strike, this.expiration, x ); }
 	limit:number;
 	get optionTypeName(){ return this.isCall ? "Call" : "Put"; }
 	quantity:number=1;
@@ -164,8 +166,8 @@ export class OptionEntryDialog implements OnDestroy
 	stop:number;
 	stopLimit:number;
 	underlying:Results.IContractDetails;
-	//get underlyingSymbol(){return this.underlying.contract.symbol;}
+	get underlyingSymbol(){return this.underlying.contract.symbol;}
 	get option():TickEx{ return this._option}; set option(value){ if(!value) this.subscription=null; this._option = value; } _option:TickEx;
 	get subscription(){return this._subscription;} set subscription(value){ if( this.subscription ) this.tws.cancelMktDataSingle( this.subscription ); this._subscription=value;} _subscription:TickObservable;
-	private _submitting=false;
+	submitting=false;
 }

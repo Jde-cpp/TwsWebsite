@@ -160,6 +160,7 @@ export class SmallChartComponent //implements AfterViewInit, OnInit, OnDestroy
 		};
 		Highcharts.stockChart( showLarge ? 'chart2' : 'chart', options );
 	}
+	get contract(){return this.details.contract;}
 	get details():Results.IContractDetails{ return this.tick.details; }// private _details:Results.IContractDetails;
 	@Input() set tick(value:TickDetails){ this._tick = value; if( value ) this.showChart(); } get tick():TickDetails{ return this._tick; } private _tick:TickDetails;
 }

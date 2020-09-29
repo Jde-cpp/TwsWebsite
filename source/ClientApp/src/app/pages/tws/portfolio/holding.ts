@@ -97,7 +97,7 @@ export class Holding extends TickEx
 	get pnl():number{ return this.change*this.position*this.contract.multiplier; }
 	get change():number
 	{
-		if( this.contract.symbol=="BGGSQ" )
+		if( this.contract.symbol=="AAPL" )
 			this.contract.multiplier = 1.0;
 
 		return this.marketValue/(this.position*this.contract.multiplier)-this.pricePrevious;

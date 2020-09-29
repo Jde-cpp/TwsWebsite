@@ -181,7 +181,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 	get editing():Cell{ return this._editing;} set editing(value:Cell){ this._editing=value;} private _editing:Cell;
 	get end():Date{ return new Date( this._end.value );} set end(value:Date){this._end.setValue(value);} private _end = new FormControl();
 	get start():Date{ return this._start.value; } set start(value:Date){ this._start.setValue(value); } private _start = new FormControl();
-	private data:DataSource;
+	data:DataSource;
 	get settings(){return this.profile.value; }
 	profile = new Settings<PageSettings>( PageSettings, "OrderComponent", this.profileService );
 	get sort():Sort{ return this.settings.sort; } set sort(value){this.settings.sort = value;}

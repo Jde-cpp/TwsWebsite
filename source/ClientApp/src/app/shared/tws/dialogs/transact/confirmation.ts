@@ -73,4 +73,5 @@ export class ConfirmationDialog
 	get tick(){ return this.transactData.tick;}
 	get timeInForce(){ return this.order.timeInForce==IB.ETimeInForce.DayTif ? "Day" : IB.ETimeInForce[this.order.timeInForce]; }
 	get transactData(){ return this.data.transactData;}
+	submitting:boolean;
 }

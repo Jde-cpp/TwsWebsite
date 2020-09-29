@@ -75,11 +75,12 @@ export class RollDialog
 	//get underlying(){ return this._underlying; } _underlying:Results.IContractDetails;
 	get underlyingContract(){ return {id:this.contract.underlyingId}; }
 	viewPromise:Promise<boolean>;
+	submitting=false;
 	//get subsequent():Results.IContractDetails[] = [];
 /*	quantity:number;
 	limit:number;
 	stop:number;
 	stopLimit:number;
 
-	private _submitting=false;*/
+	*/
 }

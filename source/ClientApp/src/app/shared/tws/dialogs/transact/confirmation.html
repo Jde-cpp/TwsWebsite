@@ -39,7 +39,7 @@
 </mat-dialog-content>
 <mat-dialog-actions>
 	<span style="flex: content; flex-direction: row;align-items: flex-end;display: flex;margin-left: auto;">
-		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="_submitting || position==null" (click)="_submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}}</button>
+		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="submitting || position==null" (click)="submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}}</button>
 		<button style="margin-left:50px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
 	</span>
 </mat-dialog-actions>

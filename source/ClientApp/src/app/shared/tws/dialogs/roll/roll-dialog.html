@@ -5,6 +5,6 @@
 	<!-- <order-entry></order-entry> -->
 </mat-dialog-content>
 <mat-dialog-actions align="end">
-	<button mat-icon-button color=primary [disabled]="_submitting" (click)="_submitting=true;onSubmitClick()">Submit</button>
+	<button mat-icon-button color=primary [disabled]="submitting" (click)="submitting=true;onSubmitClick()">Submit</button>
 	<button style="margin-left:30px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
 </mat-dialog-actions>

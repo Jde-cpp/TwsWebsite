@@ -140,9 +140,7 @@ export class TransactDialog implements AfterViewInit
 	get stop(){return this._stop;} set stop(value){this._stop = Math.round(value*100)/100;} private _stop:number;
 	get stopLimit(){return this._stopLimit;} set stopLimit(value){this._stopLimit = Math.round(value*100)/100;} private _stopLimit:number;
 	tick:TickEx;
-	//option:Option;
-
-	private _submitting=false;
+	submitting=false;
 }
 
 class DialogSettings implements IAssignable<DialogSettings>

@@ -8,21 +8,21 @@
 			</mat-select>
 		</mat-form-field>
 		<mat-form-field style="flex:0;flex-basis: 120px;width: 120px; margin-left:10px">
-			<mat-select [disabled]="strikes.length<2" (selectionChange)="onStrikeChange($event)" [value]="strike" style="width: 120px;">
+			<mat-select [disabled]="strikes.size<2" (selectionChange)="onStrikeChange($event)" [value]="strike" style="width: 120px;">
 				<mat-option style="width: 120px;" *ngFor="let strike2 of strikes  | keyvalue" [value]="strike2.key">{{strike2.key}}</mat-option>
 			</mat-select>
 		</mat-form-field>
 		<button mat-raised-button style="margin-left:10px;margin-right:20px" (click)="isCall=!isCall">{{optionTypeName}}</button>
 	</div>
 	<div style="display: flex;align-items: center; justify-content: center;">
-		<mat-form-field style="width:70px" [floatLabel]="always">
-			<input matInput type="number" disabled=true placeholder="Bid Size" [(ngModel)]="bidSize">
+		<mat-form-field style="width:70px" floatLabel="always">
+			<input matInput type="number" disabled=true placeholder="Bid Size" [ngModel]="bidSize">
 		</mat-form-field>
 		<!-- <span>{{bidSize | number:'1.0-0'}}</span> -->
 		<button mat-stroked-button (click)="limit=bid">{{bid | number:'1.2-2'}}</button>
 		<button mat-stroked-button (click)="limit=ask">{{ask | number:'1.2-2'}}</button>
-		<mat-form-field style="width:70px" [floatLabel]="always">
-			<input matInput type="number" disabled=true placeholder="Ask Size" [(ngModel)]="askSize">
+		<mat-form-field style="width:70px" floatLabel="always">
+			<input matInput type="number" disabled=true placeholder="Ask Size" [ngModel]="askSize">
 		</mat-form-field>
 	</div>
 	<div style="display: flex; justify-content: center;">
@@ -47,7 +47,7 @@
 		<mat-radio-button style="margin-left: 10px;" value="Sell">Sell</mat-radio-button>
 	</mat-radio-group> -->
 	<span style="margin-left: auto;" >
-		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="_submitting" (click)="_submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}} {{isCall ? "Call" : "Put"}}</button>
+		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="submitting" (click)="submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}} {{isCall ? "Call" : "Put"}}</button>
 		<button style="margin-left:50px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
 	</span>
 </mat-dialog-actions>

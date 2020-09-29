@@ -80,7 +80,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	start:Day;
 	end:Day;
 
-	private data:DataSource;
+	data:DataSource;
 	settingsContainer:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "TradeComponent", this.profileService );
 	get sort():Sort{ return this.settingsContainer.value.sort; } set sort(value){this.settingsContainer.value.sort = value;}
 	displayedColumns:string[] = ["symbol","shares", "openTime", "closeTime", "return_", "openPrice", "closePrice", "commissions"];//"openLongPrediction", "openShortPrediction", "closeLongPrediction", "closeShortPrediction",

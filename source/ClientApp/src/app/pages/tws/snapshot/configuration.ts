@@ -27,9 +27,14 @@ export class ConfigurationDialog
 		this.data.symbolSettings.value.shortInterest = this.shortInterest.value;
 		this.data.symbolSettings.value.shortInterestDate = this.shortInterest.value;
 		this.data.symbolSettings.save();
-
+		this.dialogRef.close( null );
+	}
+	onCancelClick()
+	{
+		this.dialogRef.close( null );
 	}
 	delay:FormControl;
 	shortInterest:FormControl;
 	date:FormControl;
+	submitting=false;
 }

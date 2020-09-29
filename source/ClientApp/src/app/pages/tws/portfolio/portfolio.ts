@@ -321,7 +321,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	private isSingleClick:boolean;
 	mktDataSubscriptions = new Map<number,TickObservable>();
 	requests = new Map <string, [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>]>();
-	private selected:Holding|null=null;
+	selected:Holding|null=null;
 	get selectedIsOption(){ return this.selected?.contract.securityType==IB.SecurityType.Option; }
 
 	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'bidSize', 'bid', 'ask', 'askSize', 'volume', 'last', 'change' ];

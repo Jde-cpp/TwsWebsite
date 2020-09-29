@@ -1,21 +1,21 @@
 <h2 mat-dialog-title>Configuration</h2>
 <mat-dialog-content>
-	<mat-form-field [floatLabel]="always">
+	<mat-form-field floatLabel="always">
 		<input matInput type=number placeholder="Delay (seconds)" [(ngModel)]="delay">
 	</mat-form-field>
 	<fieldset>
 		<legend>Short Interest</legend>
-		<mat-form-field [floatLabel]="always">
-			<input matInput type=number placeholder="Short Interest" [(ngModel)]="shortInterest">
+		<mat-form-field floatLabel="always">
+			<input matInput type="number" placeholder="Short Interest" [(ngModel)]="shortInterest">
 		</mat-form-field>
-		<mat-form-field [floatLabel]="always">
-			<input matInput type=date placeholder="Date" [(ngModel)]="shortDate">
+		<mat-form-field floatLabel="always">
+			<input matInput type="date" placeholder="Date" [(ngModel)]="date">
 		</mat-form-field>
 	</fieldset>
 </mat-dialog-content>
 <mat-dialog-actions>
 	<span style="flex: content; flex-direction: row;align-items: flex-end;display: flex;margin-left: auto;">
-		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="_submitting || position==null" (click)="_submitting=true;onSave()"><mat-icon>save</mat-icon>{{"Save"}}</button>
+		<button mat-icon-button [disabled]="submitting" (click)="submitting=true;submit()"><mat-icon>save</mat-icon>{{"Save"}}</button>
 		<button style="margin-left:50px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
 	</span>
 </mat-dialog-actions>

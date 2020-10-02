@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, Inject, Input, OnDestroy, EventEmitter, Output } from '@angular/core';
+import { Component, AfterViewInit, Inject, Input, OnDestroy, EventEmitter, Output, OnInit } from '@angular/core';
 import {FormControl} from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
@@ -23,19 +23,29 @@ import { LinkSelectOptions } from '../../framework/link-select/link-select';
 import { TimeFrame,DateRangeSettings } from '../../framework/date-range/date-range';
 
 @Component({ selector: 'candlestick', styleUrls: ['candlestick.css'], templateUrl: './candlestick.html' })
-export class CandlestickComponent implements AfterViewInit, OnDestroy
+export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private http: HttpClient, private tws : TwsService, @Inject('IErrorService') private cnsl: IErrorService, @Inject('IProfile') private profile: IProfile )
 	{}
+	ngOnInit()
+	{
+		console.log( 'CandlestickComponent::NgOnInit' );
+		this.tabSubscription = this.tabEvents.subscribe( {next: value=>
+		{
+			this.isActive = this.index==value;
+		}} );
+
+	}
 	ngAfterViewInit():void
 	{
-		this.tabSubscription = this.tabEvents.subscribe( {next: value=>{this.indexParentTab = value; this.run();}} );
+		console.log( 'CandlestickComponent::ngAfterViewInit' );
 		this.settingsContainer = new Settings<ChartSettings>( ChartSettings, `Candlestick.${this.contract.symbol}`, this.profile );
 		this.settingsContainer.loadedPromise.then( ()=>{this.run();} );
 		//Highstock.setOptions( { global: {useUTC: false}} );
 	}
 	ngOnDestroy()
 	{
+		console.log( 'CandlestickComponent::ngOnDestroy' );
 		if( this.tick )
 		    this.settingsContainer.save();
 		this.tabSubscription.unsubscribe();
@@ -44,8 +54,9 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 
 	run = ():void =>
 	{
-		if( !this.isActive )
-			return;
+		console.log( 'CandlestickComponent::run' );
+		//if( !this.isActive )
+		//	return;
 
 		var end = this.end || MarketUtilities.currentTradingDay();
 		var days = this.start ? end-this.start+1 : 1;
@@ -125,7 +136,7 @@ export class CandlestickComponent implements AfterViewInit, OnDestroy
 	//set barSize(value){this._barSize=value;this.run();} get barSize(){return this._barSize;} private _barSize: Requests.BarSize=Requests.BarSize.Minute;
 	get settings(){ return this.settingsContainer.value; }
 	settingsContainer:Settings<ChartSettings>;
-	get isActive(){return this.index==this.indexParentTab && this.tick && this.settingsContainer.isLoaded;}
+	isActive:boolean;
 	get candleSticks(){ return this.settingsContainer.value.candleSticks; }
 	@Input() index:number; indexParentTab:number;
 	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickEx;

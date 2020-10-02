@@ -191,8 +191,8 @@ export class FundamentalsComponent implements OnInit, AfterViewInit, OnDestroy
 	}
 	ngOnDestroy()
 	{
-		for( let key of Object.keys(this._value.values) )
-			console.log( `${key}=${this._value.values[key]}` );
+		//for( let key of Object.keys(this._value?.values) )
+		//	console.log( `${key}=${this._value.values[key]}` );
 	}
 
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;

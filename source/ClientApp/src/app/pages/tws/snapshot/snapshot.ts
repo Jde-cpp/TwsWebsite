@@ -41,15 +41,21 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{
 		this.profile.loadedPromise.then( (value)=>
 		{
-			this.tws.reqIds( this.previousContractIds ).then( (x)=>{this.details = x; this.viewPromise = Promise.resolve(true);} );
+			//this.settings.previousContractIds = [756733];
+			this.tws.reqIds( this.previousContractIds ).then( (x)=>
+			{
+				this.details = x;
+				this.selected.setValue( this.settings.selectedIndex );
+				this.viewPromise = Promise.resolve(true);
+			});
 		});
 		this.selected.valueChanges.subscribe( value=>
 		{
-			if( this.settings.selectedIndex != value )
+			/*if( this.settings.selectedIndex != value )
 			{
 			    this.settings.selectedIndex = value;
 			    this.profile.save();
-			}
+			}*/
 		});
 	}
 	ngOnDestroy()
@@ -63,11 +69,11 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		let index = this.previousContractIds.indexOf( detail.contract.id );
 		if( index==-1 )
 		{
+			this.details.unshift( detail );
 			this.previousContractIds.unshift( detail.contract.id );
 			this.selected.setValue( 0 );
 			this.profile.save();
-			if( this.symbolTabs.selectedIndex )
-				this.symbolTabs.selectedIndex = 0;
+			setTimeout( ()=> this.symbolTabs.selectedIndex = 0, 0 );
 		}
 		//this.tabEvents.next( index );
 		// console.log( `symbolIndexChanged( ${index} )` );

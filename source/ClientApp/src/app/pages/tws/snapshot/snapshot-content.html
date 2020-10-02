@@ -4,12 +4,12 @@
 			<div style="height:74px; overflow: hidden;">
 				<mat-form-field appearance="fill">
 					<mat-label>Symbol</mat-label>
-					<input matInput onclick="this.select();" [ngModel]="symbol" (keyup.enter)="setSymbol($event.target.value)" (blur)="setSymbol($event.target.value)">
+					<input matInput #symbolInput onclick="this.select();" [ngModel]="symbol" (keyup.enter)="setSymbol($event.target.value)" (blur)="setSymbol($event.target.value)">
 				</mat-form-field>
 			</div>
 			<div id="chart" style="min-width: 240px"></div>
-			<table>
-				<thead><tr><td>Bid Sz</td><td>Bid</td><td>Ask</td><td>Ask Sz</td><td>Last</td><td>Change</td><td>Range</td><td>Volume</td><td>Short</td><td>Inventory</td></tr></thead>
+			<table style="width:1300px">
+				<thead><tr><td>Bid Sz</td><td>Bid</td><td>Ask</td><td>Ask Sz</td><td>Last</td><td>Change</td><td>Range</td><td>Volume</td><!--<td>Short</td>--><td>Inventory</td></tr></thead>
 				<tbody><tr>
 					<td class="numberCell">{{tick?.bidSize || null | number:'1.0-0'}}</td>
 					<td class="numberCell">{{tick?.bid | number:'1.2-2'}}</td>
@@ -20,7 +20,7 @@
 					<td class="numberCell">{{tick?.low| number:'1.2-2'}} - {{tick?.high | number:'1.2-2'}}</td>
 					<td class="numberCell" *ngIf="tick==null || !tick.volumeAverage">{{volumeDisplay}}</td>
 					<td class="numberCell" *ngIf="tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</td>
-					<td class="numberCell" title="{{settingsSymbol?.shortInterestDate}}">{{ (fundamentals?.sharesOutstanding && settingsSymbol ? settingsSymbol.shortInterest/fundamentals.sharesOutstanding*100 : null) | number:'1.1-1' }}%</td>
+					<!-- <td class="numberCell" title="{{settingsSymbol?.shortInterestDate}}">{{ (fundamentals?.sharesOutstanding && settingsSymbol ? settingsSymbol.shortInterest/fundamentals.sharesOutstanding*100 : null) | number:'1.1-1' }}%</td> -->
 					<td class="numberCell">{{tick?.shortableAvailable/1000 | number:'1.0-0'}}K</td>
 				</tr></tbody>
 			</table>

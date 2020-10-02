@@ -124,11 +124,13 @@ export class DataSource implements IData
 				}
 			}
 		};
-
 		for( const trade of executions )
 			add( <ITradeCommon>trade );
-		for( const trade of flex.trades )
-			add( <ITradeCommon>trade );
+        if( flex )
+        {
+		    for( const trade of flex.trades )
+			    add( <ITradeCommon>trade );
+		}
 		for( let [contractId,result] of contractTrades )
 			this.values.push( result );
 

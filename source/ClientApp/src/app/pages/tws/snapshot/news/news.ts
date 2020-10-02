@@ -35,7 +35,7 @@ class Article
 
 	get display():string
 	{
-		var dateDisplay = DateUtilities.display( this.ib.time );
+		var dateDisplay = DateUtilities.display( new Date(this.ib.time*1000) );
 		return `${dateDisplay} - ${this.ib.headline}`;
 	}
 

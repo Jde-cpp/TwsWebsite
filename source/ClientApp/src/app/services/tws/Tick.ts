@@ -160,7 +160,7 @@ export class TickEx extends Tick
 	setPreviousDay( bar:Results.IDaySummary ){ this.close = bar.close; }
 	setDaySummary( bar:Results.IDaySummary, previousDay:Day )
 	{
-		if( this.contract.symbol=="BGGSQ" )
+		if( this.contract.symbol=="AAPL" )
 			console.log( `${this.contract.symbol} - ${DateUtilities.fromDays(bar.day)}` );
 		if( this.isMarketOpen && bar.day>previousDay )
 		{

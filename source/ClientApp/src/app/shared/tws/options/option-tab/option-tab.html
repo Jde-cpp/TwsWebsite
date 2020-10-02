@@ -1,3 +1,14 @@
-<div>
-
-</div>
+<mat-radio-group [(ngModel)]="optionType" (change)="$event ? changeType($event) : null" style="color: white" aria-label="Select an option">
+	<mat-radio-button value="1">Calls</mat-radio-button>
+	<mat-radio-button value="2">Puts</mat-radio-button>
+	<mat-radio-button value="3">All</mat-radio-button>
+</mat-radio-group>
+<paginator (page)="onPaginator($event)" [startIndex]="pageInfo.startIndex" [pageSize]="pageInfo.pageSize" [lengthChange]="lengthChange.asObservable()"></paginator>
+<span><button mat-raised-button color="primary" [disabled]="selectedOption==null" style="margin-right:10px" (click)="onTransactClick(true)">Buy</button><button mat-raised-button color="warn" [disabled]="selectedOption==null" (click)="onTransactClick(false)" >Sell</button></span>
+<mat-tab-group [(selectedIndex)]="expirationSelectedIndex" (selectedIndexChange)="expirationIndexChange($event)">  <!--[selectedIndex]="tabIndex"-->
+	<mat-tab *ngFor="let expiration of expirations; let index = index" [label]="expirationDisplays[index]">
+		<ng-template matTabContent>
+			<option-table [pageInfo]="pageInfo" [contract]="contract" [pageEvents]="pageEvents.asObservable()" [startExpiration]="expiration" [endExpiration]="expiration" [optionType]="optionType" (lengthChange)="onOptionsLengthChange($event)" (selectionChange)="onSelectionChange($event)" ></option-table>
+		</ng-template>
+	</mat-tab>
+</mat-tab-group>

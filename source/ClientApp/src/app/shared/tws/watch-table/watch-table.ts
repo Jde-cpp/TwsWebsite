@@ -45,15 +45,15 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		this.tws.reqSymbol( symbol ).then( (details)=>
 		{
-			while( details.length!=1 )
+			for( let i=0; i<details.length && details.length>1; ++i )
 			{
-				const index = details.findIndex( detail=> return detail.validExchanges.indexOf("EBS") );
-				if( index==-1 )
-				{
-					console.warn( `(${symbol}) - returned '${details.length}' records.` );
-				    return;
-				}
-				details.splice( index, 1 );
+				if( details[i].contract.currency!=MarketUtilities.DefaultCurrency )
+					details.splice( i, 1 );
+			}
+			if( details.length!=1 )
+			{
+				console.warn( `(${symbol}) - returned '${details.length}' records.` );
+				return;
 			}
 			const detail = details[0];
 			const constractId = detail.contract.id;

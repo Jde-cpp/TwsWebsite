@@ -1,16 +1,16 @@
-<ng-container *ngIf="data">
+<ng-container *ngIf="viewPromise | async">
 	<mat-toolbar style="height:120px">
 		<div style="align-content: center; margin: auto;">
 			<div style="display: inline-block;vertical-align: top;">
 				<div style="display: inline-block">
-					<date-range [(start)]="start" [(end)]="end"></date-range>
+					<date-range [settings]="dateRange"></date-range>
 					<button mat-icon-button primary><mat-icon class="iconButton" (click)="load()">cloud_download</mat-icon></button>
 				</div>
 				<div>
 					<!-- <mat-checkbox [(ngModel)]="groupBySymbol">Group by Symbol</mat-checkbox> -->
 				</div>
 			</div>
-			<tws-summary *ngIf="data" [data]="data" style="margin-left:10px"></tws-summary>
+			<tws-summary [data]="data" style="margin-left:10px"></tws-summary>
 		</div>
 		<!-- <div style="align-content: center; margin: auto">
 			<tws-summary [data]="data"></tws-summary>

@@ -18,6 +18,7 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from 'src/app/proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { ThemeStorage } from 'src/app/shared/material-site/theme-picker/theme-storage/theme-storage';
+import { DateUtilities } from 'src/app/utilities/dateUtilities';
 
 
 type ResolveGeneric = (any) => void;
@@ -200,7 +201,7 @@ class Connection
 					console.error( `no callbacks for ContractDetails reqId='${id}'` );
 			}
 			else if( message.options )
-				this.optionSummaryCallbacks.get( message.options.id ).next( message.options );
+				this.optionSummaryCallbacks.get( message.options.id )[0]( message.options );
 			else if( message.daySummary )
 				this.previousDayCallbacks.get( message.daySummary.requestId ).next( message.daySummary );
 			else if( message.fundamentals )
@@ -599,15 +600,19 @@ class Connection
 		this.send( msg );
 		return callback;
 	}
-	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Observable<Results.IOptionValues>
+	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Promise<Results.IOptionValues>
 	{
 		const id = this.getRequestId();
 		//const a = new Requests.RequestOptions(); a.contractId = contractId; a.id=id; a.securityType=2;	a.day2=date;
 		//this.send( {"options": a} );
+		console.log( `optionSummary( ${contractId}, ${optionType}, ${startExpiration}, ${endExpiration}, ${startStrike}, ${endStrike} )` );
 		this.send( {"options": {"id": id, "contractId": contractId, "securityType": optionType, "startExpiration": startExpiration, "endExpiration": endExpiration, "startSrike": startStrike, "endStrike": endStrike }} );
-		const callback = new Subject<Results.IOptionValues>();
-		this.optionSummaryCallbacks.set( id, callback );
-		return callback;
+		return new Promise<Results.IOptionValues>( (resolve,reject)=>
+		{
+			this.optionSummaryCallbacks.set( id, [resolve, reject] );
+		});
+	//	const callback = new Promise<Results.IOptionValues>();
+	//	return callback;
 	}
 /*	request<T>( requestType:Requests.ERequests ):Promise<T>
 	{
@@ -701,6 +706,7 @@ class Connection
 	{
 		const id = this.getRequestId();
 //		const param = new Requests.FlexExecutions( {"id":id, "accountNumber": account, "start": start.getTime() / 1000, "end": end.getTime() / 1000} );
+		console.log( `flexExecutions( '${account}', '${DateUtilities.display(start)}', '${DateUtilities.display(end)}' )` );
 		const msg = new Requests.RequestUnion( {"flexExecutions": {"id":id, "accountNumber": account, "start": start.getTime() / 1000, "end": end.getTime() / 1000}} );
 		this.send( msg );
 
@@ -805,7 +811,8 @@ class Connection
 	private testCallbacks = new Map<number, RequestPromise>();
 	//private historicalCallbacks = new Map<number, Subject<Bar>>();
 	//private contractMultiCallbacks = new Map<number, Subject<Results.IContractDetails>>();
-	private optionSummaryCallbacks  = new Map<number, Subject<Results.IOptionValues>>();
+	private optionSummaryCallbacks = new Map<number, [(x:Results.IOptionValues)=>void, (x:Results.IError)=>void]>();
+
 	//private callbacks = new Map<number,IDeferred>();
 	private flexCallbacks = new Map<number,Subject<Results.Flex>>();
 	private optionParamCallbacks = new Map<number, Subject<Results.IOptionParams>>();
@@ -842,7 +849,7 @@ export class TwsService
 	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>{ return this.connection.reqFundamentals( contractId ); }
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Promise<IBar[]>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
 
-	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Promise<Results.IOptionValues>{ return ObservableUtilities.toPromiseSingle( ()=>{return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike);}, false); }
+	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Promise<Results.IOptionValues>{ return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike); }
 
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit); }

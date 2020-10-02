@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, AfterViewInit, Input, Inject, OnInit, OnDestroy } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
 import {MatRadioChange} from '@angular/material/radio'
 import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
@@ -46,7 +46,7 @@ class SymbolSettings
 }
 
 @Component({ selector: 'option-tab', /*styleUrls: ['optionTable.component.css'],*/ templateUrl: './option-tab.html' })
-export class OptionTabComponent implements OnInit, OnDestroy
+export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IErrorService') private cnsl: IErrorService, @Inject('IProfile') private profile: IProfile )
 	{
@@ -78,6 +78,10 @@ export class OptionTabComponent implements OnInit, OnDestroy
 		//this.contractSubscription.unsubscribe();
 		this.settingsContainer.save();
 		this.pageSettings.save();
+	}
+	ngAfterViewInit()
+	{
+		this.run();
 	}
 	run = ():void =>
 	{
@@ -154,10 +158,10 @@ export class OptionTabComponent implements OnInit, OnDestroy
 	}
 	static _id=0;
 	id:number;
-	set isActive(value:boolean){ if( this._isActive=value )this.run();} get isActive(){return this._isActive;} private _isActive: boolean;
+	set isActive(value:boolean){ if( this._isActive=value )this.run();} get isActive(){return this._isActive;} private _isActive: boolean=true;
 	@Input() index:number;
 	//@Input() symbol:string;
-	@Input() set tick(value){ if( this._tick=value ) this.run(); } get tick(){return this._tick;} _tick: TickEx;
+	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickEx;
 	//@Input() contractEvents:Observable<TickEx>; private contractSubscription:Subscription;
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 	optionType:string="2";

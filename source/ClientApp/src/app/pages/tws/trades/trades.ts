@@ -14,6 +14,7 @@ import { DateUtilities, Day } from 'src/app/utilities/dateUtilities';
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { ITradeCommon } from 'src/app/services/tws/ExecutionObserver';
+import { DateRangeSettings } from 'src/app/shared/framework/date-range/date-range';
 
 @Component( {selector: 'trades', styleUrls: ['trades.css'], templateUrl: './trades.html'} )
 export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
@@ -47,6 +48,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		let setDataSource = ()=>
 		{
 			this.data = new DataSource( flexResult, executions, this.sort );
+			this.viewPromise = Promise.resolve( true );
 		};
 		if( today==currentTradingDay )
 		{
@@ -77,19 +79,19 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	//set start( value:Day ){ this._start = value;} get start():Day|null{ return this.settingsContainer.value.start; }
 	//set end(value:Day){ this.settingsContainer.value.end = value;} get end():Day|null{ return this.settingsContainer.value.end; }
-	start:Day;
-	end:Day;
+	dateRange:DateRangeSettings = new DateRangeSettings();
+	get start():Day{return this.dateRange.start; } set start(x){this.dateRange.start=x; }
+	get end():Day{return this.dateRange.end; } set end(x){this.dateRange.end=x; }
 
 	data:DataSource;
 	settingsContainer:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "TradeComponent", this.profileService );
 	get sort():Sort{ return this.settingsContainer.value.sort; } set sort(value){this.settingsContainer.value.sort = value;}
 	displayedColumns:string[] = ["symbol","shares", "openTime", "closeTime", "return_", "openPrice", "closePrice", "commissions"];//"openLongPrediction", "openShortPrediction", "closeLongPrediction", "closeShortPrediction",
+	viewPromise:Promise<boolean>;
 }
 
 class PageSettings implements IAssignable<PageSettings>
 {
 	assign(other){this.sort=other.sort;}
 	sort:Sort;
-	//start:number|null;
-	//end:Day|null;
 }

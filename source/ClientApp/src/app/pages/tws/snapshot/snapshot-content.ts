@@ -92,6 +92,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 				}
 				if( results.length==1 )
 					this.symbolEvent.next( results[0] );
+				this.symbolInput.nativeElement.value = this.detail.contract.symbol;
 			});
 		}
 	}
@@ -218,10 +219,16 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset*60000;
 			tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false ).then( (bars)=>
 			{
+				if( !bars.length )
+					return;
 				const openBar = bars.find( bar=>bar.time.getTime()>=openTime );
 				if( openBar )
 					this.tick.open = openBar.open;
-				this.showChart2( bars, MathUtilities.Statistics(returns, true) );
+				const first = bars[0];
+				let minuteReturns = [ [first.time.getTime()-3*60, first.open] ];
+				for( let bar of bars )
+					minuteReturns.push( [bar.time.getTime(), bar.close] );
+				this.showChart2( minuteReturns, MathUtilities.Statistics(returns, true) );
 			}).catch( (e)=>{ console.error(e); cnsle.error("Could not connect to Tws.", e); });
 		}).catch( (e)=>{ console.error(e); cnsle.error("Could not connect to Tws.", e); });
 	}
@@ -343,13 +350,12 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	};
 	onTabChange( event:MatTabChangeEvent )
 	{
-		//if( this.settingsSymbol.tabIndex!=event.index )
+		console.log( "SnapshotContentComponent::onTabChange" );
+		if( this.settingsSymbolContainer.value.tabIndex!=event.index )
 		{
-			//this.symbolTabIndex.setValue( event );
-			//this.settings.selectedIndex = event.index;
-			//this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
-		//	this.settingsSymbolContainer.save();
-		//	this.tabEvents.next( event.index );
+			this.settingsSymbolContainer.value.tabIndex = event.index;
+			this.settingsSymbolContainer.save();
+			this.tabEvents.next( event.index );
 		}
 	}
 
@@ -371,6 +377,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	subscription:TickObservable;
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;
+	@ViewChild('symbolInput', {static: false} ) symbolInput;
 	tick: TickEx;
 	get volumeDisplay()
 	{

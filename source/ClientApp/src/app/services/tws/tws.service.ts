@@ -4,7 +4,7 @@ import { Subject,Observable, of, throwError } from 'rxjs';
 import{ TickSubject, TickObservable } from './ITickObserver'
 import {Order,OrderSubject,OrderObservable} from './IOrderObserver'
 import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'
-import {IErrorService} from '../error/IErrorService'
+//import {IErrorService} from '../error/IErrorService'
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 import {ObservableUtilities} from 'src/app/utilities/ObservableUtilities';
 
@@ -17,7 +17,6 @@ import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from 'src/app/proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
-import { ThemeStorage } from 'src/app/shared/material-site/theme-picker/theme-storage/theme-storage';
 import { DateUtilities } from 'src/app/utilities/dateUtilities';
 
 
@@ -65,7 +64,6 @@ class Connection
 {
 	constructor( /*private cnsl: IErrorService*/ )
 	{
-		//console.log( 'Connection::Connection' );
 		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6811', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		//this.socket.binary(true);
 		this.socket.subscribe(
@@ -76,7 +74,7 @@ class Connection
 	}
 	onMessage( event:MessageEvent ):protobuf.Buffer
 	{
-		const bytearray = new Uint8Array( event.data );//new Uint8Array( event.data );
+		const bytearray = new Uint8Array( event.data );
 		const transmission = Results.Transmission.decode( bytearray );
 		for( const message of transmission.messages )
 		{
@@ -206,8 +204,6 @@ class Connection
 				this.previousDayCallbacks.get( message.daySummary.requestId ).next( message.daySummary );
 			else if( message.fundamentals )
 				this.handleFundamentals( message.fundamentals );
-			//else if( message.historicalData )
-			//	this.handleHistoricalData( message.historicalData );
 			else if( message.execution )
 				this.executionCallbacks.get( message.execution.id )?.execution( message.execution );
 			else if( message.optionParameters )
@@ -243,7 +239,7 @@ class Connection
 					if( !this.complete(this.contractCallbacks, message.message.intValue) )
 						this.complete( this.previousDayCallbacks, message.message.intValue );
 				}
-				else if( typeId==Results.EResults.ACCT_DOWNLOAD_END )
+				else if( typeId==Results.EResults.AccountDownloadEnd )
 				{
 					const accountNumber = message.message.stringValue;
 					if( this.accountUpdateCallbacks.has(accountNumber) )
@@ -266,37 +262,14 @@ class Connection
 				this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
 			else if( message.flex )
 				this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
-/*			else if( message.stringList )
-			{
-				const id = message.stringList.requestId;
-				const callback = this.testCallbacks.get( id );
-				if( callback )
-				{
-					callback.resolve( message.stringList.values );
-					this.testCallbacks.delete( id );
-				}
-				else
-					console.error( `no callbacks for stringList reqId='${id}'` );
-			}*/
 			else if( message.stringResult )
-			{
 				console.error( "message.stringResult not implemented" );
-/*				if( message.StringResult.Type==Results.EResults.HistorianData || message.StringResult.Type==Results.EResults.TwitterData )
-				{
-					const deferred = this.callbacks.get( message.StringResult.requestId );
-					if( deferred )
-						deferred.resolveGeneric( JSON.parse(message.StringResult.Value) );
-					else
-						console.error( `no callbacks for '${message.StringResult.Type}' reqId='${message.StringResult.requestId}'` );//todo stop request.
-				}*/
-			}
 			else if( message.type )
 			{
 				if( message.type==Results.EResults.OpenOrderEnd )
 				{
 					for( const callback of this.openOrders )
 						callback.complete();
-					//this.openOrders.length = 0;
 				}
 			}
 			else
@@ -316,7 +289,6 @@ class Connection
 					console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
 			}
 		}
-		//const tokens = msg.data.split( '\0' );
 		return bytearray;
 	}
 	handleReceive( data, callbacks, what:string, complete:boolean=false )
@@ -332,19 +304,6 @@ class Connection
 			console.error( `no callbacks for '${what}' reqId='${data.id}'` );//todo stop request.
 	}
 
-	/*handleHistoricalData( data:Results.IHistoricalData )
-	{
-		const id = data.requestId;
-		const callback = this.historicalCallbacks.get( id );~~~
-		if( callback )
-		{
-			for( const bar of data.bars )
-				callback.next( { time:new Date(bar.time*1000), high:ProtoUtilities.toNumber(bar.high), low:ProtoUtilities.toNumber(bar.low), open:ProtoUtilities.toNumber(bar.open), close:ProtoUtilities.toNumber(bar.close), wap:ProtoUtilities.toNumber(bar.wap), volume:ProtoUtilities.toNumber(bar.volume), count:ProtoUtilities.toNumber(bar.count)} );
-			callback.complete();
-		}
-		else
-			console.error( `no callbacks for historicalData reqId='${id}'` );
-	}*/
 	handleFundamentals( data:Results.IFundamentals )
 	{
 		const id = data.requestId;
@@ -368,10 +327,8 @@ class Connection
 	handleConnectionError( err )
 	{
 		for( const [_, callback] of this.flexCallbacks.entries() )
-		{
 			callback.error( "Connection to Tws Websocket failed." );
-			//callback.complete();
-		}
+
 		this.flexCallbacks.clear();
 	}
 	handleError( error:Results.IError )
@@ -387,12 +344,6 @@ class Connection
 				else
 					console.error( error.message, error );
 			}
-/*			else if( this.historicalCallbacks.has(id) )
-			{
-				this.historicalCallbacks.get( id ).error( error );
-				//this.historicalCallbacks.get( id ).complete();
-				this.historicalCallbacks.delete( id );
-			}*/
 			else if( this.optionParamCallbacks.has(id) )
 			{
 				this.optionParamCallbacks.get( id ).error( error );
@@ -414,10 +365,7 @@ class Connection
 				this.testCallbacks.delete( id );
 			}
 			else
-			{
 				console.error( `error code='${error.code}' message='${error.message}'` );//todo stop request.
-//				console.error( error.message, error );
-			}
 		}
 	}
 
@@ -453,15 +401,12 @@ class Connection
 
 	addMessage( msg ):void
 	{
-		//this.loggingService.log( msg );
-		//this.loggingService.
 	}
 	error( err ):void
 	{
 		debugger;
 		this.sessionId = null;
 		console.error( "No longer connected to TWS.", err );
-		//console.error( err );
 		this.handleConnectionError( err );
 	}
 	socketComplete():void
@@ -603,27 +548,13 @@ class Connection
 	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Promise<Results.IOptionValues>
 	{
 		const id = this.getRequestId();
-		//const a = new Requests.RequestOptions(); a.contractId = contractId; a.id=id; a.securityType=2;	a.day2=date;
-		//this.send( {"options": a} );
 		console.log( `optionSummary( ${contractId}, ${optionType}, ${startExpiration}, ${endExpiration}, ${startStrike}, ${endStrike} )` );
 		this.send( {"options": {"id": id, "contractId": contractId, "securityType": optionType, "startExpiration": startExpiration, "endExpiration": endExpiration, "startSrike": startStrike, "endStrike": endStrike }} );
 		return new Promise<Results.IOptionValues>( (resolve,reject)=>
 		{
 			this.optionSummaryCallbacks.set( id, [resolve, reject] );
 		});
-	//	const callback = new Promise<Results.IOptionValues>();
-	//	return callback;
 	}
-/*	request<T>( requestType:Requests.ERequests ):Promise<T>
-	{
-		const id = this.getRequestId();
-
-		const deferred = new Deferred<T>();
-		this.callbacks.set( id, deferred );
-		const msg = new Requests.RequestUnion(); msg.genericRequests = new Requests.GenericRequests( { "type": requestType, "ids": [id] } );
-		this.send( msg );
-		return deferred.promise;
-	}*/
 	reqAccountUpdatesMulti( number:string, callback: AccountUpdateMultiCallback, endCallback:  (accountNumber:number)=>any ):void
 	{
 		const id = this.getRequestId();
@@ -705,7 +636,6 @@ class Connection
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>
 	{
 		const id = this.getRequestId();
-//		const param = new Requests.FlexExecutions( {"id":id, "accountNumber": account, "start": start.getTime() / 1000, "end": end.getTime() / 1000} );
 		console.log( `flexExecutions( '${account}', '${DateUtilities.display(start)}', '${DateUtilities.display(end)}' )` );
 		const msg = new Requests.RequestUnion( {"flexExecutions": {"id":id, "accountNumber": account, "start": start.getTime() / 1000, "end": end.getTime() / 1000}} );
 		this.send( msg );
@@ -758,14 +688,7 @@ class Connection
 		this.previousDayCallbacks.set( requestId, callback );
 		return callback;
 	}
-/*	sendPromise<TInput,TResult>( param:string, value:TInput ):Promise<TResult>
-	{
-		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{param: value}) );
-		return new Promise<TResult>( (resolve,reject)=>
-		{
-			this.generalCallbacks.set( value["id"], [resolve,reject] );
-		});
-	}*/
+
 	sendPromise2<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput:TransformInput ):Promise<TResult>
 	{
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
@@ -799,7 +722,6 @@ class Connection
 	private sessionId:number|Long|null;
 
 	private stringMapPromises = new Map<Results.EResults,Array<[(x:StringMap)=>void,(x:Results.IError)=>void]>>();
-	//private portfolioUpdateCallbacks = new Map<string,PortfolioUpdateCallback>();
 	private accountUpdateCallbacks = new Map <string, Array<[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>]>>();
 	private accountUpdateMultiCallbacks = new Map<number, [AccountUpdateCallback, EndCallback]>();
 	private marketDataCallbacks = new Map<number, TickSubject>();
@@ -809,11 +731,8 @@ class Connection
 	private fundamentalCallbacks = new Map<number, [(x:{ [k: string]: number })=>void,(x:Results.IError)=>void]>(); //[({ [k: string]: number })=>void, (Results.IError)=>void]>();
 	private generalCallbacks = new Map<number, [(x:any)=>void,(x:Results.IError)=>void]>();
 	private testCallbacks = new Map<number, RequestPromise>();
-	//private historicalCallbacks = new Map<number, Subject<Bar>>();
-	//private contractMultiCallbacks = new Map<number, Subject<Results.IContractDetails>>();
 	private optionSummaryCallbacks = new Map<number, [(x:Results.IOptionValues)=>void, (x:Results.IError)=>void]>();
 
-	//private callbacks = new Map<number,IDeferred>();
 	private flexCallbacks = new Map<number,Subject<Results.Flex>>();
 	private optionParamCallbacks = new Map<number, Subject<Results.IOptionParams>>();
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();

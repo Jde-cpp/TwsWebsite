@@ -5,13 +5,12 @@ import { Observable, Subscription } from 'rxjs';
 import {IErrorService} from 'src/app/services/error/IErrorService'
 import { TwsService, IBar } from 'src/app/services/tws/tws.service';
 import{ TickObservable } from 'src/app/services/tws/ITickObserver'
-import { Tick, TickEx } from 'src/app/services/tws/Tick';
+import { TickDetails } from 'src/app/services/tws/Tick';
 import {Option} from './option';
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { IPageEvent } from 'src/app/shared/framework/paginator/paginator'
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { DateUtilities } from 'src/app/utilities/dateUtilities';
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 
 import * as ib2 from 'src/app/proto/ib';
@@ -19,6 +18,7 @@ import IB = ib2.Jde.Markets.Proto;
 
 import * as IbRequests from 'src/app/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import { DateUtilities } from 'src/app/utilities/dateUtilities';
 
 enum OptionType{Call=1,Put=2,Combined=3}
 
@@ -29,27 +29,27 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	{}
 	ngOnInit()
 	{
-		//this._pageSubscription = this.pageEvents.subscribe( {next: value=>{this.pageInfo=value;this.setPageContent();}} );
 		this.run();
 	}
 	ngOnDestroy()
 	{
-		//this._pageSubscription?.unsubscribe();
 		this.tws.cancelMktData( this.subscriptions.values() );
+		this._pageSubscription?.unsubscribe();
+		this._destroyed = true;
 	}
 	run():void
 	{
+		console.log( `OptionTable::run( ${DateUtilities.fromDays(this.startExpiration)} )` );
 		if( !this.contract )
 			return;
 		if( this.options && this.options.length!=0 )
 			this.lengthChange.emit( 0 );
 		this.options = new Array<Option>();
-		const currentDate = MarketUtilities.currentTradingDay();
+		const currentDay = MarketUtilities.currentTradingDay( new Date(), MarketUtilities.contractHours(this.detail.liquidHours) );
 		this.tws.optionSummary( this.contract.id, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike ).then( (values:Results.IOptionValues)=>
 		{
-			let index = 0;
-			const dayValue = values.day;
-			this.setPrices = values.day==currentDate;
+			this.setPrices = values.day==currentDay;
+			var midOption;
 			for( let day of values.optionDays )
 			{
 				for( let option of day.values )
@@ -64,12 +64,21 @@ export class OptionTableComponent implements OnInit, OnDestroy
 					var value = this.setPrices ? new Option( optionContract, option, option.bid, option.ask, option.last, option.volume ) : new Option( optionContract, option );//, index++
 					//value.oi = option.openInterest;
 					//value.oiChange = option.oiChange;
+					if( !midOption || optionContract.strike-this.midPrice<optionContract.strike-midOption.strike )
+						midOption = value;
 					this.options.push( value );
 				}
 			}
+
+			this.pageInfo.startIndex = Math.max( 0, this.options.indexOf(midOption)-Math.round(this.pageInfo.pageSize/2) );
+			if( this.pageInfo.startIndex!=0 )
+				this.startIndexChange.emit( this.pageInfo.startIndex );
+
 			if( this.options.length!=0 )
 				this.lengthChange.emit( this.options.length );
+
 			this.setPageContent();
+			this._pageSubscription = this.pageEvents.subscribe( {next: value=>{this.pageInfo=value;this.setPageContent();}} );
 		}).catch( (e)=>{debugger;console.error(e); this.cnsl.error("Could not connect to Tws.", e);} );
 	}
 
@@ -108,15 +117,16 @@ export class OptionTableComponent implements OnInit, OnDestroy
   	}
 	setPageContent()
 	{
+		console.log( `OptionTable::setPageContent( ${DateUtilities.fromDays(this.startExpiration)} )` );
 		this.pageContent = new Array<Option>();
-		let foundSelected = !this._selectedOption;
-		const marketOpen = MarketUtilities.isMarketOpen2( IB.Exchanges.Smart, IB.SecurityType.Option );
-		//for( var i=this.pageInfo.startIndex; i<Math.min(this.pageInfo.startIndex+this.pageInfo.pageSize, this.options.length); ++i )
+		let foundSelected = !this.selectedOption;
+		const marketOpen = MarketUtilities.isLiquid( this.detail );
 		let cancelSubscriptions = new Map<number,TickObservable>(); let subscriptions = new Array<Option>();
 		for( var i=0; i<this.options.length; ++i )
 		{
 			let option = this.options[i];
-			if( !foundSelected && option==this._selectedOption )
+
+			if( !foundSelected && option==this.selectedOption )
 				foundSelected = true;
 
 			const displayed = i>=this.pageInfo.startIndex && i<this.pageInfo.startIndex+this.pageInfo.pageSize;
@@ -135,13 +145,16 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			this.tws.cancelMktData( cancelSubscriptions.values() );
 		for( let option of subscriptions )
 		{
-			if( MarketUtilities.isMarketOpen2(option.contract.exchange, option.contract.securityType) )
+			if( this.subscriptions.has(option.contractId) )
+				continue;
+			//if( marketOpen )
 			{
-				var subscription = this.tws.reqMktData( option.contractId, [Requests.ETickList.PlPrice], false );
+				//var subscription = this.tws.reqMktData( option.contractId, [Requests.ETickList.PlPrice, Requests.ETickList.MiscStats], false );
+				var subscription = this.tws.reqMktData( option.contractId, [], false );
 				this.subscriptions.set( option.contractId, subscription );
 				subscription.subscribe2( option );
 			}
-			else if( !this.setPrices )
+			/*else*/ if( !this.setPrices )
 			{
 				this.tws.reqPreviousDay( [option.contractId] ).subscribe(
 				{
@@ -163,32 +176,13 @@ export class OptionTableComponent implements OnInit, OnDestroy
 					error: e=>{ if( e.code!=162 ) console.error( e ); }
 				});
 			}
-			//Should be call to RequsetPrevOptionValues
-			// if( !MarketUtilities.isMarketOpen("", "OPT") )
-			// {
-			// 	var contract = {"id":option.contractId};
-			// 	var current = MarketUtilities.previousTradingDay();
-			// 	this.tws.reqHistoricalData( contract, current, 1, Requests.BarSize.Hour, Requests.Display.Ask, true, false ).subscribe(
-			// 	{
-			// 		next: ( bar:Bar ) =>{ option.bid=bar.close; },
-			// 		error: e=>{console.error(e);}
-			// 	});
-			// 	this.tws.reqHistoricalData( contract, current, 1, Requests.BarSize.Hour, Requests.Display.Bid, true, false ).subscribe(
-			// 	{
-			// 		next: ( bar:Bar ) =>{ option.ask = bar.close; },
-			// 		error: e=>{console.error(e);}
-			// 	});
-			// 	this.tws.reqHistoricalData( contract, current, 1, Requests.BarSize.Hour, Requests.Display.Trades, true, false ).subscribe(
-			// 	{
-			// 		next: ( bar:Bar ) =>{ option.volume = bar.volume; },
-			// 		error: e=>{console.error(e);}
-			// 	});
-			// }
 		}
 		if( !foundSelected )
-		    this._selectedOption = null;
+			 this.selectedOption = null;
+		//console.log( `this._table._data=${this._table._data.length}` );
 		//if( this._table._data )
 		this._table.renderRows();
+		//console.log( `end renderRows - this._table._data=${this._table._data.length}` );
 		//else
 		 //   console.log('no data');
 	}
@@ -201,8 +195,8 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			if( this._isSingleClick )
 			{
 				const index = 0;//+row.index;
-				this._selectedOption = this._selectedOption == row ? null : row;
-				this.selectionChange.emit( this._selectedOption );
+				this.selectedOption = this.selectedOption == row ? null : row;
+				this.selectionChange.emit( this.selectedOption );
 			}
 		},250);
 	}
@@ -210,13 +204,18 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	{
 		this._isSingleClick = false;
 		const index = 0;//+row.index;
-		if( this._selectedOption!=row )
-		this._selectedOption = row;
+		if( this.selectedOption!=row )
+		this.selectedOption = row;
 //		this.dialog.open( DetailsDialog, {width: '600px', data: row} );
 	}
+	priceChange( price:number )
+	{
+		if( this._nextGreatestIndex<1 || price>this.options[this._nextGreatestIndex].strike || price<this.options[this._nextGreatestIndex-1].strike )
+			this._nextGreatestIndex = this.options.findIndex( (x)=>{return x.last>price;} );
+	} _nextGreatestIndex:number=-1;
 
-	@Input() set contract(value){ this._contract=value; } get contract(){return this._contract;} private _contract:IB.IContract;//():IB.IContract{ return /*this.holding ? this.holding.contract :*/ null; }
-	//get contractId(){ return this.contract ? this.contract.id : 0; }
+	get contract(){return this.detail.contract;}
+	get detail(){return this.tick.detail;}
 	displayedColumns : string[] = [ 'strike', 'oi', 'oiChange', 'volume', 'last', 'bid_size', 'bid', 'ask', 'ask_size' ];
 	@Input() set optionType( value )
 	{
@@ -229,24 +228,25 @@ export class OptionTableComponent implements OnInit, OnDestroy
 				this.run();
 		}
 	} get optionType(){ return this._optionType;} _optionType:OptionType;
-	//@Input() holding: TickEx;
+	@Input() midPrice:number;
 	@Input() startExpiration:number;
 	@Input() endExpiration:number;
 	@Input() startStrike:number;
 	@Input() endStrike:number;
 	@Input() pageEvents:Observable<IPageEvent>; private _pageSubscription:Subscription;
-	private _isSingleClick:boolean;
+	@Input() pageInfo:IPageEvent;
+	@Input() tick:TickDetails;
 	@Output() lengthChange = new EventEmitter<number>();
+	@Output() startIndexChange = new EventEmitter<number>();
 	@ViewChild('mainTable',{static:false}) _table:MatTable<Option>;
 
+	private _destroyed:boolean;
+	private _isSingleClick:boolean;
 	init:boolean;
-//	exposure:number;
-//	oi:number;
 	options: Option[];
 	pageContent: Option[]=[];
-	@Input() pageInfo:IPageEvent;
-//	value:number;
-	private _selectedOption:Option|null=null;
+	get price(){ return this.tick.last; }
+	selectedOption:Option|null=null;
 	@Output() selectionChange = new EventEmitter<Option>();
 	setPrices = false;
 	subscriptions = new Map<number,TickObservable>();

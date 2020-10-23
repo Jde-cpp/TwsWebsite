@@ -39,12 +39,22 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{}
 	ngAfterViewInit():void
 	{
-		this.profile.loadedPromise.then( (value)=>
+		this.profile.loadedPromise.then( ()=>
 		{
 			//this.settings.previousContractIds = [756733];
-			this.tws.reqIds( this.previousContractIds ).then( (x)=>
+			this.tws.reqIds( this.previousContractIds ).then( (results)=>
 			{
-				this.details = x;
+				//results.map( details=> details.detail.length==1 ? holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 );
+				this.details = [];
+				for( var details of results )
+				{
+					if( details.length==1 )
+						this.details.push( details[0] );
+					else if( details.length>1 )
+						console.error( `{details.detail[0].contract.symbol} has {details.detail.length} contracts` );
+					else
+						console.error( `contract returned zero contracts.` );
+				}
 				this.selected.setValue( this.settings.selectedIndex );
 				this.viewPromise = Promise.resolve(true);
 			});
@@ -63,7 +73,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		this.settings.selectedIndex = this.selected.value;
 		this.profile.save();
 	}
-	onSymbol( detail:Results.IContractDetails )
+	onSymbol( detail:Results.IContractDetail )
 	{
 		//console.log( contractId );
 		let index = this.previousContractIds.indexOf( detail.contract.id );
@@ -103,7 +113,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );
 	}*/
 //	get treeSettings(){ return this.symbolSettings.treeSettings; } set treeSettings( value:ITreeSettings ){this.symbolSettings.treeSettings = value;this.profileService.put<SymbolSettings>( `${SnapshotComponent.profileKey}.${this.symbol}`, this.symbolSettings );}
-	details:Results.IContractDetails[];
+	details:Results.IContractDetail[];
 	selected = new FormControl(0);
 	get selectedIndex(){ return this.selected.value; }
 	profile:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );

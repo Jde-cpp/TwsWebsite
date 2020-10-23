@@ -30,17 +30,17 @@ export class MarketUtilities
 		return mod==2 || mod==3 || [18512,18592,18621].indexOf(day)!=-1;
 	}
 
-	static previousTradingDate( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
+	static previousTradingDate( value:Date|null=null, tradingHours:Results.IContractHours=null ):Day
 	{
-		let copy = value ? new Date(value) : new Date();
-		if( tradingHours && copy.getTime()/1000<tradingHours.start )
-			copy.setDate( copy.getDate()-1 );
-		while( MarketUtilities.isDateHoliday(copy) )
-			copy.setDate( copy.getDate()-1 );
+		let previous = value ? new Date(value) : new Date();
+		if( tradingHours && previous.getTime()/1000<tradingHours.start )
+			previous.setDate( previous.getDate()-1 );
+		while( MarketUtilities.isDateHoliday(previous) )
+			previous.setDate( previous.getDate()-1 );
 		do
-			copy.setDate( copy.getDate()-1 );
-		while( MarketUtilities.isDateHoliday(copy) );
-		return DateUtilities.beginningOfDay( copy );
+			previous.setDate( previous.getDate()-1 );
+		while( MarketUtilities.isDateHoliday(previous) );
+		return DateUtilities.toDays( previous );
 	}
 	static previous( contract:IB.IContract, reference?:Day ):Day
 	{
@@ -59,30 +59,24 @@ export class MarketUtilities
 		while( MarketUtilities.isHoliday(day, contract) );
 		return day;
 	}
-	static previousTradingDay( reference?:Day, tradingHours?:Results.IContractHours ):Day
+	static previousTradingDay( reference?:Day ):Day
 	{
-		let day = 0;
-		if( tradingHours )
-			day = DateUtilities.toDays( this.previousTradingDate(reference ? DateUtilities.fromDays(reference) : new Date(), tradingHours) );
-		else
-		{
-			day = reference ?? DateUtilities.toDays( new Date() );
-			while( MarketUtilities.isHoliday(day) )
-				--day;
-			do
-				--day;
-			while( MarketUtilities.isHoliday(day) );
-		}
+		let day = reference ?? DateUtilities.toDays( new Date() );
+		while( MarketUtilities.isHoliday(day) )
+			--day;
+		do
+			--day;
+		while( MarketUtilities.isHoliday(day) );
 		return day;
 	}
 
-	static nextTradingDate( value:Date|null=null ):Date
+	static nextTradingDate( value:Date|null=null ):Day
 	{
 		let copy = value ? new Date( value ) : new Date();
 		do
 			copy.setDate( copy.getDate()+1 );
 		while( MarketUtilities.isDateHoliday(copy) );
-		return DateUtilities.beginningOfDay( copy );
+		return DateUtilities.toDays( copy );
 	}
 	static nextTradingDay( value?:Day ):Day
 	{
@@ -92,15 +86,15 @@ export class MarketUtilities
 		while( MarketUtilities.isHoliday(day) );
 		return day;
 	}
-	static currentTradingDate( value:Date|null=null, tradingHours:Results.IContractHours=null ):Date
+	static currentTradingDay( value:Date|null=null, tradingHours:Results.IContractHours=null ):Day
 	{
-		const day = MarketUtilities.nextTradingDate( MarketUtilities.previousTradingDate(value, tradingHours) );
+		const day = MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDate(value, tradingHours) );
 		return day;
 	}
-	static currentTradingDay( now?:Day, tradingHours?:Results.IContractHours ):Day
+	/*static currentTradingDay( now?:Day, tradingHours?:Results.IContractHours ):Day//TODO remove only works durring non-trading hours.
 	{
 		return MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDay(now, tradingHours) );
-	}
+	}*/
 
 	static isMarketOpen2( exchange:IB.Exchanges, secType:IB.SecurityType, date:Date=new Date() )
 	{
@@ -109,19 +103,12 @@ export class MarketUtilities
 		return !MarketUtilities.isDateHoliday( et )
 			&& ( secType==IB.SecurityType.Stock ? et.getHours()>3 && et.getHours()<19 : (et.getHours()==9 && et.getMinutes()>29) || (et.getHours()>9 && et.getHours()<16) );
 	}
-	static isMarketOpen( details:Results.IContractDetails )
+	static isMarketOpen( details:Results.IContractDetail )
 	{
-		return MarketUtilities.contractHours(details.tradingHours).start*1000 < new Date().getTime();
-/*		var now = new Date().getTime()/1000;
-		for( let openClose of details.tradingHours )
-		{
-			if( openClose.end )
-				return now>openClose.start && now<openClose.end;
-		}
-		return false;*/
+		return MarketUtilities.contractHours(details.tradingHours)?.start*1000 < new Date().getTime();
 	}
 
-	static isLiquid( details:Results.IContractDetails )
+	static isLiquid( details:Results.IContractDetail )
 	{
 		return MarketUtilities.contractHours(details.liquidHours).start*1000 < new Date().getTime();
 	/*		var now = new Date().getTime()/1000;
@@ -132,6 +119,8 @@ export class MarketUtilities
 		}
 		return false;*/
 	}
+
+
 	static contractHours( tradingHours:Results.IContractHours[] ):Results.IContractHours
 	{
 		var now = new Date().getTime()/1000;

@@ -51,7 +51,9 @@ export class Tick implements ITickObserver
 			this.low = price;
 		else if( type==Results.ETickType.OpenTick )
 			this.open = price;
-		else if( type!=Results.ETickType.MARK_PRICE && type<Results.ETickType.Low13Week && type>Results.ETickType.High52Week )
+		else if( type==Results.ETickType.MarkPrice )
+			this.markPrice = price;
+		else if( type<Results.ETickType.Low13Week && type>Results.ETickType.High52Week )
 			console.log( `onPriceTick( '${Results.ETickType[type]}', '${price}') - not handled` );
 		let now = Date.now();
 		if( this.delay && now>this.nextUpdate )
@@ -96,6 +98,11 @@ export class Tick implements ITickObserver
 	{
 		this.completed = true;
 	}
+	optionCalculation( type:Results.ETickType, priceBased:boolean, impliedVolatility:number, delta:number, optionPrice:number, pvDividend:number, gamma:number, vega:number, theta:number, underlyingPrice:number ):void
+	{
+		this._optionCalc.set( type, {priceBased:priceBased, impliedVolatility:impliedVolatility, delta:delta, optionPrice:optionPrice, pvDividend:pvDividend, gamma:gamma, vega:vega, theta:theta, underlyingPrice:underlyingPrice} );
+	}
+
 	get ask(){return this.delay ? this._askDelay || this._ask : this._ask;} set ask(value)
 	{
 		if( this.isMarketOpen || value>0 )
@@ -115,7 +122,9 @@ export class Tick implements ITickObserver
 				this.high = this._bid;
 		}
 	} _bid:number|null; _bidDelay:number|null;
-	get bidSize(){return this.delay ? this._bidSizeDelay : this._bidSize;} set bidSize(value){this._bidSize = value>0 ? value : null;} _bidSize:number|null; _bidSizeDelay:number|null;
+	get bidSize(){return this.delay ? this._bidSizeDelay : this._bidSize;} set bidSize(value)
+	{
+		this._bidSize = value>0 ? value : null;} _bidSize:number|null; _bidSizeDelay:number|null;
 	completed:boolean=false;
 	get close(){return this._close;} set close(value)
 	{
@@ -127,7 +136,9 @@ export class Tick implements ITickObserver
 	high:number;
 	lastTime: Date;
 	low:number;
+	markPrice:number;
 	open:number;
+	private _optionCalc = new Map<Results.ETickType,Results.IOptionCalculation>();
 	get last(){return this.delay ? this._lastDelay || this._last : this._last;} set last(value)
 	{
 		this._last = value;
@@ -215,8 +226,8 @@ export class TickEx extends Tick
 	get change():number
 	{
 		var change  = this.close>0 ? this.currentPrice-this.close : 0;
-		//if( change>5.0 )
-		//    console.log( `change=${change}` )
+//		if( !this.isOption )
+//			console.log( `last='${this.currentPrice}'.` );
 		return change;
 	}
 //	isMarketOpen:boolean;
@@ -224,11 +235,11 @@ export class TickEx extends Tick
 
 export class TickDetails extends TickEx
 {
-	constructor( public details:Results.IContractDetails )
+	constructor( public detail:Results.IContractDetail )
 	{
-		super( details.contract, MarketUtilities.isMarketOpen(details) );
-		if( !details.contract.multiplier )
-		details.contract.multiplier = 1;
+		super( detail.contract, MarketUtilities.isMarketOpen(detail) );
+		if( !detail.contract.multiplier )
+			detail.contract.multiplier = 1;
 	}
-	get contract():IB.IContract{ return this.details.contract; }
+	get contract():IB.IContract{ return this.detail.contract; }
 }

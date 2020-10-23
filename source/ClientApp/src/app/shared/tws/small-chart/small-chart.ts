@@ -35,13 +35,13 @@ export class SmallChartComponent //implements AfterViewInit, OnInit, OnDestroy
 
 	showChart()
 	{
-		let tws = this.tws, cnsle = this.cnsle, contract = this.details.contract, dayBars = [];
-		let endTime = DateUtilities.endOfDay( MarketUtilities.currentTradingDate( new Date(), MarketUtilities.contractHours(this.details.tradingHours)) );
-		tws.reqHistoricalData( contract, DateUtilities.endOfDay(MarketUtilities.previousTradingDate()), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).then( (dayBars)=>
+		let tws = this.tws, cnsle = this.cnsle, contract = this.detail.contract, dayBars = [];
+		let endTime = DateUtilities.endOfDay( DateUtilities.fromDays(MarketUtilities.currentTradingDay( new Date(), MarketUtilities.contractHours(this.detail.tradingHours))) );
+		tws.reqHistoricalData( contract, DateUtilities.fromDays(MarketUtilities.previousTradingDate(), true), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).then( (dayBars)=>
 		{
 			let returns = dayBars.map( (bar)=>{ return (bar.close-bar.open)/bar.open;} );
 			var beginningOfDay = DateUtilities.beginningOfDay(endTime);
-			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.details) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset*60000;
+			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset*60000;
 			tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false ).then( (bars)=>
 			{
 				const openBar = bars.find( bar=>bar.time.getTime()>=openTime );
@@ -53,19 +53,19 @@ export class SmallChartComponent //implements AfterViewInit, OnInit, OnDestroy
 	}
 	showChart2( bars, statResult:StatResult )
 	{
-		const tradingHours = MarketUtilities.contractHours( this.details.tradingHours ), now = new Date();
-		const currentDate = MarketUtilities.currentTradingDate( now, tradingHours );
+		const tradingHours = MarketUtilities.contractHours( this.detail.tradingHours ), now = new Date();
+		const currentDate = MarketUtilities.currentTradingDay( now, tradingHours );
 		//console.log( currentDate );
 		//var offset = MarketUtilities.getTimezoneOffset( this.contract.primaryExchange );
 		const range=23400000/*6.5 hours*/, regularEnd = new Date(currentDate);
 
-		const liquidHours = MarketUtilities.contractHours( this.details.liquidHours )
+		const liquidHours = MarketUtilities.contractHours( this.detail.liquidHours )
 		//const startTrading = now.getTime()<contractHours.start*1000 ? MarketUtilities.startTrading( currentDate, this.contract ) : contractHours.start;
-		const isMarketOpen = MarketUtilities.isMarketOpen( this.details );
+		const isMarketOpen = MarketUtilities.isMarketOpen( this.detail );
 		const liquidStart = isMarketOpen ? liquidHours.start*1000 : null;
 		//maxDate = new Date(currentDate)
-		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endLiquid( DateUtilities.endOfDay(currentDate), this.details.contract ).getTime();
-		//const endLiquid =  isMarketOpen ? new Date(liquidHours.end*1000) : MarketUtilities.endLiquid( currentDate, this.details.contract );
+		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endLiquid( DateUtilities.endOfDay(DateUtilities.fromDays(currentDate)), this.detail.contract ).getTime();
+		//const endLiquid =  isMarketOpen ? new Date(liquidHours.end*1000) : MarketUtilities.endLiquid( currentDate, this.detail.contract );
 		const minDate = isMarketOpen ? tradingHours.start*1000 : endTrading-range;
 		//minDate.setHours( 4.0 ); maxDate.setHours( 19.0 ); liquidStart.setHours( 9 ); liquidStart.setMinutes( 30 );
 		let getMinMax = ()=>
@@ -160,7 +160,7 @@ export class SmallChartComponent //implements AfterViewInit, OnInit, OnDestroy
 		};
 		Highcharts.stockChart( showLarge ? 'chart2' : 'chart', options );
 	}
-	get contract(){return this.details.contract;}
-	get details():Results.IContractDetails{ return this.tick.details; }// private _details:Results.IContractDetails;
+	get contract(){return this.detail.contract;}
+	get detail():Results.IContractDetail{ return this.tick.detail; }// private _details:Results.IContractDetails;
 	@Input() set tick(value:TickDetails){ this._tick = value; if( value ) this.showChart(); } get tick():TickDetails{ return this._tick; } private _tick:TickDetails;
 }

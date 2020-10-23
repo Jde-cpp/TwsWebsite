@@ -20,7 +20,6 @@
 					<td class="numberCell">{{tick?.low| number:'1.2-2'}} - {{tick?.high | number:'1.2-2'}}</td>
 					<td class="numberCell" *ngIf="tick==null || !tick.volumeAverage">{{volumeDisplay}}</td>
 					<td class="numberCell" *ngIf="tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</td>
-					<!-- <td class="numberCell" title="{{settingsSymbol?.shortInterestDate}}">{{ (fundamentals?.sharesOutstanding && settingsSymbol ? settingsSymbol.shortInterest/fundamentals.sharesOutstanding*100 : null) | number:'1.1-1' }}%</td> -->
 					<td class="numberCell">{{tick?.shortableAvailable/1000 | number:'1.0-0'}}K</td>
 				</tr></tbody>
 			</table>

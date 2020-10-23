@@ -67,7 +67,7 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	setSymbol( symbol:string )
 	{
 		this.editItem = null;
-		if( (!symbol && !this.tick) || symbol==this.tick?.details.contract.symbol )
+		if( (!symbol && !this.tick) || symbol==this.tick?.detail.contract.symbol )
 			return;
 		this.parent.onChangeSymbol( this, symbol );
 	}
@@ -109,7 +109,7 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	unsubscribe(){ if( this.subscription ) this.tws.cancelMktDataSingle(this.subscription); }
 */
 	get contractId():number{ return this.detail?.contract.id; }
-	get detail():Results.IContractDetails{ return this.tick?.details; }/*@Input() set detail(x){ this.tick = x ? new TickDetails(x) : null; }*/
+	get detail():Results.IContractDetail{ return this.tick?.detail; }/*@Input() set detail(x){ this.tick = x ? new TickDetails(x) : null; }*/
 	get displayChange():string{ const tick=this.tick; return tick ? `${this.decimalPipe.transform(tick.change, '1.2-2')}  (${this.decimalPipe.transform(tick?.change/tick?.close*100, '1.1-1')}%)` : null;}
 	//get displayShort():string{ return this.fundamentals?.sharesOutstanding && this.settingsSymbol ? $ {this.decimalPipe.transform(this.settingsSymbol.shortInterest/this.fundamentals.sharesOutstanding*100, '1.1-1')}% : null; }
 	get displayInventory():string{ return this.tick ? `${this.decimalPipe.transform(this.tick.shortableAvailable/1000, '1.0-0')}k` : null; }
@@ -150,7 +150,7 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 		this._shares=x;
 	} _shares:number;
 	showMenu=false;
-	get symbol():string|null{ return this.tick?.details.contract.symbol; }
+	get symbol():string|null{ return this.tick?.detail.contract.symbol; }
 	@ViewChild("symbolInput") symbolInput: ElementRef;
 	set tick( x ){ this._tick = x; /*console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );if( this._tick ) this.subscribe(); else this.unsubscribe();*/ } get tick(){ return this._tick; } private _tick:TickDetails;
 	get selected(){ return this._selected;} set selected( x )

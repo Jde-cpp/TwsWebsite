@@ -81,7 +81,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 				this.tws.reqContractSingle( value.contract ).then( (details)=>
 				{
 					const isMarketOpen = MarketUtilities.isMarketOpen( details );
-					var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDate(new Date(), details.tradingHours[0]) );
+					var previousDay = MarketUtilities.previousTradingDate( new Date(), MarketUtilities.contractHours(details.tradingHours) );
 					this.tws.reqPreviousDay( [value.contract.id] ).subscribe(
 					{
 						next: ( bar:Results.IDaySummary ) =>

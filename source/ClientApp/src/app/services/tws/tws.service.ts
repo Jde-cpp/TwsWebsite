@@ -59,7 +59,6 @@ type EndCallback = (reqId: number) => any;
 type AccountUpdateCallback = (accountUpdate: Results.IAccountUpdate) => any;
 type AccountUpdateMultiCallback = (accountUpdate: Results.IAccountUpdateMulti)=>any;
 type AccountUpdateType = [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>];
-type ContractDetailsCallback = (details: Results.IContractDetails)=>any;
 class Connection
 {
 	constructor( /*private cnsl: IErrorService*/ )
@@ -80,6 +79,8 @@ class Connection
 		{
 			if( message.tickPrice )
 			{
+				//if( message.tickPrice.tickType>9 )
+				//	console.log( `${message.tickPrice.tickType}` );
 				const callback = this.marketDataCallbacks.get( message.tickPrice.requestId );
 				if( callback )
 					callback.price( message.tickPrice.tickType, message.tickPrice.price, message.tickPrice.attributes );
@@ -90,7 +91,13 @@ class Connection
 			{
 				const callback = this.marketDataCallbacks.get( message.tickGeneric.requestId );
 				if( callback )
+				{
 					callback.generic( message.tickGeneric.tickType, message.tickGeneric.value );
+					if( message.tickGeneric.tickType==Results.ETickType.OPTION_HISTORICAL_VOL )
+						console.log( `OPTION_HISTORICAL_VOL=${message.tickGeneric.value}` );
+					else if( message.tickGeneric.tickType==Results.ETickType.OPTION_IMPLIED_VOL )
+						console.log( `OPTION_IMPLIED_VOL=${message.tickGeneric.value}` );
+				}
 				else
 					console.error( `no callbacks for tickGeneric reqId='${message.tickGeneric.requestId}'` );//todo stop request.
 			}
@@ -100,7 +107,10 @@ class Connection
 				if( callback )
 					callback.size( message.tickSize.tickType, message.tickSize.size );
 				else
-					console.error( `no callbacks for tickSize reqId='${message.tickSize.requestId}'` );//todo stop request.
+				{
+					console.error( `no callbacks for tickSize reqId='${message.tickSize.requestId}'` );
+					this.cancelMarketData( [message.tickSize.requestId] );
+				}
 			}
 			else if( message.tickString )
 			{
@@ -108,7 +118,16 @@ class Connection
 				if( callback )
 					callback.string( message.tickString.tickType, message.tickString.value );
 				else
-					console.error( `no callbacks for tickString reqId='${message.tickString.requestId}'` );//todo stop request.
+					console.log( `no callbacks for tickString reqId='${message.tickString.requestId}'` );//todo stop request.
+			}
+			else if( message.optionCalculation )
+			{
+				const x = message.optionCalculation;
+				const callback = this.marketDataCallbacks.get( x.requestId );
+				if( callback )
+					callback.optionCalculation( x.tickType, x.priceBased, x.impliedVolatility, x.delta, x.optionPrice, x.pvDividend, x.gamma, x.vega, x.theta, x.underlyingPrice )
+				else
+					this.cancelMarketData( [message.tickSize.requestId], `no callbacks for optionCalculation reqId='${message.tickSize.requestId}'` );
 			}
 			else if( message.orderStatus || message.openOrder )
 			{
@@ -194,7 +213,7 @@ class Connection
 				const id = message.contractDetails.requestId;
 				const callback = this.contractCallbacks.get( id );
 				if( callback )
-					callback.next( message.contractDetails );
+					callback.next( message.contractDetails.details );
 				else
 					console.error( `no callbacks for ContractDetails reqId='${id}'` );
 			}
@@ -206,8 +225,8 @@ class Connection
 				this.handleFundamentals( message.fundamentals );
 			else if( message.execution )
 				this.executionCallbacks.get( message.execution.id )?.execution( message.execution );
-			else if( message.optionParameters )
-				this.optionParamCallbacks.get( message.optionParameters.underlyingContractId ).next( message.optionParameters );
+			//else if( message.optionExchanges )
+			//	this.optionParamCallbacks.get( message.optionExchanges.requestId )?.resolve( message.optionExchanges.exchanges );
 			else if( message.error )
 				this.handleError( message.error );
 			else if( message.message )
@@ -250,6 +269,11 @@ class Connection
 					else
 						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
 				}
+/*will not happen		else if( typeId==Results.EResults.SecurityDefinitionOptionParameterEnd )
+				{
+					this.optionParamCallbacks.get( message.message.intValue ).complete();
+					this.optionParamCallbacks.delete( message.message.intValue );
+				}*/
 				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
 				{
 					this.testCallbacks.get( message.message.intValue ).resolve( true );
@@ -331,6 +355,18 @@ class Connection
 
 		this.flexCallbacks.clear();
 	}
+
+	checkRequestType( typeRequests:Map<number, RequestPromise>, id:number, error:Results.IError ):boolean
+	{
+		const handled = typeRequests.has( id );
+		if( handled )
+		{
+			typeRequests.get( id ).reject( error );
+			typeRequests.delete( id );
+		}
+		return handled;
+	}
+
 	handleError( error:Results.IError )
 	{
 		//debugger;
@@ -344,11 +380,6 @@ class Connection
 				else
 					console.error( error.message, error );
 			}
-			else if( this.optionParamCallbacks.has(id) )
-			{
-				this.optionParamCallbacks.get( id ).error( error );
-				this.optionParamCallbacks.delete( id );
-			}
 			else if( this.previousDayCallbacks.has(id) )
 			{
 				this.previousDayCallbacks.get( id )?.error( error );
@@ -359,13 +390,15 @@ class Connection
 				this.generalCallbacks.get( id )[1]( error );
 				this.generalCallbacks.delete( id );
 			}
-			else if( this.testCallbacks.has(id) )
-			{
-				this.testCallbacks.get( id ).reject( error );
-				this.testCallbacks.delete( id );
-			}
 			else
-				console.error( `error code='${error.code}' message='${error.message}'` );//todo stop request.
+			{
+				var requestsTypes:Map<number, RequestPromise>[] = [ this.testCallbacks, this.optionParamCallbacks ];
+				let handled = false;
+				for( let i=0; i<requestsTypes.length && !handled; ++i )
+					handled = this.checkRequestType( requestsTypes[i], id, error );
+				if( !handled )
+					console.error( `error code='${error.code}' message='${error.message}'` );//todo stop request.
+			}
 		}
 	}
 
@@ -440,9 +473,9 @@ class Connection
 
 	reqMktData( contractId:number, tickList:Requests.ETickList[], snapshot:boolean ):TickObservable
 	{
-		const id = this.getRequestId();
-		console.log( `(${id})RequestMrkDataSmart( ${contractId}, [${tickList.join()}])` );
-		const param = new Requests.RequestMrkDataSmart( {"id": id, "contractId": contractId, "tickList": tickList, "snapshot": snapshot } );
+		const id = contractId; //this.getRequestId()
+		console.log( `(${id})reqMktData( [${tickList.join()}] )` );
+		const param = new Requests.RequestMrkDataSmart( {"id": id, "contractId": contractId, "tickList": tickList, "snapshot": snapshot} );
 		const msg = new Requests.RequestUnion(); msg.marketDataSmart = param;
 		this.send( msg );
 		const callback = new TickSubject();
@@ -455,7 +488,7 @@ class Connection
 		for( const subscription of subscriptions )
 		{
 			const matched = [...this.marketDataCallbacks].find( ([key, val]) => val==subscription );
-			if( matched.length )
+			if( matched )
 			{
 				ids.push( matched[0] );
 				this.marketDataCallbacks.delete( matched[0] );
@@ -464,11 +497,16 @@ class Connection
 				console.log( "could not find reqMktData subscription." );
 		}
 		if( ids.length )
-		{
+			this.cancelMarketData( ids );
+	}
+	private cancelMarketData( ids:number[], error:string=null )
+	{
+		if( error )
+			console.error( error );
+		else
 			console.log( `cancelMktData( ${ids.join(",")} )` );
-			const msg = new Requests.RequestUnion( {genericRequests:{"type": Requests.ERequests.CancelMarketData, "ids": ids}} );
-			this.send( msg );
-		}
+		const msg = new Requests.RequestUnion( {genericRequests:{"type": Requests.ERequests.CancelMarketData, "ids": ids}} );
+		this.send( msg );
 	}
 	cancelOrder(id:number):void
 	{
@@ -518,22 +556,18 @@ class Connection
 		const variable = { id:id, providerCode:providerCode, articleId: articleId };
 		return this.sendPromise2<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle!=null;}, null );
 	}
-	reqContractDetails( contract:IB.IContract ):Observable<Results.IContractDetails>
+	reqContractDetails( contract:IB.IContract ):Promise<Results.IContractDetail[]>
 	{
-		const callback = new Subject<Results.IContractDetails>();
 		const id = this.getRequestId();
-		console.log( `reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}`)
-		const param = new Requests.RequestContractDetails( {"id": id} ); param.contracts.push( contract );
-		const msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
-		this.contractCallbacks.set( id, callback );
-		this.send( msg );
-		return callback;
+		console.log( `(${id})reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}` );
+		const variable = { id: id, contracts: [contract] };
+		return this.sendPromise2<Requests.IRequestContractDetails,Results.IContractDetail[]>( "contractDetails", variable, (x)=>{return x.contractDetails!=null;}, null );
 	}
-	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetails>
+	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetail[]>
 	{
 		if( !this.socket )
 			return throwError( 'Not connected to Tws' );
-		const callback = new Subject<Results.IContractDetails>();
+		const callback = new Subject<Results.IContractDetail[]>();
 		const id = this.getRequestId();
 		const param = new Requests.RequestContractDetails( {"id": id} );
 		for( const id of contractIds )
@@ -671,12 +705,10 @@ class Connection
 		return callback;
 	}
 
-	reqOptionParams( id:number ):Observable<Results.IOptionParams>
+	reqOptionParams( underlyingId:number ):Promise<Results.IExchangeContracts>
 	{
-		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestOptionParams, "ids": [id]}}) );
-		const callback = new Subject<Results.IOptionParams>();
-		this.optionParamCallbacks.set( id, callback );
-		return callback;
+		console.log( `reqOptionParams( ${underlyingId} )` );
+		return this.sendGenericPromise<Results.IExchangeContracts>( Requests.ERequests.RequestOptionParams, [underlyingId], (msg)=>msg.optionExchanges, (optionExchanges)=>optionExchanges.exchanges.length ? optionExchanges.exchanges[0] : null );
 	}
 
 	reqPreviousDay( ids:number[] ):Observable<Results.IDaySummary>
@@ -726,15 +758,15 @@ class Connection
 	private accountUpdateMultiCallbacks = new Map<number, [AccountUpdateCallback, EndCallback]>();
 	private marketDataCallbacks = new Map<number, TickSubject>();
 	private positionCallbacks = new Map<number,Subject<Results.IPositionMulti>>();
-	private contractCallbacks = new Map<number, Subject<Results.IContractDetails>>();
+	private contractCallbacks = new Map<number, Subject<Results.IContractDetail[]>>();
 	private executionCallbacks = new Map<number,ExecutionSubject>();
 	private fundamentalCallbacks = new Map<number, [(x:{ [k: string]: number })=>void,(x:Results.IError)=>void]>(); //[({ [k: string]: number })=>void, (Results.IError)=>void]>();
 	private generalCallbacks = new Map<number, [(x:any)=>void,(x:Results.IError)=>void]>();
-	private testCallbacks = new Map<number, RequestPromise>();
 	private optionSummaryCallbacks = new Map<number, [(x:Results.IOptionValues)=>void, (x:Results.IError)=>void]>();
 
 	private flexCallbacks = new Map<number,Subject<Results.Flex>>();
-	private optionParamCallbacks = new Map<number, Subject<Results.IOptionParams>>();
+	private testCallbacks = new Map<number, RequestPromise>();
+	private optionParamCallbacks = new Map<number, RequestPromise>();
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
@@ -751,10 +783,16 @@ export class TwsService
 	reqHistoricalNews( contractId, providerCodes:string[], totalResults:number, start:Date=null, end:Date=null ):Promise<Results.HistoricalNewsCollection>{ return this.connection.reqHistoricalNews(contractId, providerCodes, totalResults, start, end); }
 	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>{ return this.connection.reqNewsArticle(providerCode, articleId); }
 
-	reqContract( contract:IB.IContract ):Observable<Results.IContractDetails>{ return this.connection.reqContractDetails(contract); }
-	reqContractSingle( contract:IB.IContract ):Promise<Results.IContractDetails>{ return ObservableUtilities.toPromiseSingle( ()=>{return this.reqContract(contract);}, false); }
-	reqIds( contractIds:number[] ):Promise<Results.IContractDetails[]>{ return ObservableUtilities.toPromise<Results.IContractDetails>( ()=>{return this.connection.reqContractDetailsMulti(contractIds);}, false); }
-	reqSymbol( symbol:string ):Promise<Results.IContractDetails[]>{ return ObservableUtilities.toPromise( ()=>{return this.reqContract({symbol: symbol});}, false); }
+	reqContract( contract:IB.IContract ):Promise<Results.IContractDetail[]>{ return this.connection.reqContractDetails(contract); }
+	reqContractSingle( contract:IB.IContract ):Promise<Results.IContractDetail>{ return new Promise<Results.IContractDetail>( (resolve,reject)=>this.reqContract(contract).then( (results)=>{if( results.length==1 )resolve( results[0] ); else reject( {results: results, error:null} ); }).catch( (e)=>reject(e) )); } //TODO make new call to return single or error.
+	reqIds( contractIds:number[] ):Promise<Results.IContractDetail[][]>
+	{
+		return ObservableUtilities.toPromise<Results.IContractDetail[]>( ()=>
+		{
+			return this.connection.reqContractDetailsMulti(contractIds);
+		}, false);
+	}
+	reqSymbol( symbol:string ):Promise<Results.IContractDetail[]>{ return this.reqContract({symbol: symbol}); }
 
 	reqAccountUpdates( accountNumber: string ):AccountUpdateType{ return this.connection.reqAccountUpdates( accountNumber ); }
 	reqPositions( accountNumber: string ):Observable<Results.IPositionMulti>{ return this.connection.reqPositions( accountNumber ); }
@@ -774,7 +812,7 @@ export class TwsService
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
-	reqOptionParams(underlyingId:number):Observable<Results.IOptionParams>{ return this.connection.reqOptionParams(underlyingId); }
+	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 

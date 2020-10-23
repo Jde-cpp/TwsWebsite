@@ -99,7 +99,7 @@ export class DataSource implements IData
 //	private values:Order[]=[];
 	observable:Subject<object>;
 	get length():number{ return this.values ? this.values.length : 0; }
-	contracts = new Map<number,Results.IContractDetails>();
+	contracts = new Map<number,Results.IContractDetailsResult>();
 	get count():number{return this.values.length;}
 	get tradeCount():number{return this.count;}
 	positiveCount:number=0;

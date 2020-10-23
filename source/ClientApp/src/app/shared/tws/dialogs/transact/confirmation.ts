@@ -24,7 +24,7 @@ export class ConfirmationDialog
 	constructor( public dialogRef:MatDialogRef<ConfirmationDialog>, @Inject(MAT_DIALOG_DATA) public data:ConfirmationData, private tws : TwsService )
 	{
 		console.log( 'ConfirmationDialog' );
-		this.tws.reqContractSingle(this.contract).then( (x)=>this.details = x );
+		this.tws.reqContractSingle(this.contract).then( (x)=>this.detail = x );
 		let subscription = this.tws.reqPositions( this.order.account );
 		subscription.subscribe(
 		{
@@ -60,8 +60,8 @@ export class ConfirmationDialog
 		return `linear-gradient(to right, ${prefix}255),${prefix}0))`;
 	}
 	get contract(){ return this.status.contract;}
-	get description(){ return /*this.option ? this.option.description :*/ `${this.contract.symbol} - ${this.details ? this.details.longName : ''}`; }
-	details:Results.IContractDetails;
+	get description(){ return /*this.option ? this.option.description :*/ `${this.contract.symbol} - ${this.detail ? this.detail.longName : ''}`; }
+	detail:Results.IContractDetail;
 	get isBuy(){return this.order.isBuy;}
 	get order(){ return this.status.order; }
 	get orderQuantity(){ return this.order.quantity*(this.isBuy ? 1 : -1); }

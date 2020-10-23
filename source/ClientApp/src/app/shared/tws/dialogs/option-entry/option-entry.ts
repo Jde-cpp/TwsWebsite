@@ -18,7 +18,7 @@ export class Data
 	option:TickEx;
 	expirations: number[];
 	//underlying: TickEx;
-	underlying:Results.IContractDetails;
+	underlying:Results.IContractDetail;
 	//strikes:number[];
 }
 @Component( { templateUrl: 'option-entry.html', styleUrls:["option-entry.css"]} )
@@ -60,37 +60,33 @@ export class OptionEntryDialog implements OnDestroy
 			this.option = null;
 		if( this.option )
 			this.strikes.set( this.strike, [this.option.isCall ? this.option.contractId : null, !this.option.isCall ? this.option.contractId : null ] );
-		let tempStrikes = new Map<number,[number,number]>();
 		let contract:IB.IContract = { exchange: IB.Exchanges.Smart, securityType: IB.SecurityType.Option, right: isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put, expiration: expiration, symbol: this.underlying.contract.symbol };
-		this.tws.reqContract( contract ).subscribe(
+		this.tws.reqContract( contract ).then( (details:Results.IContractDetail[])=>
 		{
-			next: value=>
+			let tempStrikes = new Map<number,[number,number]>();
+			for( let detail of details )
 			{
-				let callPut:[number,number] = tempStrikes.has(value.contract.strike) ? tempStrikes.get( value.contract.strike ) : [0,0];
-				if( value.contract.right==IB.SecurityRight.Call )
-					callPut = [value.contract.id, callPut[1]];
-				else if( value.contract.right==IB.SecurityRight.Put )
-					callPut = [callPut[0], value.contract.id];
-				tempStrikes.set( value.contract.strike, callPut );
-			},
-			complete: ()=>
+				let callPut:[number,number] = tempStrikes.has(detail.contract.strike) ? tempStrikes.get( detail.contract.strike ) : [0,0];
+				if( detail.contract.right==IB.SecurityRight.Call )
+					callPut = [detail.contract.id, callPut[1]];
+				else if( detail.contract.right==IB.SecurityRight.Put )
+					callPut = [callPut[0], detail.contract.id];
+				tempStrikes.set( detail.contract.strike, callPut );
+			}
+			this.strikes = tempStrikes;
+			if( this.option )
+				return;
+			if( !this.strikes.has(strike) )
 			{
-				this.strikes = tempStrikes;
-				if( this.option )
-					return;
-				if( !this.strikes.has(strike) )
+				for( let strike2 of this.strikes.keys() )
 				{
-					for( let strike2 of this.strikes.keys() )
-					{
-						strike = strike2;
-						if( strike2>strike )
-							break;
-					}
+					strike = strike2;
+					if( strike2>strike )
+						break;
 				}
-				this.setOption( strike, expiration, isCall );
-			},
-			error: e=>{console.log(e.Message);}
-		});
+			}
+			this.setOption( strike, expiration, isCall );
+		}).catch( (e)=>console.log(e.Message) );
 	}
 	setOption( strike, expiration, isCall )
 	{
@@ -165,7 +161,7 @@ export class OptionEntryDialog implements OnDestroy
 	strikes = new Map<number,[number,number]>();
 	stop:number;
 	stopLimit:number;
-	underlying:Results.IContractDetails;
+	underlying:Results.IContractDetail;
 	get underlyingSymbol(){return this.underlying.contract.symbol;}
 	get option():TickEx{ return this._option}; set option(value){ if(!value) this.subscription=null; this._option = value; } _option:TickEx;
 	get subscription(){return this._subscription;} set subscription(value){ if( this.subscription ) this.tws.cancelMktDataSingle( this.subscription ); this._subscription=value;} _subscription:TickObservable;

@@ -57,6 +57,6 @@
 			<mat-cell *matCellDef="let element">{{element.previousValue| number:'1.0-0'}}</mat-cell>
 		</ng-container>
 		<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-		<mat-row mat-row *matRowDef="let row; columns: displayedColumns;" [class.highlight]="selectedOption==row" (click)="cellClick(row)" (dblclick)="cellDblClick(row)"></mat-row>
+		<mat-row mat-row *matRowDef="let row; let i=index; columns: displayedColumns;" [class.highlight]="selectedOption==row" [class.outOfMoney]="row.contract.right==1 ? price<row.strike : row.strike>price" (click)="cellClick(row)" (dblclick)="cellDblClick(row)"></mat-row>
 	</mat-table>
 </div>

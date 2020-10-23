@@ -52,9 +52,9 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 		else
 			onFile( new Watch.File() );
 	}
-	onSelectedChanged( details:Results.IContractDetails|null|undefined ){ this.selection = details; }
+	onSelectedChanged( details:Results.IContractDetailsResult|null|undefined ){ this.selection = details; }
 	save():Promise<void>{ return this.tws.editWatch( this.file ); }
-	selection:Results.IContractDetails|null|undefined;
+	selection:Results.IContractDetailsResult|null|undefined;
 	get canAdd(){ return this.selection!==undefined; }
 	file:Watch.File;
 	@Input() set name(x)

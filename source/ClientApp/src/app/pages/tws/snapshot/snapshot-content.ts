@@ -107,7 +107,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} );
 		this.loadedPromise = Promise.resolve( true );
 		const now = new Date();
-		var previousDay = DateUtilities.toDays( MarketUtilities.previousTradingDate(now, this.detail.tradingHours[0]) );
+		var previousDay = MarketUtilities.previousTradingDate( now, MarketUtilities.contractHours(this.detail.tradingHours) );
 		this.tws.reqPreviousDay( [this.contract.id] ).subscribe(
 		{
 			next: ( bar:Results.IDaySummary ) =>
@@ -136,6 +136,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 				if( !tick.close )
 					console.log( `No previous day close for '${this.detail.contract.symbol}'` );
 				this.showChart();
+				this.tabs.selectedIndex = this.settingsSymbolContainer.value.tabIndex;
 				this.tabEvents.next( this.tabs?.selectedIndex ?? this.settingsSymbolContainer.value.tabIndex ?? 0 );
 			},
 			error: e=>
@@ -166,7 +167,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		//}
 		if( this.subscription )
 			this.tws.cancelMktDataSingle( this.subscription );
-		const ticks = [Requests.ETickList.Inventory, (this.tick.isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
+		const ticks = [Requests.ETickList.Inventory, Requests.ETickList.HistoricalVolatility, Requests.ETickList.ImpliedVolatility, (this.tick.isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
 /*		if( isMarketOpen )
 			ticks.push( Requests.ETickList.PlPrice );
 		else*/
@@ -211,8 +212,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	showChart()
 	{
 		let tws = this.tws, cnsle = this.cnsle, contract = this.contract;
-		let endTime = DateUtilities.endOfDay( MarketUtilities.currentTradingDate( new Date(), MarketUtilities.contractHours(this.detail.tradingHours)) );
-		tws.reqHistoricalData( contract, DateUtilities.endOfDay(MarketUtilities.previousTradingDate()), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).then( (dayBars)=>
+		let endTime = DateUtilities.endOfDay( DateUtilities.fromDays(MarketUtilities.currentTradingDay( new Date(), MarketUtilities.contractHours(this.detail.tradingHours))) );
+		tws.reqHistoricalData( contract, DateUtilities.endOfDay(DateUtilities.fromDays(MarketUtilities.previousTradingDay())), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).then( (dayBars)=>
 		{
 			let returns = dayBars.map( (bar)=>{ return (bar.close-bar.open)/bar.open;} );
 			var beginningOfDay = DateUtilities.beginningOfDay(endTime);
@@ -235,20 +236,14 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	showChart2( bars, statResult:StatResult )
 	{
 		const tradingHours = MarketUtilities.contractHours( this.detail.tradingHours ), now = new Date();
-		const currentDate = MarketUtilities.currentTradingDate( now, tradingHours );
-		//console.log( currentDate );
-		//var offset = MarketUtilities.getTimezoneOffset( this.contract.primaryExchange );
-		const range=23400000/*6.5 hours*/, regularEnd = new Date(currentDate);
+		const current = MarketUtilities.currentTradingDay( now, tradingHours );
+		const range=23400000/*6.5 hours*/, regularEnd = DateUtilities.fromDays( current );
 
 		const liquidHours = MarketUtilities.contractHours( this.detail.liquidHours )
-		//const startTrading = now.getTime()<contractHours.start*1000 ? MarketUtilities.startTrading( currentDate, this.contract ) : contractHours.start;
 		const isMarketOpen = MarketUtilities.isMarketOpen( this.detail );
 		const liquidStart = isMarketOpen ? liquidHours.start*1000 : null;
-		//maxDate = new Date(currentDate)
-		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endLiquid( DateUtilities.endOfDay(currentDate), this.detail.contract ).getTime();
-		//const endLiquid =  isMarketOpen ? new Date(liquidHours.end*1000) : MarketUtilities.endLiquid( currentDate, this.detail.contract );
+		const endTrading = isMarketOpen ? tradingHours.end*1000 : MarketUtilities.endLiquid( DateUtilities.endOfDay(DateUtilities.fromDays(current)), this.detail.contract ).getTime();
 		const minDate = isMarketOpen ? tradingHours.start*1000 : endTrading-range;
-		//minDate.setHours( 4.0 ); maxDate.setHours( 19.0 ); liquidStart.setHours( 9 ); liquidStart.setMinutes( 30 );
 		let getMinMax = ()=>
 		{
 			const min = Math.max( minDate, Math.min(now.getTime(),endTrading)-range );  //23400=60*60*6.5
@@ -365,20 +360,20 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	@Input() index:number;
 	@Input() set indexSelectedSymbol(value){ this._indexSelectedSymbol=value; /*if( this.index==this.indexSelectedSymbol ) this.run();*/ } get indexSelectedSymbol(){ return this._indexSelectedSymbol;} private _indexSelectedSymbol:number;
 	@Input() pageSettings:Settings<PageSettings>;
-	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetails;
+	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetail;
 
 	loadedPromise:Promise<boolean>;
 	get primaryName():string{ return this.detail ? `${this.detail.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
 	settingsSymbolContainer:Settings<SymbolSettings>;
-	profile:Settings<SymbolSettings> //= new Settings<SymbolSettings>( SymbolSettings, "SnapshotComponent", this.profileService );
+	profile:Settings<SymbolSettings>; //= new Settings<SymbolSettings>( SymbolSettings, "SnapshotComponent", this.profileService );
 
 	get symbol():string{ return this.tick.contract.symbol; }
-	@Output() symbolEvent = new EventEmitter<Results.IContractDetails>();
+	@Output() symbolEvent = new EventEmitter<Results.IContractDetail>();
 	subscription:TickObservable;
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;
 	@ViewChild('symbolInput', {static: false} ) symbolInput;
-	tick: TickEx;
+	tick: TickDetails;
 	get volumeDisplay()
 	{
 		var display = null;

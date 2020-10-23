@@ -13,7 +13,7 @@ import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 
 export class Data
 {
-	details:Results.IContractDetails;
+	detail:Results.IContractDetail;
 	tick:TickEx;
 	isBuy:boolean;
 	quantity: number;
@@ -22,7 +22,7 @@ export class Data
 	settingsContainer:Settings<DialogSettings>;
 }
 
-export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : TwsService, details:Results.IContractDetails, tick:TickEx, isBuy:boolean, quantity: number=null, showStop:boolean=true )
+export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : TwsService, detail:Results.IContractDetail, tick:TickEx, isBuy:boolean, quantity: number=null, showStop:boolean=true )
 {
 	let settingsContainer = new Settings<DialogSettings>( DialogSettings, "TransactDialog", profile );
 	settingsContainer.load().then( ()=>
@@ -34,7 +34,7 @@ export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : Tw
 				allAccounts.set( account, numbers[account] );
 			const dialogRef = dialog.open(TransactDialog, {
 				width: '600px', autoFocus: false,
-				data: { details: details, tick: tick, isBuy: isBuy, quantity: quantity, showStop: showStop, allAccounts: allAccounts, settingsContainer: settingsContainer }
+				data: { detail: detail, tick: tick, isBuy: isBuy, quantity: quantity, showStop: showStop, allAccounts: allAccounts, settingsContainer: settingsContainer }
 			});
 			dialogRef.afterClosed().subscribe(result =>
 			{
@@ -63,8 +63,8 @@ export class TransactDialog implements AfterViewInit
 		{
 			this.tick = data.tick;
 			this.limit = data.isBuy ? data.tick.bid : data.tick.ask;
-			this.details = data.details;
-			this.isLiquid = MarketUtilities.isLiquid( this.details );
+			this.detail = data.detail;
+			this.isLiquid = MarketUtilities.isLiquid( this.detail );
 			if( this.limit==-1 )
 				this.limit = data.tick.last;
 			const delta = Math.round( (this.limit *.01)*100 )/100 * (data.isBuy ? -1 : 1);
@@ -114,8 +114,8 @@ export class TransactDialog implements AfterViewInit
 		const prefix = `rgba(${red},${green},0,`;
 		return `linear-gradient(to right, ${prefix}255),${prefix}0))`;
 	}
-	get description(){ return /*this.option ? this.option.description :*/ `${this.details.contract.symbol} - ${this.details.longName}`; }
-	details:Results.IContractDetails;
+	get description(){ return /*this.option ? this.option.description :*/ `${this.detail.contract.symbol} - ${this.detail.longName}`; }
+	detail:Results.IContractDetail;
 
 	get ask(){return this.tick.ask || 0;}
 	get askSize(){return this.tick.askSize || 0;}

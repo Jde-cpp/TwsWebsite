@@ -33,3 +33,10 @@ div.table
 	height: 30px;
 	min-height: 30px;
 }
+
+.outOfMoney
+{
+	/* background-color: aqua;
+	color: black; */
+	background-color: rgba( 0, 0, 255, .05 );
+}

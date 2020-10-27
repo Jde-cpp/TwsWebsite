@@ -104,18 +104,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	{
 		if( accountUpdate.key=="CashBalance" )
 			this.cash.set( accountUpdate.account, +accountUpdate.value );
-
-		//console.log( `onAccountUpdate [${accountUpdate.account}]${accountUpdate.key}=${accountUpdate.value}`  );
 	}
-
-/*	onHolding( reqId:number, fnctn:(holding:Holding)=>void ):void
-	{
-		let holding = this.requestsHoldings.get( reqId );
-		if( holding )
-			fnctn( holding );
-		else
-			console.log( `Could not find holding for request '${reqId}'`  );
-	}*/
 
 	onPortfolioUpdate = ( value: Results.IPortfolioUpdate ):void =>
 	{
@@ -134,7 +123,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			return found;
 		}) )
 		{
-			//this.tws.reqContractDetails( contract ).subscribe( {next: contract2=>{
 			const barSize:Requests.BarSize = contract.securityType==IB.SecurityType.Option ? Requests.BarSize.Hour : Requests.BarSize.Day;
 
 			const holding = new Holding( value );
@@ -180,29 +168,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		} );
 	}
 
-/*	onGenericTick( reqId:number, type:Results.ETickType, value:number ):void
-	{
-		console.log( `onGenericTick( '${reqId}', '${type.toString()}', '${value}')` );
-	}
-	onPriceTick( reqId:number, type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
-	{
-		this.onHolding( reqId, (holding:Holding)=>
-		{
-			if( type==Results.ETickType.ClosePrice )
-				holding.close = price;
-			else if( type==Results.ETickType.BidPrice )
-				holding.bid = price;
-			else if( type==Results.ETickType.AskPrice )
-				holding.ask = price;
-			else
-				console.log( `onPriceTick( '${reqId}', '${type.toString()}', '${price}') - not handled` );
-		});
-	}
-	onSizeTick( reqId:number, type:Results.ETickType, size:number ):void
-	{
-		if( type==Results.ETickType.SHORTABLE_SHARES )
-			console.log( `onSizeTick( '${reqId}', '${type.toString()}', '${size}')` );
-	}*/
 	onStringTick( reqId:number, type:Results.ETickType, value:string ):void
 	{
 		console.log( `onStringTick( '${reqId}', '${type.toString()}', '${value}')` );
@@ -213,13 +178,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	}
 	trade( element, event:MouseEvent ):void
 	{
-/*		var button = <Button>event.currentTarget;
-		if( button && button.innerText=="Help" )
-		{
-			var iframe = '<html><head><style>body, html {width: 100%; height: 100%; margin: 0; padding: 0}</style></head><body><iframe src="https://www.w3schools.com" style="height:calc(100% - 4px);width:calc(100% - 4px)"></iframe></html></body>';
-			var win = window.open("","","width=600,height=480,toolbar=no,menubar=no,resizable=yes");
-			win.document.write(iframe);
-		}*/
 		console.log( `trade( '${event.toString()}' )` );
 	}
 
@@ -275,13 +233,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	}
 	close( element, event:MouseEvent ):void
 	{
-/*		var button = <Button>event.currentTarget;
-		if( button && button.innerText=="Help" )
-		{
-			var iframe = '<html><head><style>body, html {width: 100%; height: 100%; margin: 0; padding: 0}</style></head><body><iframe src="https://www.w3schools.com" style="height:calc(100% - 4px);width:calc(100% - 4px)"></iframe></html></body>';
-			var win = window.open("","","width=600,height=480,toolbar=no,menubar=no,resizable=yes");
-			win.document.write(iframe);
-		}*/
 		console.log( `trade( '${event.toString()}' )` );
 	}
 	cellClick( row:Holding )
@@ -293,7 +244,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			{
 				const index = 0;//+row.index;
 				this.selected = this.selected == row ? null : row;
-				//this.selectionChange.emit( this.selectedOption );
 			}
 		},250);
 	}
@@ -331,5 +281,4 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	get settings(){return this._settings || (this.settings=new Settings());} set settings(value){ this._settings = value;} private _settings:Settings;
 	viewPromise:Promise<boolean>;
 	private static profileKey="PortfolioComponent";
-	//public objectKeys = Object.keys;
 }

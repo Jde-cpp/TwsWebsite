@@ -12,6 +12,12 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 import { attr } from 'highcharts';
 
 /*TickEx+option*/
+export class OptionStrike
+{
+	constructor( public call:Option, public put:Option ){}
+	get strike():number{ return this.call ? this.call.strike : this.put?.strike; }
+	get expiration():number{ return this.call ? this.call.expiration : this.put?.expiration; }
+}
 export class Option extends TickEx
 {
 	constructor( _contract:IB.IContract, public option:Results.IOption, bid?, ask?, last?, volume? ) //, public index:number
@@ -32,40 +38,9 @@ export class Option extends TickEx
 		if( MarketUtilities.isMarketOpen2(IB.Exchanges.Smart, IB.SecurityType.Option) )
 			super.size( type, size );
 	}
-/*	subscribe()
-	{
-		//if( MarketUtilities.isMarketOpen("", "OPT") )
-		this.subscription = this.tws.reqMktData( this.contractId, [Requests.ETickList.PlPrice], false );
-		this.subscription.subscribe2(
-		{
-			generic:( type:Results.ETickType, value:number )=>{ this.holding.onGenericTick( type, value ); },
-			price:( type:Results.ETickType, price:number, attributes:Results.ITickAttrib )=>{ this.holding.onPriceTick( type, price, attributes ); },
-			size:( type:Results.ETickType, size:number )=>{ this.holding.onSizeTick(type, size); },
-			string:( type:Results.ETickType, value:string )=>{ this.holding.onStringTick(type, value); },
-			complete: ()=>{ console.log("reqMktData::complete") }
-		});
-	}
-	unsubscribe()
-	{
-		if( this.subscription )
-			this.tws.cancelMktData( this.subscription );
-	}*/
-	// askSize:number;
-	// ask:number;
-	// bid:number;
-	// bidSize:number;
-//	last:number;
-	//volume:number;
-	//subscription:TickObservable;
-	//get change():number{ return (this.oi==0 ? 0 : this.value/this.oi)*this.oiChange; }
-	//get contractId():number{ return this.option.id; }
-	//get exposure():number{ return (this.isCall ? this.underlyingPrice*2-this.strike : this.strike)*this.oi; }
 	get oi():number{ return this.option.openInterest;}
 	get oiChange():number{ return this.option.oiChange; }
-	//get underlyingPrice():number{ return this.underlying.last;}
-	get strike():number{ return this.option.strike; }
 	get value():number{ return (!this.last || this.last<this.bid || this.last>this.ask ? (this.ask+this.bid)/2 : this.last)*this.oi; }
 	get previousValue():number{ return (this.oi-this.oiChange)*this.option.previousPrice; }
-	get description():string{ return `${MarketUtilities.optionDisplayFromDays(this.expiration)} ${this.strike} ${this.isCall ? "Call" : "Put"}` }
-	//${this.underlying.contract.symbol}
+	get description():string{ return `${MarketUtilities.optionDayDisplay(this.expiration)} ${this.strike} ${this.isCall ? "Call" : "Put"}` }
 }

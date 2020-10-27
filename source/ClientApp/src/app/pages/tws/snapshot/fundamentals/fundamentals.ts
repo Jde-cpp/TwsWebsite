@@ -6,10 +6,6 @@ import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 
 import { IProfile } from 'src/app/services/profile/IProfile';
 import { TwsService } from 'src/app/services/tws/tws.service';
 import { TickEx, TickDetails } from 'src/app/services/tws/Tick';
-import { IPageEvent } from 'src/app/shared/framework/paginator/paginator'
-import { Option } from 'src/app/shared/tws/options/option-table/option'
-import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
-import {Settings,JoinSettings} from 'src/app/utilities/settings'
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
@@ -23,7 +19,6 @@ export class Fundamentals
 {
 	constructor( public values:{[k: string]: number} )
 	{}
-	//set values(value:{ [k: string]: number } ){this._values=value;} private _values:{ [k: string]: number };
 	get( key:string ):number|null{ return this.values ? this.values[key] : null; }
 	get marketCap():number|null{ return this.get("MKTCAP")*1000000; };
 	private get nPrice():number|null{ return this.get("NPRICE"); };
@@ -31,9 +26,6 @@ export class Fundamentals
 	get low52Week():number|null{ return this.get("NLOW"); }
 	get high52Week():number|null{ return this.get("NHIG"); }
 	get beta():number|null{ return this.get("BETA"); }
-	//get priceEarnings():number|null{ return this.nPrice/this.eps; }
-
-	//get eps():number|null{ return this.get("EPS"); }
 
 	//dividends
 	get yield():number|null{ return this.get("YIELD"); }
@@ -191,8 +183,6 @@ export class FundamentalsComponent implements OnInit, AfterViewInit, OnDestroy
 	}
 	ngOnDestroy()
 	{
-		//for( let key of Object.keys(this._value?.values) )
-		//	console.log( `${key}=${this._value.values[key]}` );
 	}
 
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;

@@ -1,23 +1,13 @@
 import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
-import {MatDialog} from '@angular/material/dialog';
-import {MatRadioChange} from '@angular/material/radio'
-import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
-import {IErrorService} from 'src/app/services/error/IErrorService'
+import { Observable, Subscription } from 'rxjs';
 import { IProfile } from 'src/app/services/profile/IProfile';
 import { TwsService } from 'src/app/services/tws/tws.service';
-import { TickEx, TickDetails } from 'src/app/services/tws/Tick';
-import { IPageEvent } from 'src/app/shared/framework/paginator/paginator'
-import { Option } from 'src/app/shared/tws/options/option-table/option'
-import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
-import {Settings,JoinSettings} from 'src/app/utilities/settings'
-
-import * as ib2 from 'src/app/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
+import { TickDetails } from 'src/app/services/tws/Tick';
+import {Settings} from 'src/app/utilities/settings'
 
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
+import { DateUtilities } from 'src/app/utilities/dateUtilities';
 
 class NewsSettings
 {
@@ -104,11 +94,8 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy
 	@Input() index:number;
 	@Input() tick:TickDetails;
 
-	//articles = new Map<string,Results.INewsArticle>();
 	collection=new Array<Article>();
 	isActive:boolean;
 	static settings:Settings<NewsSettings>;
 	viewPromise:Promise<boolean>;
-
-	//pageSettings = new Settings<PageSettings>( PageSettings, 'OptnTabCmpnnt', this.profile );
 }

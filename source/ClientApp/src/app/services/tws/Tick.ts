@@ -11,22 +11,11 @@ import { TwsService } from './tws.service';
 import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 
-/*
-export interface ITicker
-{
-	onGenericTick( type:Results.ETickType, value:number ):void;
-	onPriceTick( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void;
-	onSizeTick( type:Results.ETickType, size:number ):void;
-	onStringTick( type:Results.ETickType, value:string ):void;
-	onEndTick():void;
-}
-*/
 /*just ITickObserver*/
 export class Tick implements ITickObserver
 {
 	constructor( public isMarketOpen:boolean )
 	{
-		//console.log( `isMarketOpen=${isMarketOpen}` );
 	}
 	generic( type:Results.ETickType, value:number ):void
 	{
@@ -37,8 +26,13 @@ export class Tick implements ITickObserver
 	}
 	price( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
 	{
-		if( type==Results.ETickType.ClosePrice && this.isMarketOpen )
-			this.close = price;
+		if( type==Results.ETickType.ClosePrice )
+		{
+			if( this.isMarketOpen )
+				this.close = price;
+			else
+				this.last = price;//for options.
+		}
 		else if( type==Results.ETickType.BidPrice )
 			this.bid = price;
 		else if( type==Results.ETickType.AskPrice )
@@ -92,7 +86,6 @@ export class Tick implements ITickObserver
 	}
 	onEndTick():void
 	{
-		//console.log( `onEndTick( '${reqId}' )` );
 	}
 	complete():void
 	{
@@ -139,7 +132,10 @@ export class Tick implements ITickObserver
 	markPrice:number;
 	open:number;
 	private _optionCalc = new Map<Results.ETickType,Results.IOptionCalculation>();
-	get last(){return this.delay ? this._lastDelay || this._last : this._last;} set last(value)
+	get last()
+	{
+		return this.delay ? this._lastDelay || this._last : this._last;
+	} set last(value)
 	{
 		this._last = value;
 		if( this.isMarketOpen || value>0 )
@@ -211,11 +207,10 @@ export class TickEx extends Tick
 	}
 
 	get contract():IB.IContract{ return this._contract; }
-	//get marketValue():number{return this.last*this.position;}
 	get contractId(){ return this.contract.id; }
 	get currentPrice():number{ return this.isOption ? super.currentPrice : this.last>=this.bid && this.last<=this.ask ? this.last : this.last<this.bid ? this.bid : this.ask; }
 
-	get display():string{var contract = this.contract; return this.isOption ? `${contract.symbol} ${MarketUtilities.optionDisplayFromDays(contract.expiration)} ${contract.strike} ${contract.right}` : contract.symbol; }
+	get display():string{var contract = this.contract; return this.isOption ? `${contract.symbol} ${MarketUtilities.optionDayDisplay(contract.expiration)} ${contract.strike} ${contract.right}` : contract.symbol; }
 	get expiration():number{ return this.contract.expiration; }
 	get isCall(){ return this.contract.right==IB.SecurityRight.Call; }
 	get isOption(){ return this.contract.securityType==IB.SecurityType.Option; }
@@ -226,11 +221,8 @@ export class TickEx extends Tick
 	get change():number
 	{
 		var change  = this.close>0 ? this.currentPrice-this.close : 0;
-//		if( !this.isOption )
-//			console.log( `last='${this.currentPrice}'.` );
 		return change;
 	}
-//	isMarketOpen:boolean;
 }
 
 export class TickDetails extends TickEx

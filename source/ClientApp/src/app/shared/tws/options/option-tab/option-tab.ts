@@ -6,7 +6,7 @@ import {IErrorService} from 'src/app/services/error/IErrorService'
 import { IProfile } from 'src/app/services/profile/IProfile';
 import { TwsService } from 'src/app/services/tws/tws.service';
 import { TickDetails } from 'src/app/services/tws/Tick';
-import { IPageEvent } from 'src/app/shared/framework/paginator/paginator'
+import { PageEvent } from 'src/app/shared/framework/paginator/paginator'
 import { Option } from 'src/app/shared/tws/options/option-table/option'
 import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
 import {Settings,JoinSettings} from 'src/app/utilities/settings'
@@ -18,19 +18,17 @@ import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
+import { Sort } from '@angular/material/sort';
 
-
-class PageSettings implements IPageEvent
+export class PageSettings //implements IPageEvent
 {
 	assign( value:any )
 	{
-		if( value.pageSize!=undefined )
-			this.pageSize = value.pageSize;
-		if( value.startIndex!=undefined )
-			this.startIndex = value.startIndex;
+		if( value.tableLength!=undefined )
+			this.tableLength = value.tableLength;
 	}
-	pageSize:number=12;
-	startIndex:number=0;
+	tableLength:number=12;
+	sort:Sort;
 };
 
 
@@ -41,7 +39,7 @@ class SymbolSettings
 		this.type = value.type;
 		this.expiration = value.expiration;
 	}
-	type:number=1;
+	type:IB.SecurityRight=IB.SecurityRight.Put;
 	expiration:Day;
 	midPrice:number;
 }
@@ -51,15 +49,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IErrorService') private cnsl: IErrorService, @Inject('IProfile') private profile: IProfile )
 	{
-	/*	if( !OptionTabComponent.settingsPage )
-		{
-			OptionTabComponent.settingsPage  = new PageSettings();
-			this.profile.get<PageSettings>( OptionTabComponent.PageSettingsKey ).subscribe(
-			{
-				next: value =>{ if( value ) this.pageSize = value.pageSize; },
-				error: e =>{console.log(e)}
-			}
-		}*/
+
 	}
 	ngOnInit()
 	{
@@ -71,7 +61,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	ngOnDestroy()
 	{
 		this.settingsContainer.save();
-		this.pageSettings.save();
+		//this.pageSettings.save();
 	}
 	ngAfterViewInit()
 	{
@@ -93,7 +83,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 				for( let expiration of params.expirations )
 				{
 					this.expirations.push( expiration );
-					this.expirationDisplays.push( MarketUtilities.optionDisplayFromDays(expiration) );
+					this.expirationDisplays.push( MarketUtilities.optionDayDisplay(expiration) );
 				}
 				this.viewPromise = Promise.resolve(true);
 			}).catch( (e)=>{ console.error(e); this.cnsl.error(`Could not retrieve Options '${e.message}'.`, e); } );
@@ -101,28 +91,29 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	}
 	changeType = (event:MatRadioChange):void=>
 	{
-		console.log( `changeType - ${this.optionType=="1" ? "Calls" : this.optionType=="2" ? "Puts" : "Calls-Puts" }` );
-		this.settings.type==+this.optionType;
-		this.settingsContainer.save();
+		console.log( `changeType - ${this.optionType==IB.SecurityRight.Call ? "Calls" : this.optionType==IB.SecurityRight.Put ? "Puts" : "Calls-Puts" }` );
 }
 	onOptionsLengthChange( length:number )
 	{
 		this.lengthChange.next( length );
 	}
-	onOptionsStartIndexChange( index:number )
+	onOptionsStartIndexChange( indexMidPrice:[number,number] )
 	{
-		console.log( `OptionTab::onOptionsStartIndexChange( ${index} )` );
+		let [index,midPrice] = indexMidPrice;
+		console.log( `OptionTab::onOptionsStartIndexChange( index=${index}, midPrice=${midPrice} )` );
+		this.midPrice=midPrice;
 		this.startIndexChange.next( index );
 	}
 	onSelectionChange( option:Option )
 	{
 		this.selectedOption = option;
 	}
-	onPaginator( event:IPageEvent )
+	onPaginator( event:PageEvent )
 	{
-		this.pageInfo = event;
+		this.tableLength = event.pageLength;
+		//this.midPrice = need to get from table.length.toString.toString.toString.toString.
 		this.pageEvents.next( event );
-		this.pageSettings.save();
+		//this.pageSettings.save();
 	}
 
 	onTransactClick( buy:boolean )
@@ -153,15 +144,13 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	id:number;
 	set isActive(value:boolean){ /*if( */this._isActive=value;/* )this.run();*/} get isActive(){return this._isActive;} private _isActive: boolean=true;
 	@Input() index:number;
-	//@Input() symbol:string;
 	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickDetails;
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
-	optionType:string="2";
+
+	get optionType(){return this.settings.type;} set optionType(x){ if( x!=this.settings.type ){ this.settings.type=x; this.settingsContainer.save();} }; set optionTypeString(x){ this.optionType=+x; } get optionTypeString(){ return this.optionType.toString(); }
 	lengthChange: Subject<number> = new Subject<number>();
 	startIndexChange: Subject<number> = new Subject<number>();
-	//get pageSize(){ return this.pageSettings.value.pageSize; }
-	pageEvents = new Subject<IPageEvent>();
-	get pageInfo():IPageEvent{ return this.pageSettings.value; } set pageInfo(value:IPageEvent){ this.pageSettings.value.assign(value); }
+	pageEvents = new Subject<PageEvent>();
 	get contract(){ return this.detail?.contract; }
 	get detail(){ return this.tick?.detail; }
 	get expiration():Day
@@ -174,10 +163,11 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	expirations : Day[];
 	get expirationSelectedIndex(){ return this.settings.expiration && this.expirations ? Math.max(0, this.expirations.indexOf(this.settings.expiration)) : 0; }
 	set expirationSelectedIndex(value){ this.settings.expiration = value ? this.expirations[value] : undefined; }
-	get midPrice():number{ return this.settingsContainer.value.midPrice ?? this.tick.last; }
+	get midPrice():number{ return this.settingsContainer.value.midPrice ?? this.tick.last; } set midPrice(x:number){ if( this.midPrice!=x ){this.settingsContainer.value.midPrice = x; this.settingsContainer.save();} }
 	selectedOption:Option=null;
 	settingsContainer:Settings<SymbolSettings> = new Settings<SymbolSettings>( SymbolSettings, 'OptnTabCmpnnt.', this.profile );
 	get settings(){ return this.settingsContainer ? this.settingsContainer.value : null;}
+	get tableLength(){ return this.pageSettings.value.tableLength; } set tableLength(x){ if( x && this.pageSettings.value.tableLength!=x ){this.pageSettings.value.tableLength=x; this.pageSettings.save();} }
 	pageSettings = new Settings<PageSettings>( PageSettings, 'OptnTabCmpnnt', this.profile );
 	strikes:number[];
 	viewPromise:Promise<boolean>;

@@ -1,62 +1,112 @@
-<div class="example-container mat-elevation-z8" style="max-height: 660px; width: 1200px; align-content: center; margin: auto;  text-align: center;">
+<div class="example-container mat-elevation-z8" style="max-height: 660px; align-content: center; margin: auto;  text-align: center;">
 	<mat-table #mainTable matSort [dataSource]="pageContent" style="display: inherit;" class="mat-elevation-z8" (matSortChange)="sortData($event)">
+		<ng-container matColumnDef="call-oi">
+			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> OI </mat-header-cell>
+			<mat-cell class="numberField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)">{{x.call?.oi | number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-oiChange">
+			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> oiΔ </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)"> {{x.call.oiChange | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-volume">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Volume </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)"> {{x.call.volume | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-last">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Last </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)"> {{x.call.last | number:'1.2-2'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-bid_size">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Bid SZ </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)"> {{x.call.bidSize | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-bid">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Bid </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)"> {{x.call.bid | number:'1.2-2'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-ask">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Ask </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)"> {{x.call.ask | number:'1.2-2'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-ask_size">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Ask SZ </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)"> {{x.call.askSize | number:'1.0-0'}} </mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-value">
+			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Value </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)">{{x.call.value| number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-change">
+			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Change </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)">{{x.call.change | number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-exposure">
+			<mat-header-cell class="symbolField" *matHeaderCellDef> Exposure </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)">{{x.call.exposure| number:'1.0-0'}}</mat-cell>
+		</ng-container>
+		<ng-container matColumnDef="call-previousValue">
+			<mat-header-cell *matHeaderCellDef> Previous Value </mat-header-cell>
+			<mat-cell *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)">{{x.call.previousValue| number:'1.0-0'}}</mat-cell>
+		</ng-container>
+
 		<ng-container matColumnDef="expiration">
 			<mat-header-cell class="symbolField" *matHeaderCellDef> Expiration </mat-header-cell>
-			<mat-cell class="symbolField" *matCellDef="let element">{{element.expiration}}</mat-cell>
+			<mat-cell class="symbolField" *matCellDef="let x">{{x.expiration}}</mat-cell>
 		</ng-container>
 		<ng-container matColumnDef="strike">
-			<mat-header-cell class="numberField" *matHeaderCellDef> Strike </mat-header-cell>
-			<mat-cell class="numberField" *matCellDef="let element">{{element.strike}}</mat-cell>
+			<mat-header-cell class="numberHeader" *matHeaderCellDef> Strike </mat-header-cell>
+			<mat-cell class="numberHeader" [class.verticalBoundry]="optionType==3" *matCellDef="let x">{{x.strike}}</mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="oi">
+
+		<ng-container matColumnDef="put-oi">
 			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> OI </mat-header-cell>
-			<mat-cell class="numberField" *matCellDef="let element">{{element.oi | number:'1.0-0'}}</mat-cell>
+			<mat-cell class="numberField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.strike">{{x.put?.oi | number:'1.0-0'}}</mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="oiChange">
+		<ng-container matColumnDef="put-oiChange">
 			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> oiΔ </mat-header-cell>
-			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.oiChange | number:'1.0-0'}} </mat-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)"> {{x.put.oiChange | number:'1.0-0'}} </mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="volume">
+		<ng-container matColumnDef="put-volume">
 			<mat-header-cell class="numberField" *matHeaderCellDef> Volume </mat-header-cell>
-			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.volume | number:'1.0-0'}} </mat-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)"> {{x.put.volume | number:'1.0-0'}} </mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="last">
+		<ng-container matColumnDef="put-last">
 			<mat-header-cell class="numberField" *matHeaderCellDef> Last </mat-header-cell>
-			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.last | number:'1.2-2'}} </mat-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)"> {{x.put.last | number:'1.2-2'}} </mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="bid_size">
+		<ng-container matColumnDef="put-bid_size">
 			<mat-header-cell class="numberField" *matHeaderCellDef> Bid SZ </mat-header-cell>
-			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bidSize | number:'1.0-0'}} </mat-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)"> {{x.put.bidSize | number:'1.0-0'}} </mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="bid">
+		<ng-container matColumnDef="put-bid">
 			<mat-header-cell class="numberField" *matHeaderCellDef> Bid </mat-header-cell>
-			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bid | number:'1.2-2'}} </mat-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)"> {{x.put.bid | number:'1.2-2'}} </mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="ask">
+		<ng-container matColumnDef="put-ask">
 			<mat-header-cell class="numberField" *matHeaderCellDef> Ask </mat-header-cell>
-			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.ask | number:'1.2-2'}} </mat-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)"> {{x.put.ask | number:'1.2-2'}} </mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="ask_size">
+		<ng-container matColumnDef="put-ask_size">
 			<mat-header-cell class="numberField" *matHeaderCellDef> Ask SZ </mat-header-cell>
-			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.askSize | number:'1.0-0'}} </mat-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)"> {{x.put.askSize | number:'1.0-0'}} </mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="value">
+		<ng-container matColumnDef="put-value">
 			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Value </mat-header-cell>
-			<mat-cell class="symbolField" *matCellDef="let element">{{element.value| number:'1.0-0'}}</mat-cell>
+			<mat-cell class="symbolField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)">{{x.put.value| number:'1.0-0'}}</mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="change">
+		<ng-container matColumnDef="put-change">
 			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Change </mat-header-cell>
-			<mat-cell class="symbolField" *matCellDef="let element">{{element.change | number:'1.0-0'}}</mat-cell>
+			<mat-cell class="symbolField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)">{{x.put.change | number:'1.0-0'}}</mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="exposure">
+		<ng-container matColumnDef="put-exposure">
 			<mat-header-cell class="symbolField" *matHeaderCellDef> Exposure </mat-header-cell>
-			<mat-cell class="symbolField" *matCellDef="let element">{{element.exposure| number:'1.0-0'}}</mat-cell>
+			<mat-cell class="symbolField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)">{{x.put.exposure| number:'1.0-0'}}</mat-cell>
 		</ng-container>
-		<ng-container matColumnDef="previousValue">
+		<ng-container matColumnDef="put-previousValue">
 			<mat-header-cell *matHeaderCellDef> Previous Value </mat-header-cell>
-			<mat-cell *matCellDef="let element">{{element.previousValue| number:'1.0-0'}}</mat-cell>
+			<mat-cell *matCellDef="let x;" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)">{{x.put.previousValue| number:'1.0-0'}}</mat-cell>
 		</ng-container>
 		<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-		<mat-row mat-row *matRowDef="let row; let i=index; columns: displayedColumns;" [class.highlight]="selectedOption==row" [class.outOfMoney]="row.contract.right==1 ? price<row.strike : row.strike>price" (click)="cellClick(row)" (dblclick)="cellDblClick(row)"></mat-row>
+		<mat-row mat-row *matRowDef="let row; let i=index; columns: displayedColumns;" (dblclick)="cellDblClick(row)"></mat-row>
 	</mat-table>
 </div>

@@ -16,9 +16,9 @@ export class MarketUtilities
 			if( value.getUTCFullYear()==2020 )
 			{
 				isHoliday = /*(value.getUTCMonth()==3 && value.getUTCDate()==10)
-					||*/ ( value.getUTCMonth()==6 && value.getUTCDate()==3 )
+					|| ( value.getUTCMonth()==6 && value.getUTCDate()==3 )
 					|| ( value.getUTCMonth()==8 && value.getUTCDate()==7 )
-					|| ( value.getUTCMonth()==10 && value.getUTCDate()==26 )
+					||*/ ( value.getUTCMonth()==10 && value.getUTCDate()==26 )
 					|| ( value.getUTCMonth()==11 && value.getUTCDate()==25 );
 			}
 		}
@@ -91,10 +91,6 @@ export class MarketUtilities
 		const day = MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDate(value, tradingHours) );
 		return day;
 	}
-	/*static currentTradingDay( now?:Day, tradingHours?:Results.IContractHours ):Day//TODO remove only works durring non-trading hours.
-	{
-		return MarketUtilities.nextTradingDay( MarketUtilities.previousTradingDay(now, tradingHours) );
-	}*/
 
 	static isMarketOpen2( exchange:IB.Exchanges, secType:IB.SecurityType, date:Date=new Date() )
 	{
@@ -111,14 +107,7 @@ export class MarketUtilities
 	static isLiquid( details:Results.IContractDetail )
 	{
 		return MarketUtilities.contractHours(details.liquidHours).start*1000 < new Date().getTime();
-	/*		var now = new Date().getTime()/1000;
-		for( let openClose of details.tradingHours )
-		{
-			if( openClose.end )
-				return now>openClose.start && now<openClose.end;
 		}
-		return false;*/
-	}
 
 
 	static contractHours( tradingHours:Results.IContractHours[] ):Results.IContractHours
@@ -194,11 +183,9 @@ export class MarketUtilities
 		return !MarketUtilities.isDateHoliday( et )
 			&& secType=="STK" && et.getHours()>3 && ( et.getHours()<9 || (et.getHours()==9 && et.getMinutes()<30) );
 	}
-	static optionDisplayFromDays( expirationDays:number ):string
-	{
-		return MarketUtilities.optionDisplay( DateUtilities.fromDays(expirationDays) );
-	}
-	static optionDisplay( expiration:Date ):string
+
+	static optionDayDisplay( expirationDays:Day ):string{ return MarketUtilities.optionDateDisplay(DateUtilities.fromDays(expirationDays)); }
+	static optionDateDisplay( expiration:Date ):string
 	{
 		const now = new Date();
 		var result:string;
@@ -216,6 +203,8 @@ export class MarketUtilities
 			result = `${month}-${expiration.getDate()}`;
 		return result;
 	}
+
+	static optionDisplay( contract?:IB.IContract ):string{ return `${contract.symbol}(${MarketUtilities.optionDayDisplay(contract.expiration)})@${contract.strike}`; }
 //, '1.2-2'
 	static numberDisplay( value:number, decimalPipe: DecimalPipe ):string//TODO move to pipe
 	{

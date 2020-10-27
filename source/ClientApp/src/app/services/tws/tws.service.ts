@@ -127,7 +127,7 @@ class Connection
 				if( callback )
 					callback.optionCalculation( x.tickType, x.priceBased, x.impliedVolatility, x.delta, x.optionPrice, x.pvDividend, x.gamma, x.vega, x.theta, x.underlyingPrice )
 				else
-					this.cancelMarketData( [message.tickSize.requestId], `no callbacks for optionCalculation reqId='${message.tickSize.requestId}'` );
+					this.cancelMarketData( [x.requestId], `(${x.requestId})no callbacks for optionCalculation` );
 			}
 			else if( message.orderStatus || message.openOrder )
 			{

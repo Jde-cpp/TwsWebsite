@@ -29,23 +29,10 @@ export class OptionEntryDialog implements OnDestroy
 		this.option = data.option;
 		this.isBuy = data.isBuy;
 		for( let expiration of data.expirations )
-			this.expirations.set( expiration, MarketUtilities.optionDisplayFromDays(expiration) );
+			this.expirations.set( expiration, MarketUtilities.optionDayDisplay(expiration) );
 		this.limit = data.isBuy ? this.bid : this.ask;
 		this.underlying = data.underlying;
 		this.setStrikes( this.expiration, this.option.strike, this.option.isCall );
-		//this.bidSize = this.option.bidSize || 0;
-		//this.bid = this.option.bid;
-		//this.ask = this.option.ask;
-		//this.askSize = this.option.askSize || 0;
-		//this.tick = this.option.underlying;
-		//this.expirationDay = DateUtilities.toDays( this.option.expiration );
-		//this.strike = this.option.strike;
-		//this.isCall = this.option.isCall;
-		// if( this.limit==-1 )
-		// 	this.limit = this.tick.last;
-		//const delta = Math.round( (this.limit *.01)*100 )/100 * (data.isBuy ? -1 : 1);
-		//this.stop = this.limit+delta;
-		//this.stopLimit = this.stop+delta;
 	}
 
 	ngOnDestroy()
@@ -156,7 +143,6 @@ export class OptionEntryDialog implements OnDestroy
 	limit:number;
 	get optionTypeName(){ return this.isCall ? "Call" : "Put"; }
 	quantity:number=1;
-//	get strike(){ return this._strike;} set strike(value){ this._strike=value; } private _strike:number;
 	get strike(){ return this.option.strike;}
 	strikes = new Map<number,[number,number]>();
 	stop:number;

@@ -4,7 +4,6 @@ import { Subject,Observable, of, throwError } from 'rxjs';
 import{ TickSubject, TickObservable } from './ITickObserver'
 import {Order,OrderSubject,OrderObservable} from './IOrderObserver'
 import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'
-//import {IErrorService} from '../error/IErrorService'
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
 import {ObservableUtilities} from 'src/app/utilities/ObservableUtilities';
 
@@ -79,8 +78,6 @@ class Connection
 		{
 			if( message.tickPrice )
 			{
-				//if( message.tickPrice.tickType>9 )
-				//	console.log( `${message.tickPrice.tickType}` );
 				const callback = this.marketDataCallbacks.get( message.tickPrice.requestId );
 				if( callback )
 					callback.price( message.tickPrice.tickType, message.tickPrice.price, message.tickPrice.attributes );
@@ -93,10 +90,6 @@ class Connection
 				if( callback )
 				{
 					callback.generic( message.tickGeneric.tickType, message.tickGeneric.value );
-					if( message.tickGeneric.tickType==Results.ETickType.OPTION_HISTORICAL_VOL )
-						console.log( `OPTION_HISTORICAL_VOL=${message.tickGeneric.value}` );
-					else if( message.tickGeneric.tickType==Results.ETickType.OPTION_IMPLIED_VOL )
-						console.log( `OPTION_IMPLIED_VOL=${message.tickGeneric.value}` );
 				}
 				else
 					console.error( `no callbacks for tickGeneric reqId='${message.tickGeneric.requestId}'` );//todo stop request.
@@ -214,8 +207,13 @@ class Connection
 				const callback = this.contractCallbacks.get( id );
 				if( callback )
 					callback.next( message.contractDetails.details );
-				else
-					console.error( `no callbacks for ContractDetails reqId='${id}'` );
+				else if( this.testCallbacks.has(id) )
+				{
+					this.testCallbacks.get( id ).resolve( message.contractDetails.details );
+					this.testCallbacks.delete( id );
+				}
+
+				//	console.error( `no callbacks for ContractDetails reqId='${id}'` );
 			}
 			else if( message.options )
 				this.optionSummaryCallbacks.get( message.options.id )[0]( message.options );
@@ -225,8 +223,6 @@ class Connection
 				this.handleFundamentals( message.fundamentals );
 			else if( message.execution )
 				this.executionCallbacks.get( message.execution.id )?.execution( message.execution );
-			//else if( message.optionExchanges )
-			//	this.optionParamCallbacks.get( message.optionExchanges.requestId )?.resolve( message.optionExchanges.exchanges );
 			else if( message.error )
 				this.handleError( message.error );
 			else if( message.message )
@@ -269,11 +265,6 @@ class Connection
 					else
 						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
 				}
-/*will not happen		else if( typeId==Results.EResults.SecurityDefinitionOptionParameterEnd )
-				{
-					this.optionParamCallbacks.get( message.message.intValue ).complete();
-					this.optionParamCallbacks.delete( message.message.intValue );
-				}*/
 				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
 				{
 					this.testCallbacks.get( message.message.intValue ).resolve( true );

@@ -19,8 +19,12 @@ export class Tick implements ITickObserver
 	}
 	generic( type:Results.ETickType, value:number ):void
 	{
-		if( type==49 )
+		if( type==Results.ETickType.Halted )
 			this.halted = value!=0;
+		else if( type==Results.ETickType.OPTION_HISTORICAL_VOL )
+			this.volatilityHistorical = value;
+		else if( type==Results.ETickType.OPTION_IMPLIED_VOL )
+			this.volatilityImplied = value;
 		else if( type!=Results.ETickType.SHORTABLE )
 			console.log( `onGenericTick( '${Results.ETickType[type]}', '${value}')` );
 	}
@@ -145,6 +149,8 @@ export class Tick implements ITickObserver
 		}
 	} _last:number; _lastDelay:number; lastSize:number;
 	shortableAvailable:number;
+	volatilityHistorical:number;
+	volatilityImplied:number;
 	get volume(){return this._volume;} set volume(value)
 	{
 		if( this.isMarketOpen || value>0 )

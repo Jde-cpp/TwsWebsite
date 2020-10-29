@@ -63,10 +63,24 @@ div.table
 .highlightHorizontal
 {
 	@extend .cell;
-	background-image:linear-gradient( hsla(0,0%,0%,.2) 100%, transparent 100% ); // darker
+	background-image:linear-gradient( hsla(0,0%,0%,.15) 100%, transparent 100% ); // darker
 	margin-top: -1px;
 	margin-bottom: -1px;
 	border-bottom-color:  orange;
 	border-top-color: orange;
 }
 
+.row:hover
+{
+	@extend .highlightHorizontal;
+	border-bottom-width: 2px;
+}
+
+table.mat-table
+{
+	display: table;
+}
+.stdDev
+{
+	background-color: darkblue;
+}

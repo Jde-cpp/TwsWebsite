@@ -20,8 +20,7 @@ import * as IbRequests from 'src/app/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { DateUtilities, Day } from 'src/app/utilities/dateUtilities';
 import { PageSettings } from '../option-tab/option-tab';
-
-//enum OptionType{Call=1,Put=2,Combined=3}
+import { max } from 'rxjs/operators';
 
 @Component({ selector: 'option-table', styleUrls: ['option-table.scss'], templateUrl: './option-table.html' })
 export class OptionTableComponent implements OnInit, OnDestroy
@@ -132,13 +131,14 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			this.options = data;
 			return;
     	}
-  		const multiplier = sort.direction === 'asc' ? 1 : -1;
+		const multiplier = sort.direction === 'asc' ? 1 : -1;
+		const isCall = sort.active.startsWith( "call" );
+		let field = sort.active=="strike" || sort.active=="expiration" ? sort.active : sort.active.substring( isCall ? 5 : 4 );
     	this.options = data.sort((aStrike, bStrike) =>
     	{
 			let aValue = 0; let bValue = 0;
-			const isCall = sort.active.startsWith( "call" );
 			const a = isCall ? aStrike.call : aStrike.put, b = isCall ? bStrike.call : bStrike.put;
-		  	switch (sort.active)
+		  	switch( field )
 		  	{
 			case 'value':
 				aValue = a.value; bValue = b.value;
@@ -152,8 +152,14 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			case 'oiChange':
 				aValue = a.oiChange; bValue = b.oiChange;
 				break;
+			case 'strike':
+				aValue = a.strike; bValue = b.strike;
+				break;
+			case 'expiration':
+				aValue = a.expiration; bValue = b.expiration;
+				break;
 			default:
-				console.error( `unknown sort'${sort.active}'` );
+				console.error( `unknown sort'${field}'` );
 			}
 			return (aValue<bValue ? -1 : 1)*multiplier;
 		});
@@ -204,9 +210,8 @@ export class OptionTableComponent implements OnInit, OnDestroy
 				console.log( "error could not find." );
 			var subscribe = ( option:Option )=>
 			{
-				//if( marketOpen )
+				if( marketOpen )
 				{
-					//var subscription = this.tws.reqMktData( option.contractId, [Requests.ETickList.PlPrice, Requests.ETickList.MiscStats], false );
 					var subscription = this.tws.reqMktData( option.contractId, [Requests.ETickList.PlPrice, Requests.ETickList.MiscStats], false );
 					this.subscriptions.set( option.contractId, subscription );
 					subscription.subscribe2( option );
@@ -242,12 +247,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		}
 		if( !foundSelected )
 			 this.selectedOption = null;
-		//console.log( `this._table._data=${this._table._data.length}` );
-		//if( this._table._data )
 		this._table.renderRows();
-		//console.log( `end renderRows - this._table._data=${this._table._data.length}` );
-		//else
-		 //   console.log('no data');
 	}
 
 	cellClick( row:OptionStrike, option:Option )
@@ -308,6 +308,22 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	get pageLength():number{ return this.pageSettings.tableLength; } set pageLength(x){ this.pageSettings.tableLength=x; }
 	@Input() set pageSettings(x){ this._pageSettings=x;} get pageSettings(){return this._pageSettings;} _pageSettings:PageSettings; //set pageSettings(x){ this.pageSettings; } get tableLength(){ return this.pageInfo.pageLength; }
 	@Input() tick:TickDetails;
+	get volatilityHistorical():number{ return this.tick.volatilityHistorical; }
+	get volatilityImplied(){ return this.tick.volatilityImplied; }
+	stdDev( x:OptionStrike )
+	{
+		const days = x.expiration-MarketUtilities.currentTradingDay( null, this.tick.detail.tradingHours[0] )+1;
+		const price = this.tick.last;
+		const underlyingStdDev = this.volatilityHistorical/Math.pow(252/days, .5)*this.tick.last;
+		const diff = Math.abs( price-x.strike );
+		return diff/( underlyingStdDev/2 );
+	}
+	strikeBackground( x:OptionStrike )
+	{
+		const stdDev = Math.ceil( this.stdDev(x) );
+		return stdDev>3 ? "inherit" : `rgba( 0, 0, 139, ${stdDev==1 ? 1 : stdDev==2 ? .67 : .33} )`;
+	}
+
 
 	@Output() lengthChange = new EventEmitter<number>();
 	@Output() selectionChange = new EventEmitter<Option>();
@@ -324,7 +340,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	selectedOption:Option|null=null;
 	get startIndex(){ return this._startIndex; } set startIndex(x){ if( this._startIndex!=x ){ this._startIndex=x; this.startIndexChange.emit( [this._startIndex,this.midPrice] );} } private _startIndex:number;
 	setPrices = false;
-	get sort(){ return this.pageSettings.sort; } set sort(x){ if(x.active!=this.pageSettings.sort.active || x.direction!=this.pageSettings.sort.direction ){this.pageSettings.sort=x; this.sortChange.emit(x);} }
+	get sort(){ return this.pageSettings.sort; } set sort(x){ let sort = this.pageSettings.sort; if(x.active!=(sort?.active || "strike") || x.direction!=(sort?.direction || "asc") ){this.pageSettings.sort=x; this.sortChange.emit(x);} }
 	subscriptions = new Map<number,TickObservable>();
 	viewPromise:Promise<boolean>;
 }

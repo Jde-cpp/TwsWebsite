@@ -20,9 +20,9 @@
 		<fieldset style="float: left;width: 25%;">
 			<legend>Amount {{contract.currency}}</legend>
 			<table>
-				<tr><td class="rowHeader">Amount</td><td class="number">{{order.quantity*order.limit | number:'1.0-0'}}</td></tr>
+				<tr><td class="rowHeader">Amount</td><td class="number">{{amount | number:'1.0-0'}}</td></tr>
 				<tr><td class="rowHeader">Cmmssn</td><td class="number">{{state.minCommission| number:'1.2-2'}}...{{state.maxCommission| number:'1.2-2'}}</td></tr>
-				<tr><td class="rowHeader">Total</td><td class="number">≈{{order.quantity*order.limit+(state.minCommission+state.maxCommission)/2 | number:'1.0-0' }}</td></tr>
+				<tr><td class="rowHeader">Total</td><td class="number">≈{{amount+(state.minCommission+state.maxCommission)/2 | number:'1.0-0' }}</td></tr>
 			</table>
 		</fieldset>
 		<fieldset style="float: left;width: 63%;">

@@ -1,5 +1,5 @@
 <div class="example-container mat-elevation-z8" style="max-height: 660px; align-content: center; margin: auto;  text-align: center;">
-	<mat-table #mainTable matSort [dataSource]="pageContent" style="display: inherit;" class="mat-elevation-z8" (matSortChange)="sortData($event)">
+	<mat-table #mainTable matSort [dataSource]="pageContent" class="mat-elevation-z8" [matSortActive]="sort?.active || 'strike'" [matSortDirection]="sort?.direction || 'asc'" (matSortChange)="sortData($event)">
 		<ng-container matColumnDef="call-oi">
 			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> OI </mat-header-cell>
 			<mat-cell class="numberField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)">{{x.call?.oi | number:'1.0-0'}}</mat-cell>
@@ -50,12 +50,12 @@
 		</ng-container>
 
 		<ng-container matColumnDef="expiration">
-			<mat-header-cell class="symbolField" *matHeaderCellDef> Expiration </mat-header-cell>
+			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Expiration </mat-header-cell>
 			<mat-cell class="symbolField" *matCellDef="let x">{{x.expiration}}</mat-cell>
 		</ng-container>
 		<ng-container matColumnDef="strike">
-			<mat-header-cell class="numberHeader" *matHeaderCellDef> Strike </mat-header-cell>
-			<mat-cell class="numberHeader" [class.verticalBoundry]="optionType==3" *matCellDef="let x">{{x.strike}}</mat-cell>
+			<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> Strike </mat-header-cell>
+			<mat-cell class="numberHeader" [title]="stdDev(x) | number:'1.1-1'" [style.background]="strikeBackground(x)" [class.verticalBoundry]="optionType==3" *matCellDef="let x">{{x.strike}}</mat-cell>
 		</ng-container>
 
 		<ng-container matColumnDef="put-oi">
@@ -107,6 +107,6 @@
 			<mat-cell *matCellDef="let x;" [class.highlightHorizontal]="selectedOption==x.put" [class.outOfMoney]="price<x.put.strike" (click)="cellClick(row, x.put)">{{x.put.previousValue| number:'1.0-0'}}</mat-cell>
 		</ng-container>
 		<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-		<mat-row mat-row *matRowDef="let row; let i=index; columns: displayedColumns;" (dblclick)="cellDblClick(row)"></mat-row>
+		<mat-row mat-row *matRowDef="let row; let i=index; columns: displayedColumns;" class="row" (dblclick)="cellDblClick(row)"></mat-row>
 	</mat-table>
 </div>

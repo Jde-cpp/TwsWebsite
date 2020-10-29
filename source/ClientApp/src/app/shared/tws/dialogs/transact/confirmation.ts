@@ -1,10 +1,7 @@
 import {Component, Inject} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Data } from './transact';
-import { TickEx } from 'src/app/services/tws/Tick';
 import { TwsService } from 'src/app/services/tws/tws.service';
-import {Order,OrderSubject,OrderObservable} from 'src/app/services/tws/IOrderObserver'
-
+import {Option} from 'src/app/shared/tws/options/option-table/option'
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'src/app/proto/results';
@@ -12,8 +9,6 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class ConfirmationData
 {
-	transactData:Data;
-	subscription:OrderObservable;
 	order:Results.IOpenOrder
 	stop:number|null;
 	stopLimit:number|null;
@@ -23,12 +18,11 @@ export class ConfirmationDialog
 {
 	constructor( public dialogRef:MatDialogRef<ConfirmationDialog>, @Inject(MAT_DIALOG_DATA) public data:ConfirmationData, private tws : TwsService )
 	{
-		console.log( 'ConfirmationDialog' );
-		this.tws.reqContractSingle(this.contract).then( (x)=>this.detail = x );
+		this.tws.reqContractSingle( this.contract ).then( (x)=>this.detail = x ).catch( (e)=>console.log(e.Message) );
 		let subscription = this.tws.reqPositions( this.order.account );
 		subscription.subscribe(
 		{
-			next:  value=>
+			next:value=>
 			{
 				if( !value || value.contract.id==this.contract.id )
 				{
@@ -39,19 +33,15 @@ export class ConfirmationDialog
 			}
 		});
 	}
-	onCancelClick(): void
-	{
-	  this.dialogRef.close( null );
-	  //console.log( JSON.stringify(this.order) );
-	  //console.log( JSON.stringify(this.state) );
-	}
+	onCancelClick():void{ this.dialogRef.close( null ); }
 	onSubmitClick()
 	{
 		this.order.whatIf = false;
 		this.order.id = 0;
-		const subscription = this.tws.placeOrder( this.contract, this.order, this.data.stop, this.data.stopLimit );
+		const subscription = this.tws.placeOrder( this.contract, this.order, this.data.stop, this.data.stopLimit );//TODO something with subscription.
 		this.dialogRef.close( null );
 	}
+	get amount():number{ return this.order.quantity*this.order.limit*this.contract.multiplier; }
 	get backgroundColor():string
 	{
 		const red = this.isBuy ? 0 : 255;
@@ -59,19 +49,20 @@ export class ConfirmationDialog
 		const prefix = `rgba(${red},${green},0,`;
 		return `linear-gradient(to right, ${prefix}255),${prefix}0))`;
 	}
-	get contract(){ return this.status.contract;}
-	get description(){ return /*this.option ? this.option.description :*/ `${this.contract.symbol} - ${this.detail ? this.detail.longName : ''}`; }
+	get contract(){ return this.status.contract; }
+	get description()
+	{
+		const suffix = this.contract.securityType==IB.SecurityType.Option ? Option.getDescription( this.contract.expiration, this.contract.strike, this.contract.right==IB.SecurityRight.Call) : this.detail ? this.detail.longName : '';
+		return `${this.contract.symbol} - ${suffix}`;
+	}
 	detail:Results.IContractDetail;
 	get isBuy(){return this.order.isBuy;}
 	get order(){ return this.status.order; }
 	get orderQuantity(){ return this.order.quantity*(this.isBuy ? 1 : -1); }
 	get orderType(){ return IB.EOrderType[this.order.type]; }
-	//get orderDescription(){ return }
 	get state(){ return this.status.state; }
 	get status(){ return this.data.order; }
 	position:number|null=null;
-	get tick(){ return this.transactData.tick;}
 	get timeInForce(){ return this.order.timeInForce==IB.ETimeInForce.DayTif ? "Day" : IB.ETimeInForce[this.order.timeInForce]; }
-	get transactData(){ return this.data.transactData;}
 	submitting:boolean;
 }

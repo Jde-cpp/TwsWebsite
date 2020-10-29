@@ -7,7 +7,8 @@
 	<paginator (page)="onPaginator($event)" [pageLength]="tableLength" [lengthChange]="lengthChange.asObservable()" [startIndexChange]="startIndexChange.asObservable()"></paginator><!-- [startIndex]="pageInfo.startIndex" -->
 	<span><button mat-raised-button color="primary" [disabled]="selectedOption==null" style="margin-right:10px" (click)="onTransactClick(true)">Buy</button><button mat-raised-button color="warn" [disabled]="selectedOption==null" (click)="onTransactClick(false)" >Sell</button></span>
 	<mat-tab-group [(selectedIndex)]="expirationSelectedIndex" (selectedIndexChange)="expirationIndexChange($event)">  <!--[selectedIndex]="tabIndex"-->
-		<mat-tab *ngFor="let expiration of expirations; let index = index" [label]="expirationDisplays[index]">
+		<mat-tab *ngFor="let expiration of expirations; let index = index" >
+			<ng-template mat-tab-label>{{expirationDisplays[index]}}</ng-template>
 			<ng-template matTabContent>
 				<option-table [pageSettings]="pageSettings.value" [midPrice]="midPrice" [pageEvents]="pageEvents.asObservable()" [startExpiration]="expiration" [endExpiration]="expiration" [optionType]="optionType" [tick]="tick" (lengthChange)="onOptionsLengthChange($event)" (startIndexChange)="onOptionsStartIndexChange($event)" (selectionChange)="onSelectionChange($event)"></option-table>
 			</ng-template>

@@ -61,7 +61,6 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	ngOnDestroy()
 	{
 		this.settingsContainer.save();
-		//this.pageSettings.save();
 	}
 	ngAfterViewInit()
 	{
@@ -80,10 +79,11 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 				this.strikes = params.strikes;
 				this.expirationDisplays = [];
 				this.expirations = [];
+				const today = DateUtilities.toDays( new Date() );
 				for( let expiration of params.expirations )
 				{
 					this.expirations.push( expiration );
-					this.expirationDisplays.push( MarketUtilities.optionDayDisplay(expiration) );
+					this.expirationDisplays.push( `${MarketUtilities.optionDayDisplay(expiration)}(${expiration-today} days)` );
 				}
 				this.viewPromise = Promise.resolve(true);
 			}).catch( (e)=>{ console.error(e); this.cnsl.error(`Could not retrieve Options '${e.message}'.`, e); } );
@@ -100,7 +100,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	onOptionsStartIndexChange( indexMidPrice:[number,number] )
 	{
 		let [index,midPrice] = indexMidPrice;
-		console.log( `OptionTab::onOptionsStartIndexChange( index=${index}, midPrice=${midPrice} )` );
+		console.log( `OptionTab::onOptionsStartIndexChange( index='${index}', midPrice='${midPrice}' )` );
 		this.midPrice=midPrice;
 		this.startIndexChange.next( index );
 	}
@@ -111,32 +111,26 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	onPaginator( event:PageEvent )
 	{
 		this.tableLength = event.pageLength;
-		//this.midPrice = need to get from table.length.toString.toString.toString.toString.
 		this.pageEvents.next( event );
-		//this.pageSettings.save();
 	}
 
 	onTransactClick( buy:boolean )
 	{
-		this.tws.reqContractSingle( this.tick.contract ).then( (detail)=>
+		const dialogRef = this.dialog.open(OptionEntryDialog, {
+			width: '600px',
+			data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: this.tick.detail }
+		});
+		dialogRef.afterClosed().subscribe(result =>
 		{
-			const dialogRef = this.dialog.open(OptionEntryDialog, {
-				width: '600px',
-				data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: detail }
-			});
-			dialogRef.afterClosed().subscribe(result =>
-			{
-				// if( result && this.settings.limit!=result.limit )
-				// {
-				// 	this.settings.limit = result.limit;
-				// 	this.subscribe( this.applicationId, this.level );
-				// }
-			});
+			// if( result && this.settings.limit!=result.limit )
+			// {
+			// 	this.settings.limit = result.limit;
+			// 	this.subscribe( this.applicationId, this.level );
+			// }
 		});
 	}
 	expirationIndexChange( index )
 	{
-		//console.log( `expirationIndexChange( ${index} )` );
 		this.settings.expiration = index==0 ? 0 : this.expirations[index];
 		this.settingsContainer.save();
 	}

@@ -1,9 +1,10 @@
 import {Component, Inject, OnDestroy} from '@angular/core';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TickEx } from '../../../../services/tws/Tick';
 import{ TickObservable } from 'src/app/services/tws/ITickObserver'
 import { TwsService } from '../../../../services/tws/tws.service';
-import { Option } from 'src/app/shared/tws/options/option-table/option'
+import {Data} from '../transact/transact'
+import {ConfirmationDialog} from '../transact/confirmation'
 import * as IbResults from '../../../../proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import * as ib2 from 'src/app/proto/ib';
@@ -12,19 +13,17 @@ import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 import * as IbRequests from '../../../../proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 
-export class Data
+export class OptionEntryData
 {
 	isBuy:boolean;
 	option:TickEx;
 	expirations: number[];
-	//underlying: TickEx;
 	underlying:Results.IContractDetail;
-	//strikes:number[];
 }
 @Component( { templateUrl: 'option-entry.html', styleUrls:["option-entry.css"]} )
 export class OptionEntryDialog implements OnDestroy
 {
-	constructor( public dialogRef:MatDialogRef<OptionEntryDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private tws : TwsService )
+	constructor( public dialogRef:MatDialogRef<OptionEntryDialog>, @Inject(MAT_DIALOG_DATA) public data:OptionEntryData, private tws : TwsService, private dialog : MatDialog )
 	{
 		this.option = data.option;
 		this.isBuy = data.isBuy;
@@ -110,13 +109,29 @@ export class OptionEntryDialog implements OnDestroy
 	}
 	onSubmitClick():void
 	{
-		this.tws.placeOrder( this.data.option.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: false}, this.stop, this.stopLimit ).subscribe2(
+		const subscription = this.tws.placeOrder( this.data.option.contract, {isBuy:this.isBuy, quantity: this.quantity, limit: this.limit, transmit: true, whatIf: true}, this.stop, this.stopLimit );
+		let initial:Results.IOpenOrder;let shown = false;
+		subscription.subscribe2(
 		{
-			status: ( value:Results.IOrderStatus )=>{ console.log( `status='${value}'` ); },
-			open: ( value:Results.IOpenOrder )=>{ console.log( `open='${value}'` ); },
-			complete: ()=>{ console.log( `status=complete` ); },
-			error: (e)=>{ console.error( `error=${e.message}` ); }
+			status: ( value:Results.IOrderStatus )=>{ debugger; console.log( `status='${value}'` ); },
+			open: ( value:Results.IOpenOrder )=>
+			{
+				if( !initial && !value.state.equityWithLoanBefore )
+					initial = value;//1st one doesn't have margin.
+				else if( !shown )
+				{
+					shown = true;
+					this.dialogRef.close( null );
+					const dialogRef = this.dialog.open(ConfirmationDialog, {
+						width: '600px', autoFocus: false,
+						data: { order:value, stop: this.stop, stopLimit: this.stopLimit }
+					});
+				}
+			},
+			complete: ()=>{ debugger; console.log( `status=complete` ); },
+			error: (e)=>{ debugger; console.error( `error=${e.message}` ); }
 		});
+
 	}
 	updateTicker( expiration:number, strike:number )
 	{
@@ -136,7 +151,6 @@ export class OptionEntryDialog implements OnDestroy
 	get bidSize(){return this.option.bidSize || 0;}
 	get description(){ return `${this.option.display} - ${this.underlying.longName}`; }
 	expirations = new Map<number,string>();
-	//get expirationDay(){ return this._expirationDay;} set expirationDay(value){ this._expirationDay=value; } private _expirationDay:number;
 	get expiration(){ return this.option && this.option.expiration || 0; }
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){ if( this.isBuy!=value ){ this.limit = value ? this.bid : this.ask; this._isBuy=value ? "Buy" : "Sell";} } _isBuy:string;
 	get isCall(){ return this.option.isCall; } set isCall(x){ this.setOption( this.strike, this.expiration, x ); }

@@ -5,8 +5,7 @@ import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from '../../proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { BidiModule } from '@angular/cdk/bidi';
-import { interval } from 'rxjs';
+import { Option } from 'src/app/shared/tws/options/option-table/option'
 import { TwsService } from './tws.service';
 import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
 import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
@@ -173,8 +172,6 @@ export class TickEx extends Tick
 	setPreviousDay( bar:Results.IDaySummary ){ this.close = bar.close; }
 	setDaySummary( bar:Results.IDaySummary, previousDay:Day )
 	{
-		if( this.contract.symbol=="AAPL" )
-			console.log( `${this.contract.symbol} - ${DateUtilities.fromDays(bar.day)}` );
 		if( this.isMarketOpen && bar.day>previousDay )
 		{
 			this.high = bar.high;
@@ -216,14 +213,16 @@ export class TickEx extends Tick
 	get contractId(){ return this.contract.id; }
 	get currentPrice():number{ return this.isOption ? super.currentPrice : this.last>=this.bid && this.last<=this.ask ? this.last : this.last<this.bid ? this.bid : this.ask; }
 
-	get display():string{var contract = this.contract; return this.isOption ? `${contract.symbol} ${MarketUtilities.optionDayDisplay(contract.expiration)} ${contract.strike} ${contract.right}` : contract.symbol; }
+	static descriptionDetail( detail:Results.IContractDetail ){ return  this.descriptionOption(detail.contract.symbol, detail.contract.expiration, detail.contract.strike, detail.contract.right==IB.SecurityRight.Call); }
+	static descriptionOption( symbol, expiration, strike, isCall ){ return `${symbol} ${MarketUtilities.optionDayDisplay(expiration)} ${strike} ${isCall ? "Call" : "Put"}` }
+	get display():string{ return this.isOption ? TickEx.descriptionOption( this.contract.symbol, this.expiration, this.strike, this.isCall ) : this.contract.symbol;  }
 	get expiration():number{ return this.contract.expiration; }
 	get isCall(){ return this.contract.right==IB.SecurityRight.Call; }
 	get isOption(){ return this.contract.securityType==IB.SecurityType.Option; }
 	get oi():number{ return this.option ? this.option.openInterest : 0;}
 	get oiChange():number{ return this.option ? this.option.openInterest : 0; }
 	option:Results.IOption;
-	get strike():number{ return this.option.strike; }
+	get strike():number{ return this.contract.strike; }
 	get change():number
 	{
 		var change  = this.close>0 ? this.currentPrice-this.close : 0;

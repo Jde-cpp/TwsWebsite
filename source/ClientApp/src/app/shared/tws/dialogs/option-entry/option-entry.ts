@@ -149,7 +149,7 @@ export class OptionEntryDialog implements OnDestroy
 	}
 	get bid(){return this.option && this.option.bid || 0;}
 	get bidSize(){return this.option.bidSize || 0;}
-	get description(){ return `${this.option.display} - ${this.underlying.longName}`; }
+	get description(){ return this.option.display; }
 	expirations = new Map<number,string>();
 	get expiration(){ return this.option && this.option.expiration || 0; }
 	get isBuy(){return this._isBuy!="Sell";} set isBuy(value){ if( this.isBuy!=value ){ this.limit = value ? this.bid : this.ask; this._isBuy=value ? "Buy" : "Sell";} } _isBuy:string;

@@ -1,27 +1,28 @@
 import {Component, Inject} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { Tick } from '../../../../services/tws/Tick';
+import { TickDetails } from 'src/app/services/tws/Tick';
 import { TwsService } from '../../../../services/tws/tws.service';
 import { Holding } from 'src/app/pages/tws/portfolio/holding';
 
 import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbResults from 'src/app/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as IbResults from 'src/app/proto/results';
+//import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Data
 {
 	holding: Holding;
+	underlyingTick:TickDetails;
 }
 @Component( { templateUrl: 'roll-dialog.html', styleUrls:["roll-dialog.css"]} )
 export class RollDialog
 {
 	constructor( public dialogRef:MatDialogRef<RollDialog>, @Inject(MAT_DIALOG_DATA) public data:Data, private tws : TwsService )
 	{
-		const underlyingSet = ()=>
+		this.viewPromise = Promise.resolve( true );
+/*		const underlyingSet = ()=>
 		{
-			this.viewPromise = Promise.resolve( true );
 		};
 		if( this.contract.underlyingId )
 			underlyingSet();
@@ -33,8 +34,7 @@ export class RollDialog
 				underlyingSet();
 			} );
 		}
-
-
+*/
 		//this.tws.reqContractSingle( {id: this.contract.underlyingId} ).then( (underlying)=>{this.underlying = underlying;} );
 /*		let contract = {id: this.contract.id, securityType: IB.SecurityType.Option, strike:this.strike };
 		twsService.reqContract( contract ).subscribe(

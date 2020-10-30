@@ -6,6 +6,9 @@ import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
+export type Symbol = string;
+export type ContractPK = number;
+
 export class MarketUtilities
 {
 	static isDateHoliday( value:Date )
@@ -101,13 +104,17 @@ export class MarketUtilities
 	}
 	static isMarketOpen( details:Results.IContractDetail )
 	{
-		return MarketUtilities.contractHours(details.tradingHours)?.start*1000 < new Date().getTime();
+		return details.tradingHours
+			? MarketUtilities.contractHours(details.tradingHours)?.start*1000 < new Date().getTime()
+			: this.isMarketOpen2( details.contract.primaryExchange, details.contract.securityType );
 	}
 
 	static isLiquid( details:Results.IContractDetail )
 	{
-		return MarketUtilities.contractHours(details.liquidHours).start*1000 < new Date().getTime();
-		}
+		return details.liquidHours
+			? MarketUtilities.contractHours(details.liquidHours).start*1000 < new Date().getTime()
+			: this.isMarketOpen2( details.contract.primaryExchange, IB.SecurityType.Option );
+	}
 
 
 	static contractHours( tradingHours:Results.IContractHours[] ):Results.IContractHours

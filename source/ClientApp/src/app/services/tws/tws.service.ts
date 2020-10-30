@@ -17,6 +17,7 @@ import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from 'src/app/proto/watch';
 import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { DateUtilities } from 'src/app/utilities/dateUtilities';
+import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 
 
 type ResolveGeneric = (any) => void;
@@ -784,6 +785,21 @@ export class TwsService
 		}, false);
 	}
 	reqSymbol( symbol:string ):Promise<Results.IContractDetail[]>{ return this.reqContract({symbol: symbol}); }
+	reqSymbolSingle( symbol:string ):Promise<Results.IContractDetail>
+	{
+		return new Promise<Results.IContractDetail>( (resolve,reject)=>this.reqSymbol(symbol).then( (x)=>
+		{
+			for( let i=0; i<x.length && x.length>1; ++i )
+			{
+				if( x[i].contract.currency!=MarketUtilities.DefaultCurrency )
+					 x.splice( i, 1 );
+			}
+			if( x.length==1 )
+				resolve( x[0] );
+			else
+				reject( {error:{message:`'${symbol} returned ${x.length} records.`, values:x}} );
+		}).catch((e)=>reject(e)) );
+	}
 
 	reqAccountUpdates( accountNumber: string ):AccountUpdateType{ return this.connection.reqAccountUpdates( accountNumber ); }
 	reqPositions( accountNumber: string ):Observable<Results.IPositionMulti>{ return this.connection.reqPositions( accountNumber ); }

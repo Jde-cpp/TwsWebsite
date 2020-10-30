@@ -53,7 +53,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		//this.data = null;
 		let orders:Order[] = [];
-		this.subscription = this.tws.reqAllOpenOrders();//TODO cancel this.
+		this.subscription = this.tws.reqAllOpenOrders();
 		this.subscription.subscribe2(
 		{
 			status: (value:Results.IOrderStatus)=>
@@ -119,7 +119,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 			complete: ()=>
 			{
 				//console.log('complete2');
-				this.data = new DataSource(this.settings.sort, orders);
+				this.data = new DataSource( this.settings.sort, orders );
 			},
 			error:e=>{this.subscription=null;console.error(e); this.cnsle.error(e,null); }
 		});

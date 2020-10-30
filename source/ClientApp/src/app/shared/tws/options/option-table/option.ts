@@ -28,8 +28,6 @@ export class Option extends TickEx
 		this.last = last;
 		this.volume = volume;
 	}
-	static descriptionDetail( detail:Results.IContractDetail){ return  this.getDescription(detail.contract.expiration, detail.contract.strike, detail.contract.right==IB.SecurityRight.Call); }
-	static getDescription( expiration, strike, isCall ){ return `${MarketUtilities.optionDayDisplay(expiration)} ${strike} ${isCall ? "Call" : "Put"}` }
 
 	price( type:Results.ETickType, price:number, attributes:Results.ITickAttrib ):void
 	{
@@ -45,5 +43,5 @@ export class Option extends TickEx
 	get oiChange():number{ return this.option.oiChange; }
 	get value():number{ return (!this.last || this.last<this.bid || this.last>this.ask ? (this.ask+this.bid)/2 : this.last)*this.oi; }
 	get previousValue():number{ return (this.oi-this.oiChange)*this.option.previousPrice; }
-	get description(){ return Option.getDescription(this.expiration, this.strike, this.isCall); }
+	//get description(){ return Option.getDescription(this.expiration, this.strike, this.isCall); }
 }

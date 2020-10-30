@@ -1,6 +1,6 @@
 <h2 mat-dialog-title>Roll</h2>
 <mat-dialog-content *ngIf="viewPromise | async">
-	<option-table [startExpiration]="startExpiration" [startStrike]="strike" [endStrike]="strike" [optionType]="2" [contract]="underlyingContract"></option-table>
+	<option-table [startExpiration]="startExpiration" [startStrike]="strike" [endStrike]="strike" [optionType]="data.holding.contract.right" [tick]="data.underlyingTick"></option-table>
 	<!-- <combo>[Leg1]="holding"</combo> -->
 	<!-- <order-entry></order-entry> -->
 </mat-dialog-content>

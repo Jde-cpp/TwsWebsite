@@ -43,19 +43,9 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	}
 	onChangeSymbol( row:WatchRowComponent, symbol:string )
 	{
-		this.tws.reqSymbol( symbol ).then( (result)=>
+		this.tws.reqSymbolSingle( symbol ).then( (result)=>
 		{
-			for( let i=0; i<result.length && result.length>1; ++i )
-			{
-				if( result[i].contract.currency!=MarketUtilities.DefaultCurrency )
-					result.splice( i, 1 );
-			}
-			if( result.length!=1 )
-			{
-				console.warn( `(${symbol}) - returned '${result.length}' records.` );
-				return;
-			}
-			const detail = result[0];
+			const detail = result;
 			const constractId = detail.contract.id;
 			const existing = this.findContract( constractId );
 			if( !existing )

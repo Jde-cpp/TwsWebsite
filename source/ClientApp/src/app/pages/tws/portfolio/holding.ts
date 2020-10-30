@@ -1,9 +1,8 @@
-import { TickEx } from 'src/app/services/tws/Tick';
+import { TickDetails, TickEx } from 'src/app/services/tws/Tick';
 import * as ib from 'src/app/proto/ib';
 import IB = ib.Jde.Markets.Proto;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
 
 export class TermHoldingSummary
 {
@@ -49,11 +48,11 @@ export class Price
 	get price():number{ return this.bid<=0 || this.ask<=0 || (this.last>=this.bid && this.last<=this.ask) ? this.last : (this.bid+this.ask)/2; }
 }
 /*TickEx+Holding info*/
-export class Holding extends TickEx
+export class Holding extends TickDetails
 {
 	constructor( update:Results.IPortfolioUpdate )
 	{
-		super( update.contract, null );
+		super( {contract:update.contract} );
 		this.set( update );
 	}
 	set( update:Results.IPortfolioUpdate )
@@ -104,5 +103,4 @@ export class Holding extends TickEx
 	}
 	get pricePrevious(){ return this.previousDay?.last; }
 	get marketValuePrevious(){ return this.pricePrevious*this.position*this.contract.multiplier; }
-
 }

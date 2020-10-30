@@ -80,20 +80,11 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	{
 		if( symbol && symbol!=this.detail.contract.symbol )
 		{
-			this.tws.reqSymbol( symbol ).then( (results)=>
+			this.tws.reqSymbolSingle( symbol ).then( (result)=>
 			{
-				if( results.length>1 )
-				{
-					for( let i=0; i<results.length && results.length>1; ++i )
-					{
-						if( results[i].contract.currency!=MarketUtilities.DefaultCurrency )
-						    results.splice( i, 1 );
-					}
-				}
-				if( results.length==1 )
-					this.symbolEvent.next( results[0] );
+				this.symbolEvent.next( result );
 				this.symbolInput.nativeElement.value = this.detail.contract.symbol;
-			});
+			}).catch( (e)=>console.log(e.error?.message) );
 		}
 	}
 	onConfigurationClick()

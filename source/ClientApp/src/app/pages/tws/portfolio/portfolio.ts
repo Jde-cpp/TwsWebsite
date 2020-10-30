@@ -7,8 +7,7 @@ import { IProfile } from 'src/app/services/profile/IProfile';
 import {TickObservable} from 'src/app/services/tws/ITickObserver'
 import {Holding, TermHoldingSummary, Price} from './holding'
 import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
-import {TransactDialog, TransactDoModal} from 'src/app/shared/tws/dialogs/transact/transact'
-import {DateUtilities} from 'src/app/utilities/dateUtilities'
+import {TransactDoModal} from 'src/app/shared/tws/dialogs/transact/transact'
 
 import * as ib from 'src/app/proto/ib';
 import IB = ib.Jde.Markets.Proto;
@@ -16,10 +15,9 @@ import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'src/app/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import { subscribeOn } from 'rxjs/operators';
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { MarketUtilities, ContractPK } from 'src/app/utilities/marketUtilities';
 import { RollDialog } from 'src/app/shared/tws/dialogs/roll/roll-dialog';
-import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
+import { TickDetails } from 'src/app/services/tws/Tick';
 
 
 class Settings
@@ -111,7 +109,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		const contract = value.contract;
 		//console.log( `onPortfolioUpdate[${value.accountNumber}]${contract.symbol}x${value.position}=${value.marketValue}` );
 		const contractId = contract.id;
-		if( !this.holdings.some( (holding, i) =>
+		if( !this.holdings.some( (holding) =>
 		{
 			const found = holding.contract.id==contractId;
 			if( found )
@@ -130,7 +128,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			this.holdings.push( holding );
 			this._table.renderRows();
 			if( this.mktDataSubscriptions.has(contractId) )
-				console.error( `this.mktDataSubscriptions.has(${contractId})` );//should never be here, because not in holdings
+				console.error( `this.mktDataSubscriptions.has(${contractId})` );//should never be here, because not in holdings (option underlying?)
 			else
 			{
 				var isMarketOpen = MarketUtilities.isMarketOpen2( contract.primaryExchange, contract.securityType );
@@ -180,37 +178,84 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	{
 		console.log( `trade( '${event.toString()}' )` );
 	}
-
+	selectedUnderlying():Promise<Results.IContractDetail>
+	{
+		let underlyingId:ContractPK = this.selected.contract.underlyingId;
+		let detailPromise:Promise<Results.IContractDetail>;
+		if( underlyingId )
+		{
+			let underlyingTick = this.holdings.find( x=>x.contractId==underlyingId ) || this.underlying.get( underlyingId );
+			if( underlyingTick && underlyingTick.detail.marketName )
+				detailPromise = Promise.resolve( underlyingTick.detail );
+		}
+		return detailPromise ?? new Promise<Results.IContractDetail>( (resolve,reject)=>this.tws.reqSymbolSingle( this.selected.contract.symbol ).then( (detail)=>
+		{
+			this.selected.contract.underlyingId = detail.contract.id;
+			resolve( detail );
+		}).catch((e)=>reject(e)) );
+	}
 	roll()
 	{
-		console.log( `roll( '${event.toString()}' )` );
-		const dialogRef = this.dialog.open(RollDialog,
+		/*let underlyingId:ContractPK = this.selected.contract.underlyingId;
+		let detailPromise:Promise<Results.IContractDetail>;
+		let underlyingTick:TickDetails;
+		if( underlyingId )
 		{
-			width: '600px',
-			height: '600px',
-			data: { holding: this.selected }
-		});
-		dialogRef.afterClosed().subscribe(result =>
+			underlyingTick = this.holdings.find( x=>x.contractId==underlyingId ) || this.underlying.get( underlyingId );
+			if( underlyingTick && underlyingTick.detail.marketName )
+				detailPromise = Promise.resolve( underlyingTick.detail );
+		}
+		if( !detailPromise )
+			detailPromise = this.tws.reqSymbolSingle( this.selected.contract.symbol );*/
+		this.selectedUnderlying().then( (underlyingDetail)=>
 		{
-			// if( result && this.settings.limit!=result.limit )
-			// {
-			// 	this.settings.limit = result.limit;
-			// 	this.subscribe( this.applicationId, this.level );
-			// }
-		});
-	}
-	onTransactClick( buy:boolean )
-	{
-		if( this.selectedIsOption )
-		{
-			const dialogRef = this.dialog.open(OptionEntryDialog, { width: '600px', data: { option: this.selected, isBuy: buy, expirations: [], underlying: null } });
+			const underlyingId = underlyingDetail.contract.id;
+			let holdingTick = this.holdings.find( x=>x.contractId==underlyingId );
+			let underlyingTick:TickDetails;
+			let subscription:TickObservable;
+			if( !holdingTick )
+			{
+				underlyingTick = new TickDetails( underlyingDetail );
+				subscription = this.tws.reqMktData( underlyingId, [Requests.ETickList.PlPrice,Requests.ETickList.MiscStats] );
+				subscription.subscribe2( underlyingTick );
+			}
+			else if( !holdingTick.detail.longName )
+				holdingTick.detail = underlyingDetail;
+
+			const dialogRef = this.dialog.open( RollDialog,
+			{
+				width: '600px',
+				height: '600px',
+				data: { holding: this.selected, underlyingTick:holdingTick || underlyingTick }
+			} );
 			dialogRef.afterClosed().subscribe(result =>
 			{
+				if( subscription )
+					this.tws.cancelMktDataSingle( subscription );
 				// if( result && this.settings.limit!=result.limit )
 				// {
 				// 	this.settings.limit = result.limit;
 				// 	this.subscribe( this.applicationId, this.level );
 				// }
+			});
+
+		}).catch( (e)=>console.log( e?.error.message) );
+	}
+	onTransactClick( buy:boolean )
+	{
+		if( this.selectedIsOption )
+		{
+			this.selectedUnderlying().then( (detail)=>
+			{
+				const dialogRef = this.dialog.open(OptionEntryDialog, { width: '600px', data: { option: this.selected, isBuy: buy, expirations: [], underlying: detail } });
+				dialogRef.afterClosed().subscribe(result =>
+				{
+					// if( result && this.settings.limit!=result.limit )
+					// {
+					// 	this.settings.limit = result.limit;
+					// 	this.subscribe( this.applicationId, this.level );
+					// }
+				});
 			});
 		}
 		else
@@ -256,7 +301,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 //		this.dialog.open( DetailsDialog, {width: '600px', data: row} );
 	}
 
-	holdings: Holding[] = new Array<Holding>();
+	holdings = new Array<Holding>();
+	underlying = new Map<ContractPK,TickDetails>();
 	long:TermHoldingSummary=new TermHoldingSummary();
 	short:TermHoldingSummary=new TermHoldingSummary();
 	connected = false;

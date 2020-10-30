@@ -6,6 +6,7 @@ import * as ib2 from 'src/app/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'src/app/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
+import { TickEx } from 'src/app/services/tws/Tick';
 
 export class ConfirmationData
 {
@@ -41,7 +42,7 @@ export class ConfirmationDialog
 		const subscription = this.tws.placeOrder( this.contract, this.order, this.data.stop, this.data.stopLimit );//TODO something with subscription.
 		this.dialogRef.close( null );
 	}
-	get amount():number{ return this.order.quantity*this.order.limit*this.contract.multiplier; }
+	get amount():number{ return this.order.quantity*this.order.limit*Math.max(this.contract.multiplier,1); }
 	get backgroundColor():string
 	{
 		const red = this.isBuy ? 0 : 255;
@@ -52,7 +53,7 @@ export class ConfirmationDialog
 	get contract(){ return this.status.contract; }
 	get description()
 	{
-		const suffix = this.contract.securityType==IB.SecurityType.Option ? Option.getDescription( this.contract.expiration, this.contract.strike, this.contract.right==IB.SecurityRight.Call) : this.detail ? this.detail.longName : '';
+		const suffix = this.contract.securityType==IB.SecurityType.Option ? TickEx.descriptionOption( this.contract.symbol, this.contract.expiration, this.contract.strike, this.contract.right==IB.SecurityRight.Call) : this.detail ? this.detail.longName : '';
 		return `${this.contract.symbol} - ${suffix}`;
 	}
 	detail:Results.IContractDetail;

@@ -20,9 +20,9 @@ export class Tick implements ITickObserver
 	{
 		if( type==Results.ETickType.Halted )
 			this.halted = value!=0;
-		else if( type==Results.ETickType.OPTION_HISTORICAL_VOL )
+		else if( type==Results.ETickType.OptionHistoricalVol )
 			this.volatilityHistorical = value;
-		else if( type==Results.ETickType.OPTION_IMPLIED_VOL )
+		else if( type==Results.ETickType.OptionImpliedVol )
 			this.volatilityImplied = value;
 		else if( type!=Results.ETickType.SHORTABLE )
 			console.log( `onGenericTick( '${Results.ETickType[type]}', '${value}')` );

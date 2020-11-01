@@ -158,7 +158,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		//}
 		if( this.subscription )
 			this.tws.cancelMktDataSingle( this.subscription );
-		const ticks = [Requests.ETickList.Inventory, Requests.ETickList.HistoricalVolatility, Requests.ETickList.ImpliedVolatility, (this.tick.isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
+		const ticks = [Requests.ETickList.Inventory, Requests.ETickList.HistoricalVolatility_, Requests.ETickList.ImpliedVolatility_, (this.tick.isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
 /*		if( isMarketOpen )
 			ticks.push( Requests.ETickList.PlPrice );
 		else*/

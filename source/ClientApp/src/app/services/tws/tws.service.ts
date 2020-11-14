@@ -722,6 +722,11 @@ class Connection
 		});
 	}
 
+	blockly( bytes:Uint8Array ):Promise<Uint8Array>
+	{
+		return this.sendPromise2<Requests.ICustom,Uint8Array>( "blockly", {"id": this.getRequestId(), "message": bytes}, (result:Results.IMessageUnion)=>{return result.custom;}, (x:Results.Custom)=>{return x.message;} );
+	}
+
 	sendGenericPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
 		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"id": this.getRequestId(), "type": type, "ids": ids}, result, transform );
@@ -806,6 +811,7 @@ export class TwsService
 	cancelPositions( subscription: Observable<Results.IPositionMulti> ):void{ return this.connection.cancelPositions( subscription ); }
 	accountUpdatesUnsubscribe( requests:Map<string,AccountUpdateType> ){ this.connection.accountUpdatesUnsubscribe(requests); };
 	accountUpdateUnsubscribe( accountId:string, request:AccountUpdateType ){ this.connection.accountUpdateUnsubscribe(accountId,request); };
+	blockly( bytes:Uint8Array ):Promise<Uint8Array>{ return this.connection.blockly(bytes); }
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
 	cancelMktDataSingle( x:TickObservable ):void{ new Map<number,TickObservable>( [[0,x]]).values(); }

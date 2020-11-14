@@ -4,19 +4,21 @@
    <img class="docs-angular-logo" src="assets/img/homepage/angular-white-transparent.svg" alt="angular">
 		<span>Material</span>
   </a> -->
-  <a mat-button class="docs-navbar-hide-small docs-button" routerLink="portfolio">Portfolio</a>
-  <a mat-button class="docs-navbar-hide-small docs-button" routerLink="snapshot">Snapshot</a>
-  <a mat-button class="docs-navbar-hide-small docs-button" routerLink="trades">Trades</a>
-  <a mat-button class="docs-navbar-hide-small docs-button" routerLink="orders">Orders</a>
-  <a mat-button class="docs-navbar-hide-small docs-button" routerLink="watch">Watch</a>
-  <!-- <a mat-button class="docs-navbar-hide-small docs-button" *ngFor="let key of sectionKeys" [routerLink]="key">{{sections[key].name}}</a> -->
+	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="portfolio">Portfolio</a>
+	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="snapshot">Snapshot</a>
+	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="trades">Trades</a>
+	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="orders">Orders</a>
+	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="watch">Watch</a>
+  	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="blockly">Blockly</a>
+	<a mat-button class="docs-navbar-hide-small docs-button" *ngFor="let key of sectionKeys" [routerLink]="key">{{sections[key].name}}</a>
   <div class="flex-spacer"></div>
   <theme-picker></theme-picker>
 </nav>
 <nav class="docs-navbar docs-navbar-show-small">
 	<a mat-button class="docs-navbar-link" routerLink="portfolio">Portfolio</a>
 	<a mat-button class="docs-navbar-link" routerLink="snapshot">Snapshot</a>
-	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="trades">Trades</a>
-	<a mat-button class="docs-navbar-hide-small docs-button" routerLink="watch">Watch</a>
-	 <!-- <a mat-button class="docs-navbar-link" *ngFor="let key of sectionKeys" [routerLink]="key">{{sections[key].name}}</a> -->
+	<a mat-button class="docs-navbar-link" routerLink="trades">Trades</a>
+	<a mat-button class="docs-navbar-link" routerLink="watch">Watch</a>
+	<a mat-button class="docs-navbar-link" routerLink="blockly">Blockly</a>
+	<a mat-button class="docs-navbar-link" *ngFor="let key of sectionKeys" [routerLink]="key">{{sections[key].name}}</a>
 </nav>

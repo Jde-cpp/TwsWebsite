@@ -1,0 +1,9 @@
+<div class="docs-component-viewer-nav" *ngIf="viewPromise | async">
+  <div class="docs-component-viewer-nav-content">
+      <mat-nav-list>
+        <a mat-list-item *ngFor="let function of functions.functions" [routerLink]="'/blockly/' + function.id"  routerLinkActive="docs-component-viewer-sidenav-item-selected"  [attr.aria-current]="currentItemId === function.id ? 'page': 'false'">
+          {{function.name}}
+        </a>
+      </mat-nav-list>
+  </div>
+</div>

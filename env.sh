@@ -8,4 +8,5 @@ appDir=$clientDir/src/app;
 materialDir=$(dirname $(readlink -e $baseDir/../MaterialSite/source/projects/material-site/src))/src;
 frameworkDir=$(dirname $(readlink -e $baseDir/../WebFramework/source/ClientApp/src/app))/app;
 marketProtoDir=$(dirname $(readlink -e $baseDir/../../MarketLibrary/source/types/proto))/proto;
+blocklyProtoDir=$(dirname $(readlink -e $baseDir/../../Blockly/source/types/proto))/proto;
 source $baseDir/../WebFramework/common.sh

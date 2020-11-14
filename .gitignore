@@ -90,3 +90,6 @@ source/ClientApp/src/app/app.component.spec._ts
 source/ClientApp/src/app/services/error/IErrorService.ts
 source/ClientApp/src/app/services/error/DefaultError.service.ts
 *.diff
+source/ClientApp/src/app/pages/tws/blockly/viewer/blocks/default2.js
+source/ClientApp/src/app/pages/tws/blockly/viewer/blocks/custom-fields.js
+source/ClientApp/src/app/blockly/*

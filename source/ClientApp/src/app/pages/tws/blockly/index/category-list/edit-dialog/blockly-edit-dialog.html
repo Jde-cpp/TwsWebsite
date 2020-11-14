@@ -1,0 +1,18 @@
+<h2 mat-dialog-title>{{title}}</h2>
+<mat-dialog-content>
+	<mat-form-field class="example-full-width">
+		<mat-label>Name</mat-label>
+		<input matInput [disabled]="item.id" placeholder="Ex. Sell Stock" [(ngModel)]="item.name">
+	</mat-form-field>
+	<!-- floatLabel="always"-->
+  	<mat-form-field class="example-full-width">
+		<mat-label>Description</mat-label>
+		<textarea matInput placeholder="Ex. Vanilla stock order" [(ngModel)]="item.description"></textarea>
+		<!-- [(ngModel)]="item.description" -->
+	</mat-form-field>
+	<mat-checkbox class="example-margin" [(ngModel)]="item.enabled">Enabled</mat-checkbox>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+	<button mat-icon-button color=primary [disabled]="submitting" (click)="submitting=true;onSaveClick()"><mat-icon>save</mat-icon>Save</button>
+	<button style="margin-left:30px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
+</mat-dialog-actions>

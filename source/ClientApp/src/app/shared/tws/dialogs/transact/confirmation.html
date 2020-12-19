@@ -8,17 +8,18 @@
 			<span style="padding-left: 30px;" *ngIf="this.order.outsideRth">Outside Regular Trading Hours:  true</span>
 		</div>
 		<div style="display: flex;	justify-content: space-between;">
-			<span>Order Type {{orderType}}</span><span>Routing {{contract.exchange}}</span><span>Time in Force:  {{timeInForce}}</span>
+			<span>Order Type {{orderType}}</span><span>Routing {{ExchangeName(contract.exchange)}}</span><span>Time in Force:  {{timeInForce}}</span>
 		</div>
 		<div style="display: flex;	justify-content: space-between;">
 			<span>Limit  {{order.limit | number:'1.2-2' }}</span>
+			<span *ngIf="this.data.block">Block  {{this.data.block.name}}</span>
 			<span *ngIf="this.data.stop">Stop  {{this.data.stop | number:'1.2-2' }}</span>
 			<span *ngIf="this.data.stopLimit">Stop Limit {{this.data.stopLimit | number:'1.2-2' }}</span>
 		</div>
 	</fieldset>
 	<div style="display: flex;">
 		<fieldset style="float: left;width: 25%;">
-			<legend>Amount {{contract.currency}}</legend>
+			<legend>Amount {{CurrencyName(contract.currency)}}</legend>
 			<table>
 				<tr><td class="rowHeader">Amount</td><td class="number">{{amount | number:'1.0-0'}}</td></tr>
 				<tr><td class="rowHeader">Cmmssn</td><td class="number">{{state.minCommission| number:'1.2-2'}}...{{state.maxCommission| number:'1.2-2'}}</td></tr>

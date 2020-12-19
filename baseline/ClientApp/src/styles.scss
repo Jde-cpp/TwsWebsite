@@ -1,8 +1,8 @@
 @import './app-theme';
-@import './styles/api';
-@import './styles/markdown';
-@import './styles/tables';
-@import './styles/general';
+@import 'dist/jde-material-site/src/styles/api';
+@import 'dist/jde-material-site/src/styles/markdown';
+@import 'dist/jde-material-site/src/styles/tables';
+@import 'dist/jde-material-site/src/styles/general';
 
 // Include material core styles.
 @include mat-core();
@@ -82,3 +82,14 @@ thead>tr>td
 }
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.positiveButton
+{
+	color: green;
+}
+
+.negativeButton
+{
+	color: red;
+}
+

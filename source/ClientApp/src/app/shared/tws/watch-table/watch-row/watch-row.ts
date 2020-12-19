@@ -1,18 +1,16 @@
 import {Component,EventEmitter,Input,Output, Inject, OnDestroy, ViewChild, ElementRef, OnInit, AfterViewInit, HostBinding} from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { TickDetails } from 'src/app/services/tws/Tick';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import { IErrorService } from 'src/app/services/error/IErrorService';
-import { TickObservable } from 'src/app/services/tws/ITickObserver';
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { TickDetails } from 'jde-tws';
+import { TwsService } from 'jde-tws';
+import { IErrorService } from 'jde-framework';
 
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
-import * as IbRequests from 'src/app/proto/requests';
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { Subject } from 'rxjs';
 import { WatchTableComponent } from '../watch-table';

@@ -1,13 +1,13 @@
 
-import { TickEx, Tick } from 'src/app/services/tws/Tick';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import{ TickObservable } from 'src/app/services/tws/ITickObserver'
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { TickEx, Tick } from 'jde-tws';
+import { TwsService } from 'jde-tws';
+import{ TickObservable } from 'jde-tws'
+import { MarketUtilities } from 'jde-tws';
 
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { attr } from 'highcharts';
 

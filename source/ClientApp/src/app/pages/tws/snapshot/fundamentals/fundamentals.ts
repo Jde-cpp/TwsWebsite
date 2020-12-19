@@ -1,19 +1,17 @@
 import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import {MatDialog} from '@angular/material/dialog';
-import {MatRadioChange} from '@angular/material/radio'
-import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import { TickEx, TickDetails } from 'src/app/services/tws/Tick';
+import { Observable, Subscription } from 'rxjs';
+import { IProfile } from 'jde-framework';
+import { TwsService } from 'jde-tws';
+import { TickDetails } from 'jde-tws';
 
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
+import { MarketUtilities } from 'jde-tws';
+import { DateUtilities } from 'jde-framework';
 
 export class Fundamentals
 {
@@ -29,7 +27,7 @@ export class Fundamentals
 
 	//dividends
 	get yield():number|null{ return this.get("YIELD"); }
-	get exDividendDate():Date|null{ return DateUtilities.fromDays(this.get("DIV_NEXT_DAY")); }
+	get exDividendDate():Date|null{ return this.values?.DIV_NEXT_DAY ? DateUtilities.fromDays(this.values?.DIV_NEXT_DAY) : null; }
 	get dividendPayableDate():Date|null{ return null; }
 	get dividendNextYear():number|null{ return this.get("DIV_NEXT_YEAR"); }
 	get dividendNext():number|null{ return this.get("DIV_NEXT"); }
@@ -39,7 +37,7 @@ export class Fundamentals
 	get dividendGrowthRate():number|null{ return this.get("DIVGRPCT"); }//3 years whenever 4 years of dividends are available.
 	get dividendRate():number|null{ return this.get("IAD"); }//his value is the total of the expected dividend payments over the next twelve months
 
-	get nextEarningsDate():number|null{ return -1; }
+	get nextEarningsDate():number|null{ return null; }
 
 	get eps():number|null{ return this.get("TTMEPSXCLX"); }//EPS exc. extr. items
 	get peExcludingExtraordinaryItems():number|null{ return this.get("PEEXCLXOR"); }//P/E excluding extraordinary items over the last four interim periods

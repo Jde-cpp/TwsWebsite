@@ -9,26 +9,21 @@ import {ConfigurationData,ConfigurationDialog} from './configuration'
 import {Fundamentals } from './fundamentals/fundamentals'
 import {PageSettings} from './snapshot'
 import { TransactDoModal } from '../../../shared/tws/dialogs/transact/transact'
-//import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
 
-import {IErrorService} from 		'src/app/services/error/IErrorService'
-import { IProfile } from 			'src/app/services/profile/IProfile';
-import { TwsService, IBar } from 	'src/app/services/tws/tws.service';
-import{ TickObservable } from 	'src/app/services/tws/ITickObserver'
-import { TickEx, TickDetails } from 'src/app/services/tws/Tick';
-import {DateUtilities} from 		'src/app/utilities/dateUtilities'
-import { MarketUtilities } from 	'src/app/utilities/marketUtilities';
-import {MathUtilities, StatResult} from  'src/app/utilities/mathUtilities';
-import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
-import {Settings, IAssignable} from 'src/app/utilities/settings'
+import {IErrorService} from 		'jde-framework'
+import { IProfile } from 			'jde-framework';
+import { TwsService } from 	'jde-tws';
+import{ TickObservable } from 	'jde-tws'
+import { TickDetails } from 'jde-tws';
+import {DateUtilities} from 		'jde-framework'
+import { MarketUtilities } from 	'jde-tws';
+import {MathUtilities, StatResult} from  'jde-framework';
+import { ProtoUtilities } from 'jde-framework';
+import {Settings, IAssignable} from 'jde-framework'
 
-import * as ib2 from 'src/app/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-import * as IbRequests from 'src/app/proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import * as IbResults from 'src/app/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import { load } from 'protobufjs';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';  import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class SymbolSettings implements IAssignable<SymbolSettings>
 {
@@ -95,7 +90,11 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	onContractDetails():void
 	{
 		let tick = this.tick = new TickDetails( this.detail );
-		this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} );
+		this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} ).catch( (e)=>
+		{
+			this.cnsle.warn( "Loading fundamental data failed." );
+			console.error( e );
+		} );
 		this.loadedPromise = Promise.resolve( true );
 		const now = new Date();
 		var previousDay = MarketUtilities.previousTradingDate( now, MarketUtilities.contractHours(this.detail.tradingHours) );

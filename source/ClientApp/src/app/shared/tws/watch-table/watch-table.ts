@@ -1,28 +1,23 @@
 import {Component,EventEmitter, OnInit,Input,Output, Inject, ViewContainerRef, ViewChild, ComponentFactoryResolver, ComponentRef, AfterViewInit} from '@angular/core';
-import { TickEx, TickDetails } from 'src/app/services/tws/Tick';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import { IErrorService } from 'src/app/services/error/IErrorService';
-import { TickObservable } from 'src/app/services/tws/ITickObserver';
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { TickDetails } from 'jde-tws';
+import { TwsService } from 'jde-tws';
+import { IErrorService } from 'jde-framework';
+import { TickObservable } from 'jde-tws';
+import { MarketUtilities } from 'jde-tws';
 
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
-import * as IbRequests from 'src/app/proto/requests';
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { WatchRowComponent } from './watch-row/watch-row';
 import { Subject } from 'rxjs';
 
-import * as IbWatch from 'src/app//proto/watch';
-import Watch = IbWatch.Jde.Markets.Proto.Watch;
-import { subscribeOn } from 'rxjs/operators';
-import { DateUtilities } from 'src/app/utilities/dateUtilities';
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { Tick } from 'highcharts';
-import { toMap } from 'src/app/utilities/collections';
+import * as IbWatch from 'dist/jde-tws-assets/src/assets/proto/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
+import { IProfile } from 'jde-framework';
 
 @Component({selector: 'watch-table', templateUrl: './watch-table.html', styleUrls:['./watch-table.scss']})
 export class WatchTableComponent implements OnInit, AfterViewInit

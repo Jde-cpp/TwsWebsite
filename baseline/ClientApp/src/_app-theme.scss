@@ -1,19 +1,19 @@
 @import '~@angular/material/theming';
 
-@import './app/pages/material-site/component-category-list/component-category-list-theme';
+@import 'dist/jde-material-site/src/assets/pages/component-category-list/component-category-list-theme';
 //@import './app/pages/material-site/component-list/component-list-theme';
-@import './app/pages/material-site/component-sidenav/component-sidenav-theme';
+@import 'dist/jde-material-site/src/assets/pages/component-sidenav/component-sidenav-theme';
 //@import './app/pages/material-site/component-viewer/component-viewer-theme';
 //@import './app/pages/material-site/guide-list/guide-list-theme';
 //@import './app/pages/material-site/homepage/homepage-theme';
 //@import './app/shared/example-viewer/example-viewer-theme';
-@import './app/shared/material-site/footer/footer-theme';
-@import './app/shared/material-site/navbar/navbar-theme';
+@import 'dist/jde-material-site/src/assets/shared/footer/footer-theme';
+@import 'dist/jde-material-site/src/assets/shared/navbar/navbar-theme';
 //@import './app/shared/table-of-contents/table-of-contents-theme';
-@import './styles/api-theme';
-@import './styles/markdown-theme';
-@import './styles/svg-theme';
-@import './styles/tables-theme';
+@import 'dist/jde-material-site/src/styles/api-theme';
+@import 'dist/jde-material-site/src/styles/markdown-theme';
+@import 'dist/jde-material-site/src/styles/svg-theme';
+@import 'dist/jde-material-site/src/styles/tables-theme';
 
 // Styles for the docs app that are based on the current theme.
 @mixin material-docs-app-theme($theme) {

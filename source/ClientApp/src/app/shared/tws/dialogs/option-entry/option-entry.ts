@@ -1,17 +1,16 @@
 import {Component, Inject, OnDestroy} from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TickEx } from '../../../../services/tws/Tick';
-import{ TickObservable } from 'src/app/services/tws/ITickObserver'
-import { TwsService } from '../../../../services/tws/tws.service';
-import {Data} from '../transact/transact'
+import { TickEx } from 'jde-tws';
+import{ TickObservable } from 'jde-tws'
+import { TwsService } from 'jde-tws';
 import {ConfirmationDialog} from '../transact/confirmation'
-import * as IbResults from '../../../../proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import * as ib2 from 'src/app/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import * as IbRequests from '../../../../proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import { MarketUtilities } from 'jde-tws';
+import { BlocklyService } from 'jde-blockly';
+
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';  import Results = IbResults.Jde.Markets.Proto.Results;
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as myBlockly2 from 'dist/jde-blockly-assets/src/assets/proto/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
 
 export class OptionEntryData
 {
@@ -23,8 +22,9 @@ export class OptionEntryData
 @Component( { templateUrl: 'option-entry.html', styleUrls:["option-entry.css"]} )
 export class OptionEntryDialog implements OnDestroy
 {
-	constructor( public dialogRef:MatDialogRef<OptionEntryDialog>, @Inject(MAT_DIALOG_DATA) public data:OptionEntryData, private tws : TwsService, private dialog : MatDialog )
+	constructor( public dialogRef:MatDialogRef<OptionEntryDialog>, @Inject(MAT_DIALOG_DATA) public data:OptionEntryData, private tws : TwsService, private dialog : MatDialog, private blockly: BlocklyService )
 	{
+		blockly.loadEnabled().then( (values)=>this.blocks=values ).catch( (e)=>console.error(e) );
 		this.option = data.option;
 		this.isBuy = data.isBuy;
 		for( let expiration of data.expirations )
@@ -124,7 +124,7 @@ export class OptionEntryDialog implements OnDestroy
 					this.dialogRef.close( null );
 					const dialogRef = this.dialog.open(ConfirmationDialog, {
 						width: '600px', autoFocus: false,
-						data: { order:value, stop: this.stop, stopLimit: this.stopLimit }
+						data: { order:value, stop: this.stop, stopLimit: this.stopLimit, block:this.blockExecutingId ? this.blocks.find( (x)=>x.id==this.blockExecutingId ) : null }
 					});
 				}
 			},
@@ -166,4 +166,6 @@ export class OptionEntryDialog implements OnDestroy
 	get option():TickEx{ return this._option}; set option(value){ if(!value) this.subscription=null; this._option = value; } _option:TickEx;
 	get subscription(){return this._subscription;} set subscription(value){ if( this.subscription ) this.tws.cancelMktDataSingle( this.subscription ); this._subscription=value;} _subscription:TickObservable;
 	submitting=false;
+	blockExecutingId:string;
+	blocks:Blockly.IFunction[];
 }

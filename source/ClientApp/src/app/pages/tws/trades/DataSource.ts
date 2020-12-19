@@ -3,11 +3,10 @@ import {Sort} from '@angular/material/sort';
 import { Subject } from 'rxjs';
 
 import {IData} from 'src/app/shared/tws/summary/summary'
-import {ITradeCommon} from 'src/app/services/tws/ExecutionObserver'
+import {ITradeCommon} from 'jde-tws'
 
-import Jde from 'src/app/utilities/mathUtilities'
-import * as IbResults from 'src/app/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+import {sum} from 'jde-framework'
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Trade
 {
@@ -65,18 +64,18 @@ export class TradeResult
 	get closeTime():Date|null{ return this.last ? this.last.date : null; }
 	get openPrice():number{ return (this.isLong ? this.cost : this.proceeds)/Math.abs(this.shares); } //let sum=0; return this.openTrades.forEach( value=>sum+= ); }
 	get closePrice():number{ const value = this.isLong ? this.proceeds : this.cost; return value==null ? null : value/Math.abs(this.shares);}
-	get shares():number{ return Jde.sum( this.openTrades, (value)=>value.quantity ); }
-	get offsetShares():number{ return this.offsetTrades ? Jde.sum( this.offsetTrades, a=>a.quantity ) : null; }
+	get shares():number{ return sum( this.openTrades, (value)=>value.quantity ); }
+	get offsetShares():number{ return this.offsetTrades ? sum( this.offsetTrades, a=>a.quantity ) : null; }
 	get AbsShares():number{ return Math.abs(this.shares); }
 	get isLong():boolean{ return this.shares>0; }
 	get purchasePrice(){ return this.isLong ? this.openPrice : this.closePrice;}
 	get salesPrice(){ return this.isLong ? this.closePrice : this.openPrice; }
 
-	get cost():number{ let trades = this.isLong ? this.openTrades : this.offsetTrades; return trades ? Jde.sum(trades, (value)=>value.price* value.quantity+value.commission) : null; }
-	get proceeds(){    let trades = this.isLong ? this.offsetTrades : this.openTrades; return trades ? Jde.sum(trades, (value)=>value.price*-value.quantity+value.commission) : null; }
+	get cost():number{ let trades = this.isLong ? this.openTrades : this.offsetTrades; return trades ? sum(trades, (value)=>value.price* value.quantity+value.commission) : null; }
+	get proceeds(){    let trades = this.isLong ? this.offsetTrades : this.openTrades; return trades ? sum(trades, (value)=>value.price*-value.quantity+value.commission) : null; }
 
-	get salesCommissions(){    let trades = this.isLong ? this.offsetTrades : this.openTrades; return trades ? Jde.sum(trades, (a)=>a.commission) : null; }
-	get purchaseCommissions(){ let trades = this.isLong ? this.openTrades : this.offsetTrades; return trades ? Jde.sum(trades, (a)=>a.commission) : null; }
+	get salesCommissions(){    let trades = this.isLong ? this.offsetTrades : this.openTrades; return trades ? sum(trades, (a)=>a.commission) : null; }
+	get purchaseCommissions(){ let trades = this.isLong ? this.openTrades : this.offsetTrades; return trades ? sum(trades, (a)=>a.commission) : null; }
 	get commissions(){ return this.salesCommissions+this.purchaseCommissions; }
 	get return_():number{ return this.proceeds==null || this.cost==null ? null : this.proceeds/this.cost; }
 

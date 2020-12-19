@@ -1,26 +1,22 @@
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import {Sort} from '@angular/material/sort';
-import {IErrorService} from 'src/app/services/error/IErrorService'
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import {TickObservable} from 'src/app/services/tws/ITickObserver'
-import { OrderObservable } from 'src/app/services/tws/IOrderObserver';
-import {DateUtilities} from 		'src/app/utilities/dateUtilities'
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
-import { Settings } from 'src/app/utilities/settings'
+import {IErrorService} from 'jde-framework'
+import { IProfile } from 'jde-framework';
+import { TwsService } from 'jde-tws';
+import {TickObservable} from 'jde-tws'
+import { OrderObservable } from 'jde-tws';
+import { MarketUtilities } from 'jde-tws';
+import { ProtoUtilities } from 'jde-framework';
+import { Settings } from 'jde-framework'
 import {DataSource,Order} from './DataSource'
-import { ComponentPageTitle } from '../../material-site/page-title/page-title';
+import { ComponentPageTitle } from 'jde-material-site';
 
-import * as ib2 from 'src/app/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
 
-import * as IbRequests from 'src/app/proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 
-import * as IbResults from 'src/app/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 //import { Data } from 'src/app/shared/tws/summary/summary';
 
 class Cell

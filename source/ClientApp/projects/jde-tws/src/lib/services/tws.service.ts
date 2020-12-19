@@ -4,20 +4,15 @@ import { Subject,Observable, of, throwError } from 'rxjs';
 import{ TickSubject, TickObservable } from './ITickObserver'
 import {Order,OrderSubject,OrderObservable} from './IOrderObserver'
 import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'
-import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
-import {ObservableUtilities} from 'src/app/utilities/ObservableUtilities';
+import { ProtoUtilities } from 'jde-framework';
+import {ObservableUtilities} from '../utilities/ObservableUtilities';
+import { DateUtilities } from 'jde-framework';
+import { MarketUtilities } from '../utilities/marketUtilities';
 
-
-import * as ib2 from 'src/app/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-import * as IbRequests from 'src/app/proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import * as IbResults from 'src/app/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbWatch from 'src/app/proto/watch';
-import Watch = IbWatch.Jde.Markets.Proto.Watch;
-import { DateUtilities } from 'src/app/utilities/dateUtilities';
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbWatch from 'dist/jde-tws-assets/src/assets/proto/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 
 
 type ResolveGeneric = (any) => void;
@@ -382,6 +377,11 @@ class Connection
 				this.generalCallbacks.get( id )[1]( error );
 				this.generalCallbacks.delete( id );
 			}
+			else if( this.fundamentalCallbacks.has(id) )
+			{
+				this.fundamentalCallbacks.get( id )[1]( error );
+				this.fundamentalCallbacks.delete( id );
+			}
 			else
 			{
 				var requestsTypes:Map<number, RequestPromise>[] = [ this.testCallbacks, this.optionParamCallbacks ];
@@ -429,7 +429,7 @@ class Connection
 	}
 	error( err ):void
 	{
-		debugger;
+	//	debugger;
 		this.sessionId = null;
 		console.error( "No longer connected to TWS.", err );
 		this.handleConnectionError( err );
@@ -670,11 +670,11 @@ class Connection
 		this.flexCallbacks.set( id, callback );
 		return callback;
 	}
-	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable
+	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number, blockId:string ):OrderObservable
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})placeOrder( ${contract.symbol}x${(order.isBuy ? 1 : -1)*order.quantity}@${order.limit} )` );
-		this.send( new Requests.RequestUnion({placeOrder: {"id":id, "contract": contract, "order": order, stop:stop, stopLimit:stopLimit}}) );
+		this.send( new Requests.RequestUnion({placeOrder: {"id":id, "contract": contract, "order": order, stop:stop, stopLimit:stopLimit, blockId:blockId}}) );
 
 		const callback = new OrderSubject();
 		this.orders.set( id, new Order(contract, order, callback) );
@@ -816,13 +816,13 @@ export class TwsService
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
 	cancelMktDataSingle( x:TickObservable ):void{ new Map<number,TickObservable>( [[0,x]]).values(); }
 	reqExecutions( query:Requests.IRequestExecutions=new Requests.RequestExecutions() ):ExecutionObservable{ return this.connection.reqExecutions( query ); }
-	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>{ return this.connection.reqFundamentals( contractId ); }
+	reqFundamentals( contractId:number ):Promise<{ [k:string]: number }>{ return this.connection.reqFundamentals( contractId ); }
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Promise<IBar[]>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }
 
 	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Promise<Results.IOptionValues>{ return this.connection.optionSummary(contractId, optionType, startExpiration, endExpiration, startStrike, endStrike); }
 
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
-	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit); }
+	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number, blockId?:string ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit, blockId); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }

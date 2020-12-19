@@ -2,23 +2,23 @@ import { Component, AfterViewInit, OnInit, ViewChild, Input, Inject, Output, Eve
 import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import { Observable, Subscription } from 'rxjs';
-import {IErrorService} from 'src/app/services/error/IErrorService'
-import { TwsService, IBar } from 'src/app/services/tws/tws.service';
-import{ TickObservable } from 'src/app/services/tws/ITickObserver'
-import { TickDetails } from 'src/app/services/tws/Tick';
+import {IErrorService} from 'jde-framework'
+import { TwsService, IBar } from 'jde-tws';
+import{ TickObservable } from 'jde-tws'
+import { TickDetails } from 'jde-tws';
 import {Option, OptionStrike} from './option';
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { PageEvent } from 'src/app/shared/framework/paginator/paginator'
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
+import { PageEvent } from 'jde-framework'
+import { MarketUtilities } from 'jde-tws';
+import { ProtoUtilities } from 'jde-framework';
 
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbRequests from 'src/app/proto/requests';
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import { DateUtilities, Day } from 'src/app/utilities/dateUtilities';
+import { DateUtilities, Day } from 'jde-framework';
 import { PageSettings } from '../option-tab/option-tab';
 import { max } from 'rxjs/operators';
 
@@ -184,7 +184,6 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			if( displayed )
 			{
 				subscriptions.push( strike );
-				const x = strike.strike;
 				this.pageContent.push( strike );
 			}
 			else

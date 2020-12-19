@@ -1,18 +1,17 @@
 import {Component, Inject} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import {Option} from 'src/app/shared/tws/options/option-table/option'
-import * as ib2 from 'src/app/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'src/app/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import { TickEx } from 'src/app/services/tws/Tick';
+import { TwsService } from 'jde-tws';
+import { TickEx } from 'jde-tws';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as myBlockly2 from 'dist/jde-blockly-assets/src/assets/proto/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
 
 export class ConfirmationData
 {
 	order:Results.IOpenOrder
 	stop:number|null;
 	stopLimit:number|null;
+	block:Blockly.IFunction|null;
 }
 @Component( {templateUrl: 'confirmation.html', styleUrls:["transact.css"]} )
 export class ConfirmationDialog
@@ -34,12 +33,21 @@ export class ConfirmationDialog
 			}
 		});
 	}
+	ExchangeName( id:IB.Exchanges )
+	{
+		return IB.Exchanges[id];
+	}
+
+	CurrencyName( id:IB.Currencies )
+	{
+		return IB.Currencies[id];
+	}
 	onCancelClick():void{ this.dialogRef.close( null ); }
 	onSubmitClick()
 	{
 		this.order.whatIf = false;
 		this.order.id = 0;
-		const subscription = this.tws.placeOrder( this.contract, this.order, this.data.stop, this.data.stopLimit );//TODO something with subscription.
+		const subscription = this.tws.placeOrder( this.contract, this.order, this.data.stop, this.data.stopLimit, this.data.block?.id );//TODO something with subscription.
 		this.dialogRef.close( null );
 	}
 	get amount():number{ return this.order.quantity*this.order.limit*Math.max(this.contract.multiplier,1); }

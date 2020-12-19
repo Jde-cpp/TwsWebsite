@@ -1,13 +1,14 @@
 import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import { TickDetails } from 'src/app/services/tws/Tick';
-import {Settings} from 'src/app/utilities/settings'
+import { IProfile } from 'jde-framework';
+import { TwsService } from 'jde-tws';
+import { TickDetails } from 'jde-tws';
+import {Settings} from 'jde-framework'
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { DateUtilities } from 'src/app/utilities/dateUtilities';
+import { DateUtilities } from 'jde-framework';
+
 
 class NewsSettings
 {

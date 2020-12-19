@@ -5,22 +5,22 @@ import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 
 import {SeriesCandlestickOptions,SeriesColumnOptions} from "highcharts";
 import * as Highstock from "highcharts/highstock";
 import * as Highcharts from "highcharts";
-import { TickEx } from 'src/app/services/tws/Tick';
+import { TickEx } from 'jde-tws';
 
-import {IErrorService} from 'src/app/services/error/IErrorService'
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { TwsService, IBar } from 	'src/app/services/tws/tws.service';
+import {IErrorService} from 'jde-framework'
+import { IProfile } from 'jde-framework';
+import { TwsService, IBar } from 'jde-tws';
 //import {Highcharts} from 'highcharts/es-modules/parts/Globals.js'
 //import * as Highcharts from 'highcharts'
-import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
-import {Settings,JoinSettings, IAssignable} from 'src/app/utilities/settings'
+import { Day, DateUtilities } from 'jde-framework';
+import {Settings, IAssignable} from 'jde-framework'
 
-import * as ib2 from 'src/app/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'src/app/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbRequests from 'src/app/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests; import BarSize = Requests.BarSize;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { LinkSelectOptions } from '../../framework/link-select/link-select';
-import { TimeFrame,DateRangeSettings } from '../../framework/date-range/date-range';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests; import BarSize = Requests.BarSize;
+import { MarketUtilities } from 'jde-tws';
+import { LinkSelectOptions } from 'jde-framework';
+import { TimeFrame,DateRangeSettings } from 'jde-framework';
 
 @Component({ selector: 'candlestick', styleUrls: ['candlestick.css'], templateUrl: './candlestick.html' })
 export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy

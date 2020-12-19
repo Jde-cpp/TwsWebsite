@@ -1,10 +1,11 @@
 import { Subject,Observable,NextObserver,CompletionObserver,Subscription } from 'rxjs';
 
 
-import * as ib2 from '../../proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from '../../proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+/// <reference path="dist/jde-tws-assets/src/assets/proto/ib.d.ts" />
+/// <reference path="dist/jde-tws-assets/src/assets/proto/results.d.ts" />
+//import {IComboLeg} from 'ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export interface ITradeCommon
 {

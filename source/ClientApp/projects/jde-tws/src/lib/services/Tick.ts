@@ -1,16 +1,13 @@
 import {ITickObserver} from './ITickObserver'
 
-import * as ib2 from '../../proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from '../../proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { Option } from 'src/app/shared/tws/options/option-table/option'
+import { MarketUtilities } from '../utilities/marketUtilities';
 import { TwsService } from './tws.service';
-import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
-import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
+import { Day } from 'jde-framework';
+import { ProtoUtilities } from 'jde-framework';
 
-/*just ITickObserver*/
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+
 export class Tick implements ITickObserver
 {
 	constructor( public isMarketOpen:boolean )
@@ -77,8 +74,8 @@ export class Tick implements ITickObserver
 			this.volume = size;
 		else if( type==Results.ETickType.AverageVolume )
 			this.volumeAverage = size;
-		else
-			console.log( `onSizeTick( '${type.toString()}', '${size}')` );
+		else if( type!=Results.ETickType.LastTimestamp )
+			console.log( `onSizeTick( '${Results.ETickType[type]}', '${size}')` );
 	}
 	string( type:Results.ETickType, value:string ):void
 	{

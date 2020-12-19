@@ -2,22 +2,22 @@ import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ViewEncapsulati
 import { MatTable } from '@angular/material/table';
 import {MatDialog} from '@angular/material/dialog';
 import { Observable } from 'rxjs';//,of
-import { TwsService, IBar } from 'src/app/services/tws/tws.service';
-import { IProfile } from 'src/app/services/profile/IProfile';
-import {TickObservable} from 'src/app/services/tws/ITickObserver'
+import { TwsService } from 'jde-tws';
+import { IProfile } from 'jde-framework';
+import {TickObservable} from 'jde-tws'
 import {Holding, TermHoldingSummary, Price} from './holding'
 import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
 import {TransactDoModal} from 'src/app/shared/tws/dialogs/transact/transact'
 
-import * as ib from 'src/app/proto/ib';
+import * as ib from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib.Jde.Markets.Proto;
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbRequests from 'src/app/proto/requests';
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import { MarketUtilities, ContractPK } from 'src/app/utilities/marketUtilities';
+import { MarketUtilities, ContractPK } from 'jde-tws';
 import { RollDialog } from 'src/app/shared/tws/dialogs/roll/roll-dialog';
-import { TickDetails } from 'src/app/services/tws/Tick';
+import { TickDetails } from 'jde-tws';
 
 
 class Settings

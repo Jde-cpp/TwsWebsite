@@ -1,31 +1,19 @@
-import { AfterViewInit, ElementRef, EventEmitter, Inject, Input, Component, OnInit, OnDestroy, Output,  ViewChild, ChangeDetectorRef } from '@angular/core';
-import {MatDialog} from '@angular/material/dialog';
-import {MatSnackBar} from '@angular/material/snack-bar';
-import {MatTabChangeEvent} from '@angular/material/tabs';
-import { Subject } from 'rxjs';
+import { Inject, Input, Component } from '@angular/core';
 import theme from 'highcharts/themes/dark-unica';
 import * as Highcharts from 'highcharts/highstock';
-import { TransactDoModal } from '../../../shared/tws/dialogs/transact/transact'
-//import {IChartSettings} from 'src/app/shared/tws/highcharts/candlestick'
+import {IErrorService} from 		'jde-framework'
+import { TwsService } from 	'jde-tws';
+import { TickDetails } from 				'jde-tws';
+import {DateUtilities} from 		'jde-framework'
+import { MarketUtilities } from 	'jde-tws';
+import {MathUtilities, StatResult} from  'jde-framework';
 
-import {IErrorService} from 		'src/app/services/error/IErrorService'
-import { IProfile } from 			'src/app/services/profile/IProfile';
-import { TwsService, IBar } from 	'src/app/services/tws/tws.service';
-import{ TickObservable } from 	'src/app/services/tws/ITickObserver'
-import { TickEx, TickDetails } from 				'src/app/services/tws/Tick';
-import {DateUtilities} from 		'src/app/utilities/dateUtilities'
-import { MarketUtilities } from 	'src/app/utilities/marketUtilities';
-import {MathUtilities, StatResult} from  'src/app/utilities/mathUtilities';
-import { ProtoUtilities } from 'src/app/utilities/protoUtilities';
-import {Settings, IAssignable} from 'src/app/utilities/settings'
-
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
-import * as IbRequests from 'src/app/proto/requests';
+import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { load } from 'protobufjs';
 
 @Component( {selector: 'small-chart', templateUrl: './small-chart.html'} )
 export class SmallChartComponent //implements AfterViewInit, OnInit, OnDestroy

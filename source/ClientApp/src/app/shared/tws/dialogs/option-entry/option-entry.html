@@ -39,6 +39,13 @@
 			<mat-option *ngFor="let option of autoAmount(limit)" [value]="option">{{option}}</mat-option>
 		</mat-autocomplete>
 	</div>
+	<div style="display: flex; justify-content: center;" *ngIf="blocks?.length">
+		<mat-form-field>
+			<mat-select [(ngModel)]="blockExecutingId">
+				<mat-option *ngFor="let block of blocks" [value]="block.id">{{block.name}}</mat-option>
+			</mat-select>
+		</mat-form-field>
+	</div>
 </mat-dialog-content>
 <mat-dialog-actions style="flex: content; flex-direction: row;align-items: flex-start;display: flex;">
 	<button mat-raised-button [class.buy]="isBuy" [class.sell]="!isBuy" style="margin-left:10px;margin-right:20px" (click)="isBuy=!isBuy">{{isBuy ? "Buy" : "Sell"}}</button>

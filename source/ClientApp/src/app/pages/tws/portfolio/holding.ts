@@ -1,7 +1,7 @@
-import { TickDetails, TickEx } from 'src/app/services/tws/Tick';
-import * as ib from 'src/app/proto/ib';
+import { TickDetails, TickEx } from 'jde-tws';
+import * as ib from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib.Jde.Markets.Proto;
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class TermHoldingSummary

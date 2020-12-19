@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import {PageSettings} from './snapshot'
 import {SymbolSettings} from './snapshot-content'
-import {Settings, IAssignable} from 'src/app/utilities/settings'
+import {Settings} from 'jde-framework'
 
 export class ConfigurationData
 {

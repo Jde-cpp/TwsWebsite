@@ -1,20 +1,19 @@
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject } from '@angular/core';
-import { FormControl } from '@angular/forms';
 import {Sort} from '@angular/material/sort';
 
-import { TwsService } from 'src/app/services/tws/tws.service';
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { TwsService } from 'jde-tws';
+import { IProfile } from 'jde-framework';
+import { MarketUtilities } from 'jde-tws';
 import {DataSource} from './DataSource'
-import { ComponentPageTitle } from 'src/app/pages/material-site/page-title/page-title';
-import {IErrorService} from 'src/app/services/error/IErrorService'
-import {Settings, IAssignable} from 'src/app/utilities/settings'
-import { DateUtilities, Day } from 'src/app/utilities/dateUtilities';
+import { ComponentPageTitle } from 'jde-material-site';
+import {IErrorService} from 'jde-framework'
+import {Settings, IAssignable} from 'jde-framework'
+import { DateUtilities, Day } from 'jde-framework';
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { ITradeCommon } from 'src/app/services/tws/ExecutionObserver';
-import { DateRangeSettings } from 'src/app/shared/framework/date-range/date-range';
+import { ITradeCommon } from 'jde-tws';
+import { DateRangeSettings } from 'jde-framework';
 
 @Component( {selector: 'trades', styleUrls: ['trades.css'], templateUrl: './trades.html'} )
 export class TradeComponent implements AfterViewInit, OnInit, OnDestroy

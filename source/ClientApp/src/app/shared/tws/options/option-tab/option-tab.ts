@@ -2,22 +2,22 @@ import { Component, AfterViewInit, Input, Inject, OnInit, OnDestroy } from '@ang
 import {MatDialog} from '@angular/material/dialog';
 import {MatRadioChange} from '@angular/material/radio'
 import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
-import {IErrorService} from 'src/app/services/error/IErrorService'
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { TwsService } from 'src/app/services/tws/tws.service';
-import { TickDetails } from 'src/app/services/tws/Tick';
-import { PageEvent } from 'src/app/shared/framework/paginator/paginator'
+import {IErrorService} from 'jde-framework'
+import { IProfile } from 'jde-framework';
+import { TwsService } from 'jde-tws';
+import { TickDetails } from 'jde-tws';
+import { PageEvent } from 'jde-framework'
 import { Option } from 'src/app/shared/tws/options/option-table/option'
 import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
-import {Settings,JoinSettings} from 'src/app/utilities/settings'
+import {Settings,JoinSettings} from 'jde-framework'
 
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
-import { Day, DateUtilities } from 'src/app/utilities/dateUtilities';
+import { MarketUtilities } from 'jde-tws';
+import { Day, DateUtilities } from 'jde-framework';
 import { Sort } from '@angular/material/sort';
 
 export class PageSettings //implements IPageEvent
@@ -116,6 +116,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 
 	onTransactClick( buy:boolean )
 	{
+
 		const dialogRef = this.dialog.open(OptionEntryDialog, {
 			width: '600px',
 			data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: this.tick.detail }

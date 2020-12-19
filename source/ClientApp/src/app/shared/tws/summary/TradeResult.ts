@@ -3,9 +3,9 @@ import {IData} from 'src/app/shared/tws/summary/summary'
 import * as dts from 'src/app/proto/dts';
 import Dts = dts.Jde.Markets.Proto;
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import * as Ib from 'src/app/proto/ib';
+import * as Ib from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = Ib.Jde.Markets.Proto;
 
 import { Jde } from 'src/app/proto/appFromServer';

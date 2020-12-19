@@ -1,7 +1,7 @@
 import { DecimalPipe } from '@angular/common';
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import {RouterModule} from '@angular/router';
+import {Routes, RouterModule} from '@angular/router';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
@@ -26,12 +26,10 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
 
-import {NavBarModule} from './shared/material-site/navbar';
-import {ThemePickerModule} from './shared/material-site/theme-picker';
+import {NavBarModule} from 'jde-material-site';
+import {ThemePickerModule} from 'jde-material-site';
 //import {ComponentPageTitle} from './pages/material-site/page-title/page-title';
-import {StyleManager} from './shared/material-site/style-manager';
-
-import {PaginatorComponent} from './shared/framework/paginator/paginator';
+import {StyleManager} from 'jde-material-site';
 
 import{ FundamentalsComponent } from './pages/tws/snapshot/fundamentals/fundamentals';
 import{ NewsComponent } from './pages/tws/snapshot/news/news';
@@ -48,14 +46,15 @@ import {OptionEntryDialog} from './shared/tws/dialogs/option-entry/option-entry'
 import {RollDialog} from './shared/tws/dialogs/roll/roll-dialog'
 import {TransactDialog} from './shared/tws/dialogs/transact/transact'
 
-import {DateRangeComponent} from './shared/framework/date-range/date-range'
-import {LinkSelectComponent} from './shared/framework/link-select/link-select'
+import {DateRangeComponent} from 'jde-framework'
+import {LinkSelectComponent} from 'jde-framework'
+import {PaginatorComponent} from 'jde-framework';
+
 import {QuantityComponent} from './shared/tws/widgets/quantity/quantity'
 
-import {routes} from './routes';
 import { AppComponent } from './app.component';
 
-import {BlocklyViewerComponent} from './pages/tws/blockly/viewer/blockly-viewer';
+
 import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
 import {ConfigurationDialog} from './pages/tws/snapshot/configuration'
 import {OrderComponent} from './pages/tws/orders/orders'
@@ -64,19 +63,46 @@ import {SnapshotContentComponent} from './pages/tws/snapshot/snapshot-content';
 import {TradeComponent} from './pages/tws/trades/trades'
 import {WatchComponent} from './pages/tws/watch/watch'
 import {WatchContentComponent} from './pages/tws/watch/watch-content';
+import {BlocklyViewerComponent} from 'jde-blockly';
+import {BlocklyCategoryList} from 'jde-blockly';
+import {BlocklySidenav} from 'jde-blockly'
+import {LocalStorageProfile} from 'jde-framework'
+import {DefaultErrorService } from 'jde-framework'
 
-import {LocalStorageProfile} from './services/profile/localStorageProfile.service'
-import {DefaultErrorService } from './services/error/DefaultError.service'
+import {CanActivateComponentSidenav} from 'jde-material-site';
+import {ThemeStorage} from 'jde-material-site';
 
-import {CanActivateComponentSidenav} from './pages/material-site/component-sidenav/component-sidenav-can-load-guard';
-import {ThemeStorage} from './shared/material-site/theme-picker/theme-storage/theme-storage';
-
-
+const routes: Routes =
+[
+	{ path: '', component: SnapshotComponent, pathMatch: 'full', data: {} },
+	{ path: 'portfolio', component: PortfolioComponent },
+	{ path: 'snapshot', component: SnapshotComponent },
+	{ path: 'trades', component: TradeComponent },
+	{ path: 'orders', component: OrderComponent },
+	{ path: 'watch', component: WatchComponent },
+	{
+		path: 'blockly',
+		component: BlocklySidenav,
+		children :
+		[
+			{ path: ':id', component: BlocklyViewerComponent },
+			{ path: '', component: BlocklyCategoryList }
+		]
+	},
+	// {
+	// 	path: 'blockly',
+	// 	loadChildren: () => import('dist/jde-blockly/lib/pages/index/sidenav/blockly-sidenav').then(m => m.BlocklySidenavModule)
+	// },
+	//{path: '', redirectTo: ''}
+	//{ path: 'blockly/:id', component: BlocklyViewerComponent },
+	// { path: 'blockly', component: BlocklyCategoryList },
+	// { path: '', redirectTo: 'snapshot', pathMatch: 'full' },
+];
 
 @NgModule({
   declarations: [
 	 AppComponent,
-	 BlocklyViewerComponent,PortfolioComponent,ConfigurationDialog,OrderComponent, SnapshotComponent,SnapshotContentComponent,TradeComponent,WatchComponent, WatchContentComponent,
+	 BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,ConfigurationDialog,OrderComponent, SnapshotComponent,SnapshotContentComponent,TradeComponent,WatchComponent, WatchContentComponent,
 	 PaginatorComponent,
 	 FundamentalsComponent, NewsComponent, CandlestickComponent, OptionTableComponent, OptionTabComponent, SmallChartComponent, SummaryComponent,
 	 WatchTableComponent, WatchRowComponent,

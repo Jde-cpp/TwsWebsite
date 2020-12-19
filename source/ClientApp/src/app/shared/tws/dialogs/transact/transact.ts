@@ -1,15 +1,15 @@
 import {Component, Inject,AfterViewInit} from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { IProfile } from 'src/app/services/profile/IProfile';
-import { TickEx } from 'src/app/services/tws/Tick';
-import { TwsService } from 'src/app/services/tws/tws.service';
+import { IProfile } from 'jde-framework';
+import { TickEx } from 'jde-tws';
+import { TwsService } from 'jde-tws';
 import {ConfirmationDialog} from './confirmation'
-import {Settings, IAssignable} from 'src/app/utilities/settings'
-import * as IbResults from 'src/app/proto/results';
+import {Settings, IAssignable} from 'jde-framework'
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
-import { MarketUtilities } from 'src/app/utilities/marketUtilities';
+import { MarketUtilities } from 'jde-tws';
 
 export class Data
 {
@@ -127,7 +127,13 @@ export class TransactDialog implements AfterViewInit
 	outsideRth:boolean=false;
 	quantity:number;
 	limit:number;
-	get selectedAccount(){ return this.settingsContainer.value.selectedAccount; } set selectedAccount(v)
+	get selectedAccount()
+	{
+		let account = this.settingsContainer.value.selectedAccount;
+		if( !account && this.allAccounts.size==1 )
+			account = this.allAccounts.keys().next().value;
+		return account;
+	} set selectedAccount(v)
 	{
 		if( this.selectedAccount!=v )
 		{

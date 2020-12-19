@@ -2,12 +2,12 @@ import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBi
 import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
-import { TwsService } from 'src/app/services/tws/tws.service';
-import { IProfile } from 'src/app/services/profile/IProfile';
-import {IErrorService} from 'src/app/services/error/IErrorService'
-import {Settings, IAssignable} from 'src/app/utilities/settings'
+import { TwsService } from 'jde-tws';
+import { IProfile } from 'jde-framework';
+import {IErrorService} from 'jde-framework'
+import {Settings, IAssignable} from 'jde-framework'
 
-import * as IbResults from 'src/app/proto/results';
+import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class PageSettings implements IAssignable<PageSettings>

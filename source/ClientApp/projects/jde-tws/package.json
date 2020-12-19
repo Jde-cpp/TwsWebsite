@@ -1,0 +1,12 @@
+{
+  "name": "jde-tws",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^10.2.0",
+	 "@angular/core": "^10.2.0",
+	 "rxjs": "~6.6.3"
+  },
+  "dependencies": {
+    "tslib": "^2.0.0"
+  }
+}

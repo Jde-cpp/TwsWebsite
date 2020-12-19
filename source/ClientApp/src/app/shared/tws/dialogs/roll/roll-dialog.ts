@@ -1,13 +1,13 @@
 import {Component, Inject} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TickDetails } from 'src/app/services/tws/Tick';
-import { TwsService } from '../../../../services/tws/tws.service';
+import { TickDetails } from 'jde-tws';
+import { TwsService } from 'jde-tws';
 import { Holding } from 'src/app/pages/tws/portfolio/holding';
 
-import * as ib2 from 'src/app/proto/ib';
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-//import * as IbResults from 'src/app/proto/results';
+//import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
 //import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Data

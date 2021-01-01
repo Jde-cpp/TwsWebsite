@@ -5,8 +5,9 @@ link=${2:-1}
 baseDir=`pwd`;
 clientDir=$baseDir/source/ClientApp;
 appDir=$clientDir/src/app;
-materialDir=$(dirname $(readlink -e $baseDir/../MaterialSite/source/projects/material-site/src))/src;
-frameworkDir=$(dirname $(readlink -e $baseDir/../WebFramework/source/ClientApp/src/app))/app;
+materialDir=$(dirname $(readlink -e $baseDir/../MaterialSite/control))/control;
+frameworkDir=$(dirname $(readlink -e $baseDir/../WebFramework/control))/control;
 marketProtoDir=$(dirname $(readlink -e $baseDir/../../MarketLibrary/source/types/proto))/proto;
 blocklyProtoDir=$(dirname $(readlink -e $baseDir/../../Blockly/source/types/proto))/proto;
+blocklyDir=$(dirname $(readlink -e $baseDir/../WebBlockly/control))/control;
 source $baseDir/../WebFramework/common.sh

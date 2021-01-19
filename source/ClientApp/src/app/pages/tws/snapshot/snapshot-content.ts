@@ -207,7 +207,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		{
 			let returns = dayBars.map( (bar)=>{ return (bar.close-bar.open)/bar.open;} );
 			var beginningOfDay = DateUtilities.beginningOfDay(endTime);
-			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset*60000;
+			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset()*60000;
 			tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false ).then( (bars)=>
 			{
 				if( !bars.length )

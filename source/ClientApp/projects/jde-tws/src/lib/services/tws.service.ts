@@ -796,7 +796,7 @@ export class TwsService
 		{
 			for( let i=0; i<x.length && x.length>1; ++i )
 			{
-				if( x[i].contract.currency!=MarketUtilities.DefaultCurrency )
+				if( x[i].contract.currency!=MarketUtilities.DefaultCurrency() )
 					 x.splice( i, 1 );
 			}
 			if( x.length==1 )

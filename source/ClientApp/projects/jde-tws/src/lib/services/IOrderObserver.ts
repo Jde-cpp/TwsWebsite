@@ -1,6 +1,6 @@
 import { Subject,Observable,NextObserver,CompletionObserver,Subscription, PartialObserver, Subscriber } from 'rxjs';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Order

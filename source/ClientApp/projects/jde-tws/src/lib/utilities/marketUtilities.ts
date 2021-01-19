@@ -1,8 +1,10 @@
-import { DateUtilities, Day } from 'jde-framework';
 import { DecimalPipe } from '@angular/common';
+import { DateUtilities, Day } from 'jde-framework';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+//import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+
 
 export type Symbol = string;
 export type ContractPK = number;
@@ -14,13 +16,16 @@ export class MarketUtilities
 		let isHoliday = [0,6].includes( value.getUTCDay() );
 		if( !isHoliday )
 		{
-			if( value.getUTCFullYear()==2020 )
+			if( value.getUTCFullYear()==2021 )
 			{
-				isHoliday = /*(value.getUTCMonth()==3 && value.getUTCDate()==10)
-					|| ( value.getUTCMonth()==6 && value.getUTCDate()==3 )
-					|| ( value.getUTCMonth()==8 && value.getUTCDate()==7 )
-					||*/ ( value.getUTCMonth()==10 && value.getUTCDate()==26 )
-					|| ( value.getUTCMonth()==11 && value.getUTCDate()==25 );
+				isHoliday = (value.getUTCMonth()==0 && (value.getUTCDate()==1 || value.getUTCDate()==18) )
+					|| (value.getUTCMonth()==1 && value.getUTCDate()==15)
+					|| (value.getUTCMonth()==3 && value.getUTCDate()==2)
+					|| ( value.getUTCMonth()==4 && value.getUTCDate()==31 )
+					|| ( value.getUTCMonth()==6 && value.getUTCDate()==5 )
+					|| ( value.getUTCMonth()==8 && value.getUTCDate()==6 )
+					|| ( value.getUTCMonth()==10 && value.getUTCDate()==25 )
+					|| ( value.getUTCMonth()==11 && value.getUTCDate()==24 );
 			}
 		}
 		return isHoliday;
@@ -28,7 +33,7 @@ export class MarketUtilities
 	static isHoliday( day:Day, contract?:IB.IContract )
 	{
 		const mod = day%7;
-		return mod==2 || mod==3 || [18512,18592,18621].indexOf(day)!=-1;
+		return mod==2 || mod==3 || [18645,18673,18719,18778,18813,18876,18956,18985].indexOf(day)!=-1;
 	}
 
 	static previousTradingDate( value:Date|null=null, tradingHours:Results.IContractHours=null ):Day
@@ -50,7 +55,7 @@ export class MarketUtilities
 		{
 			let now = new Date();
 			day = DateUtilities.toDays( now );
-			if( !this.isMarketOpen2(contract.exchange, contract.securityType, now) )
+			if( !MarketUtilities.isMarketOpen2(contract.exchange, contract.securityType, now) )
 				--day;
 		}
 		while( MarketUtilities.isHoliday(day, contract) )
@@ -104,14 +109,14 @@ export class MarketUtilities
 	{
 		return details.tradingHours
 			? MarketUtilities.contractHours(details.tradingHours)?.start*1000 < new Date().getTime()
-			: this.isMarketOpen2( details.contract.primaryExchange, details.contract.securityType );
+			: MarketUtilities.isMarketOpen2( details.contract.primaryExchange, details.contract.securityType );
 	}
 
 	static isLiquid( details:Results.IContractDetail )
 	{
 		return details.liquidHours
 			? MarketUtilities.contractHours(details.liquidHours).start*1000 < new Date().getTime()
-			: this.isMarketOpen2( details.contract.primaryExchange, IB.SecurityType.Option );
+			: MarketUtilities.isMarketOpen2( details.contract.primaryExchange, IB.SecurityType.Option );
 	}
 
 
@@ -146,13 +151,13 @@ export class MarketUtilities
 	}
 	static endLiquid( date:Date, contract:IB.IContract ):Date
 	{
-		const liquid = this.endTrading( date, contract );
+		const liquid = MarketUtilities.endTrading( date, contract );
 		if( contract.securityType==IB.SecurityType.Stock )
 			liquid.setHours( 16 );
 		return liquid;
 	}
 
-	static get DefaultCurrency(){ return IB.Currencies.UsDollar; }
+	static DefaultCurrency(){ return IB.Currencies.UsDollar; }
 /*	static startTrading( details:Results.IContractDetails )
 	{
 		var now = new Date().getTime()/1000;
@@ -179,7 +184,7 @@ export class MarketUtilities
 		if( exchange!="Nasdaq" && exchange!="Nyse" )
 			console.error( `need to implement exchange '${exchange}` );
 
-		return 19*60+DateUtilities.easternTimezoneOffset;
+		return 19*60+DateUtilities.easternTimezoneOffset();
 	}
 	static isPreOpening( exchange:string, secType:string )
 	{

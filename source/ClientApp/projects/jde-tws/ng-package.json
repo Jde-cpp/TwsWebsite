@@ -7,10 +7,7 @@
 		"umdModuleIds":
 		{
 			"jde-tws-assets": "jde-tws-assets",
-			"jde-framework": "jde-framework",
-			"dist/jde-tws-assets/src/assets/proto/ib": "jde-tws-assets-ib",
-			"dist/jde-tws-assets/src/assets/proto/results": "IbResults",
-			"dist/jde-tws-assets/src/assets/proto/requests": "IbRequests"
+			"jde-framework": "jde-framework"
 		}
 	}
 }

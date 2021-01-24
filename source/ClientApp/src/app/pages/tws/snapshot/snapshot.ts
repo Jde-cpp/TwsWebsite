@@ -7,7 +7,7 @@ import { IProfile } from 'jde-framework';
 import {IErrorService} from 'jde-framework'
 import {Settings, IAssignable} from 'jde-framework'
 
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
+import * as IbResults from 'jde-cpp/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class PageSettings implements IAssignable<PageSettings>

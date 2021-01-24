@@ -10,8 +10,7 @@ import {IErrorService} from 'jde-framework'
 import {Settings, IAssignable} from 'jde-framework'
 import { DateUtilities, Day } from 'jde-framework';
 
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import { ITradeCommon } from 'jde-tws';
 import { DateRangeSettings } from 'jde-framework';
 

@@ -7,16 +7,16 @@ import { TwsService, IBar } from 'jde-tws';
 import{ TickObservable } from 'jde-tws'
 import { TickDetails } from 'jde-tws';
 import {Option, OptionStrike} from './option';
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
+import * as IbResults from 'jde-cpp/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { PageEvent } from 'jde-framework'
 import { MarketUtilities } from 'jde-tws';
 import { ProtoUtilities } from 'jde-framework';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
+import * as ib2 from 'jde-cpp/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
+import * as IbRequests from 'jde-cpp/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { DateUtilities, Day } from 'jde-framework';
 import { PageSettings } from '../option-tab/option-tab';

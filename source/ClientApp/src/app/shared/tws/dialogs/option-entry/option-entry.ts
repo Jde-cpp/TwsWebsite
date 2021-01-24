@@ -5,12 +5,13 @@ import{ TickObservable } from 'jde-tws'
 import { TwsService } from 'jde-tws';
 import {ConfirmationDialog} from '../transact/confirmation'
 import { MarketUtilities } from 'jde-tws';
-import { BlocklyService } from 'jde-blockly';
+import { BlocklyService } from 'jde-tws';
 
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';  import Results = IbResults.Jde.Markets.Proto.Results;
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import * as myBlockly2 from 'dist/jde-blockly-assets/src/assets/proto/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
+import * as IbResults from 'jde-cpp/results';  import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as myBlockly2 from 'jde-cpp/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
 
 export class OptionEntryData
 {

@@ -2,9 +2,10 @@ import {Component, Inject} from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TwsService } from 'jde-tws';
 import { TickEx } from 'jde-tws';
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-import * as myBlockly2 from 'dist/jde-blockly-assets/src/assets/proto/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as myBlockly2 from 'jde-cpp/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
 
 export class ConfirmationData
 {

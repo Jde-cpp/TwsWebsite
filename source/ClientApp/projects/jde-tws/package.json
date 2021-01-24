@@ -11,6 +11,6 @@
   },
   "scripts":
   {
-		"copy-proto": "copyfiles -V -u 1 src/lib/*.d.ts ../../dist/jde-tws/esm2015"
+		"copy-proto": "copyfiles -V -u 1 \"src/lib/proto/*.d.ts\" \"../../dist/jde-tws/esm2015\""
   }
 }

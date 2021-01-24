@@ -5,11 +5,10 @@ import { IProfile } from 'jde-framework';
 import { TwsService } from 'jde-tws';
 import { TickDetails } from 'jde-tws';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
-
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+//import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import { MarketUtilities } from 'jde-tws';
 import { DateUtilities } from 'jde-framework';
 

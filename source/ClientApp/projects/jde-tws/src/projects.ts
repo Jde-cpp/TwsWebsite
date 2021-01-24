@@ -10,4 +10,6 @@ export * from './lib/services/IOrderObserver';
 export * from './lib/services/ITickObserver';
 export * from './lib/services/Tick';
 export {TwsService, IBar} from './lib/services/tws.service';
+export {BlocklyService} from './lib/services/blockly.service';
+export * from './lib/services/Tick';
 export * from './lib/utilities/marketUtilities';

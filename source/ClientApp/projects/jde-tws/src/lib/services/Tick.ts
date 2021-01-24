@@ -5,9 +5,11 @@ import { TwsService } from './tws.service';
 import { Day } from 'jde-framework';
 import { ProtoUtilities } from 'jde-framework';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
+//import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 export class Tick implements ITickObserver
 {
 	constructor( public isMarketOpen:boolean )

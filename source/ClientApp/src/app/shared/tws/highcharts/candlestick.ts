@@ -15,9 +15,9 @@ import { TwsService, IBar } from 'jde-tws';
 import { Day, DateUtilities } from 'jde-framework';
 import {Settings, IAssignable} from 'jde-framework'
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests; import BarSize = Requests.BarSize;
+import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests; import BarSize = Requests.BarSize;
 import { MarketUtilities } from 'jde-tws';
 import { LinkSelectOptions } from 'jde-framework';
 import { TimeFrame,DateRangeSettings } from 'jde-framework';

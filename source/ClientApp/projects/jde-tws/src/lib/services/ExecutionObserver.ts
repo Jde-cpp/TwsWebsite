@@ -1,11 +1,14 @@
 import { Subject,Observable,NextObserver,CompletionObserver,Subscription } from 'rxjs';
 
 
-/// <reference path="dist/jde-tws-assets/src/assets/proto/ib.d.ts" />
-/// <reference path="dist/jde-tws-assets/src/assets/proto/results.d.ts" />
-//import {IComboLeg} from 'ib';
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+// <reference path="dist/jde-tws-assets/src/assets/proto/ ib.d.ts" />
+// <reference path="dist/jde-tws-assets/src/assets/proto/ ib.js" />
+// <reference path="dist/jde-tws-assets/src/assets/proto/results.d.ts" />
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+// import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
+// import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export interface ITradeCommon
 {

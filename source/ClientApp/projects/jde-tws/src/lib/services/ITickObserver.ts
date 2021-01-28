@@ -1,5 +1,7 @@
 import { Subject,Observable,NextObserver,CompletionObserver,Subscription, PartialObserver, Subscriber } from 'rxjs';
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 //https://stackoverflow.com/questions/46151594/how-to-handle-progress-update-using-reactivex-observables-subjects
 export interface ITickObserver extends CompletionObserver<number>

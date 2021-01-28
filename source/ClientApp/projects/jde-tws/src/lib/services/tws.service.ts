@@ -9,10 +9,16 @@ import {ObservableUtilities} from '../utilities/ObservableUtilities';
 import { DateUtilities } from 'jde-framework';
 import { MarketUtilities } from '../utilities/marketUtilities';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbWatch from 'dist/jde-tws-assets/src/assets/proto/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
+
+// import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
+// import * as IbRequests from '../proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
+// import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+// import * as IbWatch from '../proto/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 
 
 type ResolveGeneric = (any) => void;
@@ -810,7 +816,7 @@ export class TwsService
 		{
 			for( let i=0; i<x.length && x.length>1; ++i )
 			{
-				if( x[i].contract.currency!=MarketUtilities.DefaultCurrency )
+				if( x[i].contract.currency!=MarketUtilities.DefaultCurrency() )
 					 x.splice( i, 1 );
 			}
 			if( x.length==1 )

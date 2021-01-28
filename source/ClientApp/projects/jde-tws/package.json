@@ -8,5 +8,9 @@
   },
   "dependencies": {
     "tslib": "^2.0.0"
+  },
+  "scripts":
+  {
+		"copy-proto": "copyfiles -V -u 1 \"src/lib/proto/*.d.ts\" \"../../dist/jde-tws/esm2015\""
   }
 }

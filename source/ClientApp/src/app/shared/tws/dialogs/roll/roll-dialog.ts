@@ -4,10 +4,10 @@ import { TickDetails } from 'jde-tws';
 import { TwsService } from 'jde-tws';
 import { Holding } from 'src/app/pages/tws/portfolio/holding';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
+import * as ib2 from 'jde-cpp/ib';
 import IB = ib2.Jde.Markets.Proto;
 
-//import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
+//import * as IbResults from 'jde-cpp/results';
 //import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Data

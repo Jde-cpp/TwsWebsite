@@ -5,7 +5,7 @@ import { TwsService } from 'jde-tws';
 import { TickDetails } from 'jde-tws';
 import {Settings} from 'jde-framework'
 
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
+import * as IbResults from 'jde-cpp/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 import { DateUtilities } from 'jde-framework';
 

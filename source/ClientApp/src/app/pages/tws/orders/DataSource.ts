@@ -1,7 +1,6 @@
 import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import { Subject } from 'rxjs';
 import {IData} from 'src/app/shared/tws/summary/summary'
 import {TickEx} from 'jde-tws'

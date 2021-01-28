@@ -111,3 +111,6 @@ source/ClientApp/projects/jde-tws/src/lib/jde-tws.component.ts
 source/ClientApp/projects/jde-tws/src/lib/jde-tws.service.spec.ts
 source/ClientApp/projects/jde-tws/src/lib/jde-tws.service.ts
 source/ClientApp/src/angular.json
+*.d.ts
+source/ClientApp/projects/tws-proto/*
+

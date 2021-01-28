@@ -5,10 +5,8 @@ import { TickEx } from 'jde-tws';
 import { TwsService } from 'jde-tws';
 import {ConfirmationDialog} from './confirmation'
 import {Settings, IAssignable} from 'jde-framework'
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 import { MarketUtilities } from 'jde-tws';
 
 export class Data

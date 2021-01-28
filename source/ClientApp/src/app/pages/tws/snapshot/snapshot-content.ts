@@ -21,9 +21,10 @@ import {MathUtilities, StatResult} from  'jde-framework';
 import { ProtoUtilities } from 'jde-framework';
 import {Settings, IAssignable} from 'jde-framework'
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';  import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as IbRequests from 'jde-cpp/requests';  import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class SymbolSettings implements IAssignable<SymbolSettings>
 {
@@ -207,7 +208,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		{
 			let returns = dayBars.map( (bar)=>{ return (bar.close-bar.open)/bar.open;} );
 			var beginningOfDay = DateUtilities.beginningOfDay(endTime);
-			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset*60000;
+			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset()*60000;
 			tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false ).then( (bars)=>
 			{
 				if( !bars.length )

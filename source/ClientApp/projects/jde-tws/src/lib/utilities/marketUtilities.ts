@@ -1,8 +1,12 @@
-import { DateUtilities, Day } from 'jde-framework';
 import { DecimalPipe } from '@angular/common';
+import { DateUtilities, Day } from 'jde-framework';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+// import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
+// import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+
 
 export type Symbol = string;
 export type ContractPK = number;
@@ -53,7 +57,7 @@ export class MarketUtilities
 		{
 			let now = new Date();
 			day = DateUtilities.toDays( now );
-			if( !this.isMarketOpen2(contract.exchange, contract.securityType, now) )
+			if( !MarketUtilities.isMarketOpen2(contract.exchange, contract.securityType, now) )
 				--day;
 		}
 		while( MarketUtilities.isHoliday(day, contract) )
@@ -107,14 +111,14 @@ export class MarketUtilities
 	{
 		return details.tradingHours
 			? MarketUtilities.contractHours(details.tradingHours)?.start*1000 < new Date().getTime()
-			: this.isMarketOpen2( details.contract.primaryExchange, details.contract.securityType );
+			: MarketUtilities.isMarketOpen2( details.contract.primaryExchange, details.contract.securityType );
 	}
 
 	static isLiquid( details:Results.IContractDetail )
 	{
 		return details.liquidHours
 			? MarketUtilities.contractHours(details.liquidHours).start*1000 < new Date().getTime()
-			: this.isMarketOpen2( details.contract.primaryExchange, IB.SecurityType.Option );
+			: MarketUtilities.isMarketOpen2( details.contract.primaryExchange, IB.SecurityType.Option );
 	}
 
 
@@ -149,13 +153,13 @@ export class MarketUtilities
 	}
 	static endLiquid( date:Date, contract:IB.IContract ):Date
 	{
-		const liquid = this.endTrading( date, contract );
+		const liquid = MarketUtilities.endTrading( date, contract );
 		if( contract.securityType==IB.SecurityType.Stock )
 			liquid.setHours( 16 );
 		return liquid;
 	}
 
-	static get DefaultCurrency(){ return IB.Currencies.UsDollar; }
+	static DefaultCurrency(){ return IB.Currencies.UsDollar; }
 /*	static startTrading( details:Results.IContractDetails )
 	{
 		var now = new Date().getTime()/1000;
@@ -182,7 +186,7 @@ export class MarketUtilities
 		if( exchange!="Nasdaq" && exchange!="Nyse" )
 			console.error( `need to implement exchange '${exchange}` );
 
-		return 19*60+DateUtilities.easternTimezoneOffset;
+		return 19*60+DateUtilities.easternTimezoneOffset();
 	}
 	static isPreOpening( exchange:string, secType:string )
 	{

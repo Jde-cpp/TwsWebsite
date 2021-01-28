@@ -2,6 +2,7 @@ import { Observable } from 'rxjs';
 
 export class ObservableUtilities
 {
+	// @dynamic
 	static toPromise<T>( fnctn:()=>Observable<T>, expectEmpty=false ):Promise<T[]>
 	{
 		return new Promise<T[]>( (resolve,reject)=>
@@ -14,7 +15,6 @@ export class ObservableUtilities
 				error: e=>{ reject( {results: results, error:e} ); }
 			});
 		});
-
 	}
 	static toPromiseSingle<T>( fnctn:()=>Observable<T>, expectNull:boolean=true ):Promise<T>
 	{

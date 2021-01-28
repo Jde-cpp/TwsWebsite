@@ -5,18 +5,15 @@ import { IErrorService } from 'jde-framework';
 import { TickObservable } from 'jde-tws';
 import { MarketUtilities } from 'jde-tws';
 
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { WatchRowComponent } from './watch-row/watch-row';
 import { Subject } from 'rxjs';
 
-import * as IbWatch from 'dist/jde-tws-assets/src/assets/proto/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
+import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { IProfile } from 'jde-framework';
 
 @Component({selector: 'watch-table', templateUrl: './watch-table.html', styleUrls:['./watch-table.scss']})

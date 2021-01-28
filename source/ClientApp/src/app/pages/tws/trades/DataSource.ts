@@ -6,7 +6,7 @@ import {IData} from 'src/app/shared/tws/summary/summary'
 import {ITradeCommon} from 'jde-tws'
 
 import {sum} from 'jde-framework'
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Trade
 {

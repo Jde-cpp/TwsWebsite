@@ -9,12 +9,10 @@ import {Holding, TermHoldingSummary, Price} from './holding'
 import {OptionEntryDialog} from 'src/app/shared/tws/dialogs/option-entry/option-entry'
 import {TransactDoModal} from 'src/app/shared/tws/dialogs/transact/transact'
 
-import * as ib from 'dist/jde-tws-assets/src/assets/proto/ib';
-import IB = ib.Jde.Markets.Proto;
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
+//import * as ib from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib.Jde.Markets.Proto;
+import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { MarketUtilities, ContractPK } from 'jde-tws';
 import { RollDialog } from 'src/app/shared/tws/dialogs/roll/roll-dialog';
 import { TickDetails } from 'jde-tws';

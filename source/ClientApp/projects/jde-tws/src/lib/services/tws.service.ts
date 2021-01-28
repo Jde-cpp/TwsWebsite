@@ -38,7 +38,7 @@ export interface ITicker
 	onStringTick( reqId:number, type:Results.ETickType, value:string ):void;
 	complete(reqId:number):void;
 }
-type GetResult = (result:Results.IMessageUnion)=>any;
+type GetResult = (result:Results.IMessageUnion)=>any;//gets the result, null if not same message.
 type Resolve = (x:any)=>void;
 type Reject = (x:Results.IError)=>void;
 type TransformInput = (x:any)=>any;
@@ -58,7 +58,7 @@ class Connection
 {
 	constructor( /*private cnsl: IErrorService*/ )
 	{
-		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6811', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
+		this.socket = webSocket<protobuf.Buffer>( {url: 'wss://localhost:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		//this.socket.binary(true);
 		this.socket.subscribe(
 			( msg ) => this.addMessage( msg ),
@@ -735,16 +735,30 @@ class Connection
 	{
 		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, transform );
 	}
-	StringRequest( type:Requests.ERequests, name:string ):Requests.IStringRequest
+/*	StringRequest( type:Requests.ERequests, name:string ):Requests.IStringRequest
 	{
 		return {id: this.getRequestId(), "type": type, "name": name};
-	}
+	}*/
 	static transformStringList( result:Results.IStringList ){ return result.values; }
 	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
 	portfolios():Promise<string[]>{ return this.sendGenericPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
 	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise2<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}, (wl:Results.IWatchList)=>{return wl.file;} ); };
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
 	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise2<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
+	googleLogin( token:string ):Promise<void>{ console.log( `googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
+
+	get( url:string ):Promise<string>{ console.log( `get( ${url} )` ); return this.sendStringPromise2<string>( url, Requests.ERequests.RestGet, (x)=>x.stringResult, (x)=>x.value); };
+	delete( url:string ):Promise<void>{ console.log( `delete( ${url} )` ); return this.sendStringPromise2<void>( url, Requests.ERequests.RestDelete, (x)=>x.stringResult); };
+	patch<T>( url:string, item:string ):Promise<void>
+	{
+		console.log( `patch( ${url}, ${item} )` );
+		return this.sendPromise2<Requests.IRestRequest,void>( "restRequest", {id: this.getRequestId(), type: Requests.ERequests.RestPatch, url: url, item: item }, (x)=>x.stringResult, null );
+	}
+	post( url:string, item:string ):Promise<number>
+	{
+		console.log( `post( ${url}, ${item} )` );
+		return this.sendPromise2<Requests.IRestRequest,number>( "restRequest", {id: this.getRequestId(), type: Requests.ERequests.RestPost, url: url, item: item }, (x)=>x.stringResult, (msg:Results.StringResult)=>+msg.value );
+	}
 
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
 	private socket:WebSocketSubject<protobuf.Buffer>;
@@ -834,7 +848,12 @@ export class TwsService
 	watch( name:string ):Promise<Watch.File>{ return this.connection.watch(name); };
 	deleteWatch( name:string ):Promise<void>{ return this.connection.deleteWatch(name); };
 	editWatch( file:Watch.File ):Promise<void>{ return this.connection.editWatch(file); };
+	googleLogin( token:string ):Promise<void>{ return this.connection.googleLogin(token); };
 
+	get( url:string ):Promise<string>{ return this.connection.get(url); };
+	delete( url:string ):Promise<void>{ return this.connection.delete(url); };
+	patch( url:string, item:string ):Promise<void>{ return this.connection.patch(url,item); };
+	post( url:string, item:string ):Promise<number>{ return this.connection.post(url,item); };
 
 	private static accounts:StringMap;
 	private static newsProviders:StringMap;

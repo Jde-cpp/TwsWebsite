@@ -3,7 +3,8 @@ import { Component, ViewEncapsulation } from '@angular/core';
 @Component({selector: 'app-root', templateUrl: './app.component.html', styleUrls: ['./app.component.scss'], encapsulation: ViewEncapsulation.None})
 export class AppComponent
 {
-  title = 'WebSite';
+	title = 'WebSite';
+	//authenticate=true;
 }
 
 function __classPrivateFieldSet(receiver, privateMap, value)

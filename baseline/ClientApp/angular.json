@@ -208,6 +208,11 @@
 							"**/node_modules/**"
 						]
 					}
+				},
+				"serve":
+				{
+					"builder": "@angular-devkit/build-angular:dev-server",
+					"options": { "sourceMap": {"scripts":true} }
 				}
 			}
 		},
@@ -290,6 +295,11 @@
 							"**/node_modules/**"
 						]
 					}
+				},
+				"serve":
+				{
+					"builder": "@angular-devkit/build-angular:dev-server",
+					"options": { "sourceMap": {"scripts":true} }
 				}
 			}
 		},

@@ -28,11 +28,14 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 
 import {NavBarModule} from 'jde-material-site';
 import {ThemePickerModule} from 'jde-material-site';
-//import {ComponentPageTitle} from './pages/material-site/page-title/page-title';
 import {StyleManager} from 'jde-material-site';
+import {IAuth} from 'jde-material-site';
+
+import {TwsAuthService} from 'jde-tws';
 
 import{ FundamentalsComponent } from './pages/tws/snapshot/fundamentals/fundamentals';
 import{ NewsComponent } from './pages/tws/snapshot/news/news';
+import{ UserComponent } from './pages/user-management/users/users'
 import{ CandlestickComponent } from './shared/tws/highcharts/candlestick';
 import{ OptionTableComponent } from './shared/tws/options/option-table/option-table';
 import{ OptionTabComponent } from './shared/tws/options/option-tab/option-tab';
@@ -71,6 +74,8 @@ import {DefaultErrorService } from 'jde-framework'
 
 import {CanActivateComponentSidenav} from 'jde-material-site';
 import {ThemeStorage} from 'jde-material-site';
+import { ComponentCategoryList } from 'jde-material-site';
+import { ComponentSidenav } from 'projects/jde-material-site/src/lib/pages/component-sidenav/component-sidenav';
 
 const routes: Routes =
 [
@@ -87,6 +92,17 @@ const routes: Routes =
 		[
 			{ path: ':id', component: BlocklyViewerComponent },
 			{ path: '', component: BlocklyCategoryList }
+		]
+	},
+	{
+		path: 'users',
+		component: ComponentSidenav,
+		children :
+		[
+			{ path: 'users', component: UserComponent },
+			// { path: 'roles', component: RoleComponent },
+			// { path: 'groups', component: GroupComponent },
+			{ path: '', component: ComponentCategoryList }
 		]
 	},
 	// {
@@ -110,13 +126,14 @@ const routes: Routes =
 	 LinkSelectComponent, DateRangeComponent, QuantityComponent],
   imports: [
 	 BrowserModule, RouterModule.forRoot( routes, {enableTracing: false} ), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
-	 MatAutocompleteModule,MatButtonModule, MatDialogModule, MatFormFieldModule,MatMenuModule, MatIconModule,MatInputModule,MatNativeDateModule, MatExpansionModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule,MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
+	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatExpansionModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
 	 NavBarModule, ThemePickerModule
   ],
   entryComponents: [TransactDialog, RollDialog, OptionEntryDialog],
   providers: [
 		{provide: 'IProfile', useClass: LocalStorageProfile},
 		{provide: 'IErrorService', useClass: DefaultErrorService},
+		{provide: 'IAuth', useClass: TwsAuthService},
 		CanActivateComponentSidenav, StyleManager, ThemeStorage, DecimalPipe
 	],
 	bootstrap: [AppComponent]

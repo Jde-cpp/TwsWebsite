@@ -2,11 +2,11 @@
 import { Routes, RouterModule } from '@angular/router';
 
 import {CanActivateComponentSidenav} from 'jde-material-site';
-import {OrderComponent} from './pages/tws/orders/orders';
-import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
-import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
-import {TradeComponent} from './pages/tws/trades/trades';
-import {WatchComponent} from './pages/tws/watch/watch';
+import {OrderComponent} from '../../projects/jde-tws/src/lib/pages/orders/orders';
+import {PortfolioComponent} from '../../projects/jde-tws/src/lib/pages/portfolio/portfolio';
+import {SnapshotComponent} from '../../projects/jde-tws/src/lib/pages/snapshot/snapshot';
+import {TradeComponent} from '../../projects/jde-tws/src/lib/pages/trades/trades';
+import {WatchComponent} from '../../projects/jde-tws/src/lib/pages/watch/watch';
 
 export const routes: Routes =
 [

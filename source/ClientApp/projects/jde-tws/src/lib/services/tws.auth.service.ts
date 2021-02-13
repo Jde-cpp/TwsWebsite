@@ -10,7 +10,7 @@ export class TwsAuthService implements IAuth
 	constructor( private tws: TwsService )
 	{}
 
-	enabled():boolean{ return true; }
+	enabled():boolean{ return false; }
 	login( token )
 	{
 		this.tws.googleLogin( token );

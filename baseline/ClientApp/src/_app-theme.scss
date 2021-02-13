@@ -1,6 +1,6 @@
 @import '~@angular/material/theming';
 
-@import 'dist/jde-material-site/src/assets/pages/component-category-list/component-category-list-theme';
+//@import 'dist/jde-material-site/src/assets/pages/component-category-list/component-category-list-theme';
 //@import './app/pages/material-site/component-list/component-list-theme';
 @import 'dist/jde-material-site/src/assets/pages/component-sidenav/component-sidenav-theme';
 //@import './app/pages/material-site/component-viewer/component-viewer-theme';
@@ -44,7 +44,7 @@
   .is-next-version {
     background: mat-color($next-theme, 900) !important;
   }
-
+/*
   @include component-category-list-theme($theme);
   //@include component-list-theme($theme);
   @include component-viewer-sidenav-theme($theme);
@@ -59,6 +59,7 @@
   //@include home-page-theme($theme);
   @include nav-bar-theme($theme);
   //@include table-of-contents-theme($theme);
+  */
 }
 
 // Define the light theme.

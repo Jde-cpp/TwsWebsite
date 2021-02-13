@@ -29,43 +29,46 @@ import {MatToolbarModule} from '@angular/material/toolbar';
 import {NavBarModule} from 'jde-material-site';
 import {ThemePickerModule} from 'jde-material-site';
 import {StyleManager} from 'jde-material-site';
-import {IAuth} from 'jde-material-site';
 
-import {TwsAuthService} from 'jde-tws';
+import {TwsAuthService, TwsService} from 'jde-tws';
 
-import{ FundamentalsComponent } from './pages/tws/snapshot/fundamentals/fundamentals';
-import{ NewsComponent } from './pages/tws/snapshot/news/news';
-import{ UserComponent } from './pages/user-management/users/users'
-import{ CandlestickComponent } from './shared/tws/highcharts/candlestick';
-import{ OptionTableComponent } from './shared/tws/options/option-table/option-table';
-import{ OptionTabComponent } from './shared/tws/options/option-tab/option-tab';
-import {SmallChartComponent} from './shared/tws/small-chart/small-chart';
-import {SummaryComponent} from './shared/tws/summary/summary';
-import {WatchTableComponent} from './shared/tws/watch-table/watch-table';
-import {WatchRowComponent} from './shared/tws/watch-table/watch-row/watch-row';
+//import{ NewsComponent } from 'jde-tws';
+import{ UserComponent } from './pages/user-management/users/users';
+import{ GraphQLComponent } from './pages/GraphQL/graph-ql-component';
+import{ GraphQLDetailComponent } from './pages/GraphQL/detail/graph-ql-detail';
+import{ GraphQLProperties } from './pages/GraphQL/properties/properties';
+import{ GraphQLLinkComponent } from  './pages/GraphQL/links/links';
 
-import {ConfirmationDialog} from './shared/tws/dialogs/transact/confirmation'
-import {OptionEntryDialog} from './shared/tws/dialogs/option-entry/option-entry';
-import {RollDialog} from './shared/tws/dialogs/roll/roll-dialog'
-import {TransactDialog} from './shared/tws/dialogs/transact/transact'
+import{ UserEntryDialog } from './pages/user-management/users/dialog/user-dialog';
+import{ CandlestickComponent } from 'jde-tws';
+import {SelectDialog} from './pages/GraphQL/select-dialog/select-dialog';
+/*
+import{ OptionTableComponent } from 'jde-tws';
+import{ OptionTabComponent } from 'jde-tws';
+import {SmallChartComponent} from 'jde-tws';
+import {SummaryComponent} from 'jde-tws';
+import {WatchTableComponent} from 'jde-tws';
+import {WatchRowComponent} from 'jde-tws';
 
+import {ConfirmationDialog} from 'jde-tws'
+//import {OptionEntryDialog} from 'jde-tws';
+import {RollDialog} from 'jde-tws'
+import {TransactDialog} from 'jde-tws'
+*/
 import {DateRangeComponent} from 'jde-framework'
 import {LinkSelectComponent} from 'jde-framework'
 import {PaginatorComponent} from 'jde-framework';
 
-import {QuantityComponent} from './shared/tws/widgets/quantity/quantity'
-
 import { AppComponent } from './app.component';
 
+//import {QuantityComponent} from 'jde-tws'
+//import {ConfigurationDialog} from 'jde-tws'
+import {OrderComponent} from 'jde-tws'
+import {PortfolioComponent} from 'jde-tws';
+import {SnapshotComponent, SnapshotContentComponent, FundamentalsComponent } from 'jde-tws';
+import {TradeComponent} from 'jde-tws'
+import {WatchComponent} from 'jde-tws'
 
-import {PortfolioComponent} from './pages/tws/portfolio/portfolio';
-import {ConfigurationDialog} from './pages/tws/snapshot/configuration'
-import {OrderComponent} from './pages/tws/orders/orders'
-import {SnapshotComponent} from './pages/tws/snapshot/snapshot';
-import {SnapshotContentComponent} from './pages/tws/snapshot/snapshot-content';
-import {TradeComponent} from './pages/tws/trades/trades'
-import {WatchComponent} from './pages/tws/watch/watch'
-import {WatchContentComponent} from './pages/tws/watch/watch-content';
 import {BlocklyViewerComponent} from 'jde-blockly';
 import {BlocklyCategoryList} from 'jde-blockly';
 import {BlocklySidenav} from 'jde-blockly'
@@ -95,45 +98,48 @@ const routes: Routes =
 		]
 	},
 	{
-		path: 'users',
+		path: 'settings',
 		component: ComponentSidenav,
+		data: { name: "Settings" },
 		children :
 		[
-			{ path: 'users', component: UserComponent },
-			// { path: 'roles', component: RoleComponent },
-			// { path: 'groups', component: GroupComponent },
-			{ path: '', component: ComponentCategoryList }
+			{ path: 'users', component: UserComponent, data: { name: "Users", summary: "View/Modify Users" } },
+			{ path: 'roles/:id', component: GraphQLDetailComponent },
+			{
+				path: 'roles',
+				component: GraphQLComponent,
+				data: { name: "Roles", summary: "View/Modify Roles" }
+				// children:
+				// [
+				// 	{ path: ':id', component: UserComponent, data: { name: "Users", summary: "View/Modify Users" } },
+				// 	{ path: '**', component: GraphQLDetailComponent },
+				// 	{ path: '', component: ComponentCategoryList, data: { name: "Settings", summary: "Site Settings" } }
+				// ]
+			},
+			{ path: 'groups', component: GraphQLComponent, data: { name: "Groups", summary: "View/Modify Groups" } },
+			{ path: '', component: ComponentCategoryList, data: { name: "Settings", summary: "Site Settings" } }
 		]
-	},
-	// {
-	// 	path: 'blockly',
-	// 	loadChildren: () => import('dist/jde-blockly/lib/pages/index/sidenav/blockly-sidenav').then(m => m.BlocklySidenavModule)
-	// },
-	//{path: '', redirectTo: ''}
-	//{ path: 'blockly/:id', component: BlocklyViewerComponent },
-	// { path: 'blockly', component: BlocklyCategoryList },
-	// { path: '', redirectTo: 'snapshot', pathMatch: 'full' },
+	}
 ];
 
 @NgModule({
   declarations: [
-	 AppComponent,
-	 BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,ConfigurationDialog,OrderComponent, SnapshotComponent,SnapshotContentComponent,TradeComponent,WatchComponent, WatchContentComponent,
+	 AppComponent, ComponentCategoryList,
+	 BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent,TradeComponent,WatchComponent,
 	 PaginatorComponent,
-	 FundamentalsComponent, NewsComponent, CandlestickComponent, OptionTableComponent, OptionTabComponent, SmallChartComponent, SummaryComponent,
-	 WatchTableComponent, WatchRowComponent,
-	 ConfirmationDialog, OptionEntryDialog, RollDialog, TransactDialog,
-	 LinkSelectComponent, DateRangeComponent, QuantityComponent],
+	 CandlestickComponent,
+	 UserComponent, UserEntryDialog, SelectDialog, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent],
   imports: [
-	 BrowserModule, RouterModule.forRoot( routes, {enableTracing: false} ), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
+	  BrowserModule, RouterModule.forRoot( routes, {enableTracing: false} ), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
 	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatExpansionModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
 	 NavBarModule, ThemePickerModule
   ],
-  entryComponents: [TransactDialog, RollDialog, OptionEntryDialog],
+  entryComponents: [/*TransactDialog, RollDialog, OptionEntryDialog,*/ UserEntryDialog, SelectDialog],
   providers: [
 		{provide: 'IProfile', useClass: LocalStorageProfile},
 		{provide: 'IErrorService', useClass: DefaultErrorService},
 		{provide: 'IAuth', useClass: TwsAuthService},
+		{provide: 'IGraphQL', useClass: TwsService},
 		CanActivateComponentSidenav, StyleManager, ThemeStorage, DecimalPipe
 	],
 	bootstrap: [AppComponent]

@@ -6,20 +6,13 @@ import {Order,OrderSubject,OrderObservable} from './IOrderObserver'
 import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'
 import { ProtoUtilities } from 'jde-framework';
 import {ObservableUtilities} from '../utilities/ObservableUtilities';
-import { DateUtilities } from 'jde-framework';
+import { Table, IGraphQL, Mutation, DateUtilities } from 'jde-framework';
 import { MarketUtilities } from '../utilities/marketUtilities';
 
-//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
-
-// import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
-// import * as IbRequests from '../proto/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
-// import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-// import * as IbWatch from '../proto/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
-
 
 type ResolveGeneric = (any) => void;
 type ClientId = number;
@@ -64,7 +57,8 @@ class Connection
 {
 	constructor( /*private cnsl: IErrorService*/ )
 	{
-		this.socket = webSocket<protobuf.Buffer>( {url: 'wss://localhost:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
+		//this.socket = webSocket<protobuf.Buffer>( {url: 'wss://PL1USPMU0029WS:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
+		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://PL1USPMU0029WS:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		//this.socket.binary(true);
 		this.socket.subscribe(
 			( msg ) => this.addMessage( msg ),
@@ -214,8 +208,6 @@ class Connection
 					this.testCallbacks.get( id ).resolve( message.contractDetails.details );
 					this.testCallbacks.delete( id );
 				}
-
-				//	console.error( `no callbacks for ContractDetails reqId='${id}'` );
 			}
 			else if( message.options )
 				this.optionSummaryCallbacks.get( message.options.id )[0]( message.options );
@@ -267,20 +259,52 @@ class Connection
 					else
 						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
 				}
+/*				else if( typeId==Results.EResults.Authentication )
+				{
+					if( this.testCallbacks.has)
+					const accountNumber = message.message.stringValue;
+					if( this.accountUpdateCallbacks.has(accountNumber) )
+					{
+						for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
+							callback[1].next( null );//message.portfolioUpdate
+					}
+					else
+						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
+				}*/
 				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
 				{
 					this.testCallbacks.get( message.message.intValue ).resolve( true );
 					this.testCallbacks.delete( message.message.intValue );
 				}
 				else
+				{
+					debugger;
 					console.error( "unknown message:  "+(<Results.MessageUnion>message).toJSON() );
+				}
 			}
 			else if( message.positionMulti )
 				this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
 			else if( message.flex )
 				this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
 			else if( message.stringResult )
-				console.error( "message.stringResult not implemented" );
+			{
+				var id = message.stringResult.id;
+				if( this.testCallbacks.has(id) )
+				{
+					let x =  this.testCallbacks.get( id );
+					//try
+					{
+						x.resolve( x.transformInput(message.stringResult) );
+					}
+					//catch( e )
+					//{
+					//	x.reject( e );
+					//}
+					this.testCallbacks.delete( id );
+				}
+				else
+					console.error( "message.stringResult not implemented" );
+			}
 			else if( message.type )
 			{
 				if( message.type==Results.EResults.OpenOrderEnd )
@@ -460,14 +484,9 @@ class Connection
 		this.send( new Requests.RequestUnion({"genericRequests": {"type": request}}) );
 		return new Promise<StringMap>( (resolve,reject)=>{ promises.push( [resolve,reject] ); });
 	}
-	reqManagedAccts(): Promise<StringMap>
-	{
-		return this.stringMapPromise( Requests.ERequests.ManagedAccounts, Results.EResults.ManagedAccounts );
-	}
-	reqNewsProviders():Promise<StringMap>
-	{
-		return this.stringMapPromise( Requests.ERequests.ReqNewsProviders, Results.EResults.NewsProviders );
-	}
+
+	reqManagedAccts(): Promise<StringMap>{  return this.stringMapPromise(Requests.ERequests.ManagedAccounts, Results.EResults.ManagedAccounts); }
+	reqNewsProviders():Promise<StringMap>{ return this.stringMapPromise(Requests.ERequests.ReqNewsProviders, Results.EResults.NewsProviders); }
 
 	reqMktData( contractId:number, tickList:Requests.ETickList[], snapshot:boolean ):TickObservable
 	{
@@ -752,10 +771,17 @@ class Connection
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
 	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise2<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
 	googleLogin( token:string ):Promise<void>{ console.log( `googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
+	query( ql: string ):Promise<any>{ console.log( `query( ${ql} )` ); return this.sendStringPromise2<any>(ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>
+	{
+		return result.stringResult;
+	}, (rslt:Results.IStringResult)=>
+	{
+		return rslt.value.length ? JSON.parse(rslt.value).data : null;
+	} ); }
 
-	get( url:string ):Promise<string>{ console.log( `get( ${url} )` ); return this.sendStringPromise2<string>( url, Requests.ERequests.RestGet, (x)=>x.stringResult, (x)=>x.value); };
-	delete( url:string ):Promise<void>{ console.log( `delete( ${url} )` ); return this.sendStringPromise2<void>( url, Requests.ERequests.RestDelete, (x)=>x.stringResult); };
-	patch<T>( url:string, item:string ):Promise<void>
+	//get( url:string ):Promise<string>{ console.log( `get( ${url} )` ); return this.sendStringPromise2<string>( url, Requests.ERequests.RestGet, (x)=>x.stringResult, (x)=>x.value); };
+	//delete( url:string ):Promise<void>{ console.log( `delete( ${url} )` ); return this.sendStringPromise2<void>( url, Requests.ERequests.RestDelete, (x)=>x.stringResult); };
+	/*patch<T>( url:string, item:string ):Promise<void>
 	{
 		console.log( `patch( ${url}, ${item} )` );
 		return this.sendPromise2<Requests.IRestRequest,void>( "restRequest", {id: this.getRequestId(), type: Requests.ERequests.RestPatch, url: url, item: item }, (x)=>x.stringResult, null );
@@ -764,7 +790,7 @@ class Connection
 	{
 		console.log( `post( ${url}, ${item} )` );
 		return this.sendPromise2<Requests.IRestRequest,number>( "restRequest", {id: this.getRequestId(), type: Requests.ERequests.RestPost, url: url, item: item }, (x)=>x.stringResult, (msg:Results.StringResult)=>+msg.value );
-	}
+	}*/
 
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
 	private socket:WebSocketSubject<protobuf.Buffer>;
@@ -790,7 +816,7 @@ class Connection
 }
 
 @Injectable( {providedIn: 'root'} )
-export class TwsService
+export class TwsService implements IGraphQL
 {
 	constructor( /*@Inject('IErrorService') private cnsl: IErrorService*/ )
 	{}
@@ -856,11 +882,52 @@ export class TwsService
 	editWatch( file:Watch.File ):Promise<void>{ return this.connection.editWatch(file); };
 	googleLogin( token:string ):Promise<void>{ return this.connection.googleLogin(token); };
 
-	get( url:string ):Promise<string>{ return this.connection.get(url); };
-	delete( url:string ):Promise<void>{ return this.connection.delete(url); };
-	patch( url:string, item:string ):Promise<void>{ return this.connection.patch(url,item); };
-	post( url:string, item:string ):Promise<number>{ return this.connection.post(url,item); };
+	query( ql: string ):Promise<any>{ return this.connection.query( ql ); }
+	schema( names:string[] ):Promise<Table[]>
+	{
+		return new Promise<Table[]>( (resolve, reject)=>
+		{
+			let results = new Array<Table>();
+			let query =  new Array<string>();
+			names.forEach( (x)=>{ if( TwsService.tables.has(x) ) results.push(TwsService.tables.get(x)); else query.push(x); } );
+			if( !query.length )
+				resolve( results );
+			else
+			{
+				for( let name of query )
+				{
+					let ql = `{ __type(name: "${name}") { fields { name type { name kind ofType{name kind} } } } }`;
+					this.query( ql ).then( ( data:any )=>
+					{
+						let table = new Table( data.__type );
+						TwsService.tables.set( name, table );
+						if( results.push( table )==names.length )
+							resolve( results );
+					}).catch( (e)=>reject(e) );
+				}
+			}
+		});
+	}
+	mutations():Promise<Mutation[]>
+	{
+		return new Promise<Mutation[]>( (resolve, reject)=>
+		{
+			if( TwsService.mutations )
+				resolve( TwsService.mutations );
+			else
+			{
+				let ql = `query{__schema{mutationType{name fields { name args { name defaultValue type { name } } } } }`;
+				this.query( ql ).then( ( data:any )=>
+				{
+					TwsService.mutations = data.__schema.fields;
+					resolve( TwsService.mutations );
+				}).catch( (e)=>reject(e) );
+			}
+		});
+	}
 
+	private static tables = new Map<string,Table>();
+	private static mutations = new Array<Mutation>();
 	private static accounts:StringMap;
 	private static newsProviders:StringMap;
 	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( /*this.cnsl*/); return this._connection;} private _connection:Connection;

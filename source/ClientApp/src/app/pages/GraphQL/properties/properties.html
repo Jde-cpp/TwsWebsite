@@ -1,0 +1,16 @@
+<ng-container *ngIf="viewPromise | async">
+	<div>
+		<mat-form-field *ngFor="let member of clone | keyvalue: originalOrder" style="width: 100%;" appearance="fill">
+			<mat-label>{{member.key}}</mat-label>
+			<input matInput *ngIf="member.key!='description'" [value]="clone.get(member.key)" (focusout)="clone.set( member.key, $event.target.value)" >
+			<!-- (input)="clone.set(member.key,$event.target.value)" -->
+			<textarea matInput *ngIf="member.key=='description'" [value]="clone.get(member.key)" (focusout)="clone.set( member.key, $event.target.value)"></textarea>
+		</mat-form-field>
+	</div>
+	<div>
+		<span *ngIf="clone.size" style="margin-left: auto;" >
+			<button mat-icon-button (click)="saving=true;onSubmitClick()" [disabled]="saving"><mat-icon>done</mat-icon>Save</button>
+			<button mat-icon-button (click)="onCancelClick()" style="margin-left:50px;margin-right:20px"><mat-icon>cancel</mat-icon>Cancel</button>
+		</span>
+	</div>
+</ng-container>

@@ -16,6 +16,8 @@ import {TransactDoModal} from '../../shared/dialogs/transact/transact'
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
+import { IAuth } from 'jde-material-site';
+import { FormControl } from '@angular/forms';
 
 class Settings
 {
@@ -25,14 +27,24 @@ class Settings
 @Component({selector: 'portfolio',styleUrls: ['portfolio.scss'],templateUrl: './portfolio.html'})
 export class PortfolioComponent implements AfterViewInit, OnDestroy
 {
-	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile )
+	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth )
 	{}
 
 	ngAfterViewInit():void
 	{
 		this.profileService.get<Settings>( PortfolioComponent.profileKey ).then( (value)=>
 		{
-			this.settings = value; this.onSettingsLoaded();
+			this.settings = value;
+			if( this.authorizationService.enabled && !this.authorizationService.loggedIn )
+			{
+				this.authorizationSubscription = this.authorizationService.subscribe();
+				this.authorizationSubscription.subscribe({
+					next: ()=>this.onSettingsLoaded(),
+					error: (e)=>{debugger;console.log( `could not login ${e}` );}
+				});
+			}
+			else
+				this.onSettingsLoaded();
 		});
 	}
 
@@ -42,10 +54,13 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			this.tws.accountUpdatesUnsubscribe( this.requests );
 		if( this.mktDataSubscriptions.size )
 			this.tws.cancelMktData( this.mktDataSubscriptions.values() );//TickObservable[]=[];
+		//this.authorizationSubscription?.;
+
 	}
 
 	onSettingsLoaded()
 	{
+		console.log( "PortfolioComponent::onSettingsLoaded" );
 		this.tws.reqManagedAccts().then( (numbers)=>
 		{
 			this.allAccounts.clear();
@@ -54,16 +69,26 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			this.selectedAccounts = this.settings.selectedAccounts.filter( accountId=>this.allAccounts.has(accountId) );
 			if( !this.selectedAccounts.length )
 				this.selectedAccounts = [ ...this.allAccounts.keys() ];
+			console.log( `selectedAccounts=[${this.selectedAccounts.join()}]` );
 			for( var accountId of this.selectedAccounts )
 				this.subscribe( accountId );
 		});
 	}
 	subscribe( accountId:string )
 	{
+		console.log( `subscribe( ${accountId} )` );
 		var callbacks = this.tws.reqAccountUpdates( accountId );
 		this.requests.set( accountId, callbacks );
 		callbacks[0].subscribe( {next:accountUpdate =>{this.onAccountUpdate(accountUpdate);}, error:  e=>{console.error(e);}} );
-		callbacks[1].subscribe( {next:x =>{ if(x) this.onPortfolioUpdate(x); else if( !this.viewPromise ) this.initialLoad();}, error:  e=>{console.error(e);}} );
+		callbacks[1].subscribe(
+		{
+			next:x =>
+			{
+				if(x)
+					this.onPortfolioUpdate(x);
+				else if( !this.viewPromise )
+					this.initialLoad();
+			}, error:  e=>{console.error(e);}} );
 	}
 	accountChange( _:string )
 	{
@@ -90,7 +115,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			if( !this.requests.has(accountId) )
 				this.subscribe( accountId );
 		}
-		if( holdingCount!=this.holdings.length )
+		if( holdingCount!=this.holdings.length && this._table!==undefined )
 			this._table.renderRows();
 		this.settings.selectedAccounts = this.selectedAccounts.length==this.allAccounts.size ? [] : this.selectedAccounts;
 		this.profileService.put<Settings>( PortfolioComponent.profileKey, this.settings );
@@ -123,7 +148,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			const holding = new Holding( value );
 			(holding.isLong ? this.long : this.short).add( holding );
 			this.holdings.push( holding );
-			this._table.renderRows();
+			if( this._table!==undefined )
+				this._table.renderRows();
 			if( this.mktDataSubscriptions.has(contractId) )
 				console.error( `this.mktDataSubscriptions.has(${contractId})` );//should never be here, because not in holdings (option underlying?)
 			else
@@ -150,6 +176,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				holding.setDaySummary( bar,  MarketUtilities.previous(holding.contract) );
 			},
 		});
+		console.log( "this.viewPromise=true" );
 		this.viewPromise = Promise.resolve( true );
 	}
 	loadPreviousDay( contract:IB.IContract, isMarketOpen:boolean, holding:Holding, day:number )
@@ -286,6 +313,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			{
 				const index = 0;//+row.index;
 				this.selected = this.selected == row ? null : row;
+				console.log( `selected ${this.selected.display}` );
 			}
 		},250);
 	}
@@ -298,6 +326,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 //		this.dialog.open( DetailsDialog, {width: '600px', data: row} );
 	}
 
+	authorizationSubscription:Observable<void>;
 	holdings = new Array<Holding>();
 	underlying = new Map<ContractPK,TickDetails>();
 	long:TermHoldingSummary=new TermHoldingSummary();
@@ -324,4 +353,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	get settings(){return this._settings || (this.settings=new Settings());} set settings(value){ this._settings = value;} private _settings:Settings;
 	viewPromise:Promise<boolean>;
 	private static profileKey="PortfolioComponent";
+	foodForm = new FormControl( ["A", "B", "C"] );
+
 }

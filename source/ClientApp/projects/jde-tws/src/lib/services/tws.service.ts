@@ -155,6 +155,8 @@ class Connection
 			}
 			else if( message.stringMap )
 			{
+				var result = message.stringMap.result;
+				console.log( `${Results.EResults[result]} = ${Object.keys(message.stringMap.values).length} records` )
 				let promises = this.stringMapPromises.get( message.stringMap.result );
 				if( promises )
 				{
@@ -459,7 +461,7 @@ class Connection
 	}
 	error( err ):void
 	{
-	//	debugger;
+		debugger;
 		this.sessionId = null;
 		console.error( "No longer connected to TWS.", err );
 		this.handleConnectionError( err );
@@ -771,7 +773,9 @@ class Connection
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
 	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise2<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
 	googleLogin( token:string ):Promise<void>{ console.log( `googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
-	query( ql: string ):Promise<any>{ console.log( `query( ${ql} )` ); return this.sendStringPromise2<any>(ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>
+	query( ql: string ):Promise<any>
+	{
+		console.log( `query( ${ql} )` ); return this.sendStringPromise2<any>(ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>
 	{
 		return result.stringResult;
 	}, (rslt:Results.IStringResult)=>
@@ -927,7 +931,7 @@ export class TwsService implements IGraphQL
 	}
 
 	private static tables = new Map<string,Table>();
-	private static mutations = new Array<Mutation>();
+	private static mutations:Array<Mutation>;
 	private static accounts:StringMap;
 	private static newsProviders:StringMap;
 	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( /*this.cnsl*/); return this._connection;} private _connection:Connection;

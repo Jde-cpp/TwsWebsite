@@ -38,6 +38,7 @@ import{ GraphQLComponent } from './pages/GraphQL/graph-ql-component';
 import{ GraphQLDetailComponent } from './pages/GraphQL/detail/graph-ql-detail';
 import{ GraphQLProperties } from './pages/GraphQL/properties/properties';
 import{ GraphQLLinkComponent } from  './pages/GraphQL/links/links';
+import{ GraphQLTable } from  './pages/GraphQL/table/table';
 
 import{ UserEntryDialog } from './pages/user-management/users/dialog/user-dialog';
 import{ CandlestickComponent } from 'jde-tws';
@@ -103,19 +104,12 @@ const routes: Routes =
 		data: { name: "Settings" },
 		children :
 		[
+			{ path: 'accounts/:id', component: GraphQLDetailComponent },
+			{ path: 'accounts', component: GraphQLComponent, data: { name: "Accounts", summary: "View/Modify IB Accounts", display:"description" } },
 			{ path: 'users', component: UserComponent, data: { name: "Users", summary: "View/Modify Users" } },
 			{ path: 'roles/:id', component: GraphQLDetailComponent },
-			{
-				path: 'roles',
-				component: GraphQLComponent,
-				data: { name: "Roles", summary: "View/Modify Roles" }
-				// children:
-				// [
-				// 	{ path: ':id', component: UserComponent, data: { name: "Users", summary: "View/Modify Users" } },
-				// 	{ path: '**', component: GraphQLDetailComponent },
-				// 	{ path: '', component: ComponentCategoryList, data: { name: "Settings", summary: "Site Settings" } }
-				// ]
-			},
+			{ path: 'roles', component: GraphQLComponent, data: { name: "Roles", summary: "View/Modify Roles" } },
+			{ path: 'groups/:id', component: GraphQLDetailComponent },
 			{ path: 'groups', component: GraphQLComponent, data: { name: "Groups", summary: "View/Modify Groups" } },
 			{ path: '', component: ComponentCategoryList, data: { name: "Settings", summary: "Site Settings" } }
 		]
@@ -123,13 +117,14 @@ const routes: Routes =
 ];
 
 @NgModule({
-  declarations: [
-	 AppComponent, ComponentCategoryList,
-	 BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent,TradeComponent,WatchComponent,
-	 PaginatorComponent,
-	 CandlestickComponent,
-	 UserComponent, UserEntryDialog, SelectDialog, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent],
-  imports: [
+	declarations: [
+		AppComponent, ComponentCategoryList,
+		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent,TradeComponent,WatchComponent,
+		PaginatorComponent,
+		CandlestickComponent,
+		UserComponent, UserEntryDialog, SelectDialog, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLTable, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent,
+	],
+  	imports: [
 	  BrowserModule, RouterModule.forRoot( routes, {enableTracing: false} ), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
 	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatExpansionModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
 	 NavBarModule, ThemePickerModule

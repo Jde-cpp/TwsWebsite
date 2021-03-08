@@ -3,11 +3,10 @@ import {ActivatedRoute, Params, Router, RouterModule, Routes} from '@angular/rou
 import { MatDialog } from '@angular/material/dialog';
 import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
-import { IProfile, IErrorService, Settings} from 'jde-framework'
+import { IProfile, IErrorService, Settings, IGraphQL, Table, FieldKind, Field} from 'jde-framework'
 
 import { ComponentPageTitle } from 'jde-material-site';
-import { IGraphQL, Table, FieldKind } from 'projects/jde-framework/src/lib/services/IGraphQL';
-import { CdkColumnDef } from '@angular/cdk/table';
+import { Subject } from 'rxjs';
 
 @Component( {selector: 'graph-ql-component', styleUrls: ['graph-ql-component.css'], templateUrl: './graph-ql-component.html'} )
 export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
@@ -40,15 +39,10 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	load()
 	{
 		//`query{ users{ id name target description authenticatorId attributes created updated deleted } }`
-		this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).map( (x)=>x.name );
-/*		this.displayedColumns.forEach( (colId)=>
-		{
-			var c = new CdkColumnDef( this._table );
-			c.name = colId;
-			c.headerCell = //<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Target </mat-header-cell>
-			new CdkHeaderCellDef();
-			this._table.addColumnDef( c );
-		})*/
+		var order = ["name", "description","created", "updated", "deleted", "target"];
+		var sort = ( x:Field,y:Field )=>order.indexOf(x.name)-order.indexOf(y.name);
+		this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).sort( sort );
+
 		let columns = this.schema.fields.filter( (x)=>x.type.kind!=FieldKind.LIST ).map( (x)=>x.name ).join( " " );
 		let ql = `query{ ${this.fetchName} { ${columns} } }`;
 		this.graphQL.query( ql ).then( (data:any)=>
@@ -57,7 +51,11 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 			this.viewPromise = Promise.resolve(true);
 		}).catch( (e)=>console.error(e) );
 	}
-	cellClick( row:any ){  this.selection = this.selection == row ? null : row; }
+//	cellClick( row:any ){  this.selection = this.selection == row ? null : row; }
+	selectionChanged( $event:any )
+	{
+		this.selection = $event;
+	}
 	sortData( options:Sort )
 	{
 		const values = this.data.slice();
@@ -76,25 +74,13 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 		if( this.selection.deleted )
 			this.graphQL.query( `{ mutation { restore${this.type}("id":${this.selection.id}) } }` ).then( ()=>this.selection.deleted=null ).catch( (e)=>console.log(e) );
 		else
-			this.router.navigate( ["settings", "roles", this.selection.target] );//this.dialogOpen( this.selection );
+			this.router.navigate( ["settings", this.fetchName, this.selection.target] );
 	}
-	insert(){ debugger;this.dialogOpen( null ); }
-
-	dialogOpen( user:any )
+	insert()
 	{
-		debugger;
-		// const dialogRef = this.dialog.open( UserEntryDialog,
-		// {
-		// 	width: '600px',
-		// 	height: '450px',
-		// 	data: { user: user, authenticators: this.authenticators }
-		// });
-		// dialogRef.afterClosed().subscribe(result =>
-		// {
-		// 	if( result )
-		// 		this.load();
-		// });
+		this.router.navigate( ["settings", this.fetchName, '$new'] );
 	}
+
 	delete()
 	{
 		const purge = this.selection.deleted!=null;
@@ -104,11 +90,12 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 		this.graphQL.query(`{ mutation { ${type}${this.type}(\"id\":${this.selection.id}) } }`).then( next ).catch( (e)=>{ console.error(e.toString()); } );
 	}
 
-	get haveSelection(){ return this.selection!==undefined; }
+	get haveSelection(){ return !!this.selection; }
 	selection:any|null|undefined;
 
 	viewPromise:Promise<boolean>;
-	displayedColumns:string[];// = ["name","target","description","authenticator", "deleted"];
+	//displayedColumns:string[];// = ["name","target","description","authenticator", "deleted"];
+	displayedColumns:Field[];// = ["name","target","description","authenticator", "deleted"];
 	@ViewChild('mainTable',{static: false}) _table:MatTable<any>;
 
 	data:any[];
@@ -119,8 +106,9 @@ export class GraphQLComponent implements AfterViewInit, OnInit, OnDestroy
 	get settings(){ return this.profile.value; }
 	get sort(){ return this.settings.sort; }
 	get showDeleted(){return this.settings.showDeleted;}
+	showDeletedSubject = new Subject<boolean>();
 	get type():string{ return this.name.substr(0,this.name.length-1); }
-	toggleShowDeleted(){ this.settings.showDeleted = !this.settings.showDeleted; }
+	toggleShowDeleted(){ this.settings.showDeleted = !this.settings.showDeleted; this.showDeletedSubject.next( this.settings.showDeleted ); }
 }
 
 class PageSettings

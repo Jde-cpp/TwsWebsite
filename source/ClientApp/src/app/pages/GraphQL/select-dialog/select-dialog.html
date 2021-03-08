@@ -1,7 +1,8 @@
 <ng-container *ngIf="viewPromise | async">
 	<h2 mat-dialog-title>{{title}}</h2>
 	<mat-dialog-content>
-		<mat-table [dataSource]="dataSource" class="mat-elevation-z8">
+		<graph-ql-table [dataSource]="dataSource" [displayedColumns]="displayedColumns" [sort]="sort" [selections]="selections" ></graph-ql-table>
+		<!-- <mat-table [dataSource]="dataSource" class="mat-elevation-z8">
 			<ng-container matColumnDef="select">
 				<mat-header-cell *matHeaderCellDef>
 					<mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()" [indeterminate]="selection.hasValue() && !isAllSelected()" [aria-label]="checkboxLabel()"> </mat-checkbox>
@@ -20,7 +21,7 @@
 			</ng-container>
 			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
 			<mat-row mat-row *matRowDef="let row; columns: displayedColumns;" (click)="selection.toggle(row)"></mat-row>
-		</mat-table>
+		</mat-table> -->
 	</mat-dialog-content>
 	<mat-dialog-actions style="flex: content; flex-direction: row;align-items: flex-start;display: flex;">
 		<span style="margin-left: auto;" >

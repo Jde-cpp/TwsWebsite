@@ -10,6 +10,7 @@ import { IGraphQL, Table, FieldKind } from 'projects/jde-framework/src/lib/servi
 import { CdkColumnDef } from '@angular/cdk/table';
 import { Subject } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { MetaObject } from 'projects/jde-framework/src/lib/utilities/JsonUtils';
 
 @Component( { templateUrl: 'graph-ql-detail.html'} )
 export class GraphQLDetailComponent implements OnDestroy, OnInit
@@ -30,6 +31,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		var parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
 		var parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
 		this.name = parent.data.name;
+		var display = parent.data?.display || "name";
 
 		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
 		this.profile.load().then( ()=>
@@ -37,34 +39,47 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 			this.graphQL.schema( [this.type] ).then( (tables)=>
 			{
 				this.schema = tables[0];
-				let ql = `query{ ${this.schema.plural}(deleted:null){name target} }`;
+				var columns = ["name", "target"];
+				if( !columns.includes(display) )
+					columns.push( display );
+				let ql = `query{ ${this.schema.objectCollectionName}(deleted:null){${columns.join(" ")}} }`;
 				this.graphQL.query( ql ).then( (data:any)=>
 				{
-					let results = data[this.schema.plural];
+					let results = data[this.schema.objectCollectionName];
 					let siblings = new Map<string,string>();
 					if( results )
 					{
 						var parent = this.route.url["value"][0].path;
 						siblings.set( parent, parent.charAt(0).toUpperCase()+parent.slice(1) );
-						results.forEach( x => siblings.set(x.target,x.name) );
+						results.forEach( x => siblings.set(x.target,x[display]) );
 					}
 					this.siblings.next( siblings );
-					this.load();
+					if( this.target!='$new' )
+						this.load();
+					else
+						this.viewPromise = Promise.resolve( true );
 				});
 			});
 		});
 	}
-	onNavigationEnd =( val:NavigationEnd )=>
+	onNavigationEnd =( val:NavigationEnd )=>///settings
 	{
-		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );
+		if( val.url.split('/').length==3 )
+			return;
+		console.log( `onNavigationEnd( ${val} )` );
+		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );//settings
 		var grandParent = this.route.parent;
-		var parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
+		var parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );//roles
 		if( this.target==parentUrl )
 			return;
 		var parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
 		var paths = [this.target, parent.data.name];
 		for( let x = grandParent; x.routeConfig?.data?.name; x = x.parent )
 			paths.push( x.routeConfig.data.name );
+		if( this.target=="users" || this.target=="roles" )
+			debugger;
+		if( paths[0].toUpperCase()==paths[2].toUpperCase() )
+			return;
 		this.componentPageTitle.title = paths.join( " | " );
 		this.load();
 	}
@@ -74,7 +89,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 			debugger;
 		let fetch = ( columns )=>
 		{
-			let ql = `query{ ${this.fetchName}(target:"${this.target}"){ ${columns} } }`;
+			let ql = `query{ ${this.fetchName}(filter:{target:{ eq:"${this.target}"}}){ ${columns} } }`;
 			this.graphQL.query( ql ).then( (data:any)=>
 			{
 				if( data==null )
@@ -93,10 +108,17 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 			{
 				for( let table of tables )
 				{
+					if( table.typeName.startsWith(this.schema.typeName) )
+						table.subType = new MetaObject( table.typeName.substring(this.schema.typeName.length) );
+					else if( table.typeName.endsWith(this.schema.typeName) )
+						table.subType = new MetaObject( table.typeName.substring(0, table.typeName.length-this.schema.typeName.length) );
 					this.tabs.push( table );
-					columns = columns.concat( ` ${table.plural}{${table.columns}}` );
+					columns = columns.concat( ` ${table.objectCollectionName}{${table.columns}}` );
 				}
-				fetch( columns );
+				if( this.target=='$new' )
+					this.viewPromise = Promise.resolve(true);
+				else
+					fetch( columns );//query {  role(target:"user_management") { id name attributes created deleted updated description target  groups{id name attributes created deleted updated description target } rolePermissions { rightId id name api{id name} }  }  }
 			});
 		}
 		else
@@ -109,7 +131,7 @@ export class GraphQLDetailComponent implements OnDestroy, OnInit
 		//	newValue
 		//debugger;
 	}
-	get fetchName():string{ return this.schema.jsonName; }
+	get fetchName():string{ return this.schema.objectReferenceName; }
 	name:string;
 	data:any;
 	get settings(){ return this.profile.value;}

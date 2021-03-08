@@ -1,12 +1,13 @@
-import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild, Input } from '@angular/core';
+import { Component, AfterViewInit, OnInit, OnDestroy, Inject, ViewChild, Input, AfterContentInit, ContentChildren, QueryList, ContentChild } from '@angular/core';
 import {ActivatedRoute, NavigationEnd, Params, Router, RouterModule, Routes} from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import {Sort} from '@angular/material/sort';
-import { MatTable } from '@angular/material/table';
+import { MatColumnDef, MatHeaderRowDef, MatNoDataRow, MatRowDef, MatTable } from '@angular/material/table';
 import { IProfile, IErrorService, Settings} from 'jde-framework'
+import {StringUtils} from '../../../utilities/StringUtils'
 
 import { ComponentPageTitle } from 'jde-material-site';
-import { IGraphQL, Table, FieldKind } from 'projects/jde-framework/src/lib/services/IGraphQL';
+import { IGraphQL, Table, Field, FieldKind } from 'jde-framework';
 import { filter } from 'rxjs/operators';
 import { SelectDialog } from '../select-dialog/select-dialog';
 
@@ -26,123 +27,115 @@ export class GraphQLLinkComponent implements OnDestroy, OnInit, AfterViewInit
 	}
 	ngAfterViewInit():void
 	{
-/*		var grandParent = this.route.parent;
-		var parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
-		var parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		this.name = parent.data.name;
-*/
-		var id = this.router.url.substring( 0, this.router.url.lastIndexOf('/')+1 )+this.table.jsonName;
+		var id = this.router.url.substring( 0, this.router.url.lastIndexOf('/')+1 )+this.schema.objectReferenceName;
 		this.profile = new Settings<PageSettings>( PageSettings, id, this.profileService );
 		this.profile.load().then( ()=>
 		{
-			this.displayedColumns = this.table.fields.filter( (x)=>x.displayed ).map( (x)=>x.name );
-			this.load();
-		} );
-/*		this.profile = new Settings<PageSettings>( PageSettings, `${this.type}-detail`, this.profileService );
-		this.profile.load().then( ()=>
-		{
-			this.graphQL.schema( [this.type] ).then( (tables)=>
+			this.graphQL.mutations().then( (mutations)=>
 			{
-				this.schema = tables[0];
-				let ql = `query{ ${this.schema.plural}(deleted:null){name target} }`;
-				this.graphQL.query( ql ).then( (data:any)=>
+				const mutationA = `add${this.parentType}${this.schema.typeName}`;
+				const mutationB = `add${this.schema.typeName}${this.parentType}`;
+				const mutationC = `add${this.schema.typeName}`
+				var mutation = mutations.find( (x)=>x.name==mutationA || x.name==mutationB || x.name==mutationC ); if( !mutation ) throw `could not find mutation ${mutationA}/${mutationB}`;
+				this.mutation = mutation.name.substr( 3 );
+				for( var field of this.schema.nonListFields.filter((x)=>x.displayed) )
 				{
-					let results = data[this.schema.plural];
-					let siblings = new Map<string,string>();
-					if( results )
-					{
-						var parent = this.route.url["value"][0].path;
-						siblings.set( parent, parent.charAt(0).toUpperCase()+parent.slice(1) );
-						results.forEach( x => siblings.set(x.target,x.name) );
-					}
-					this.siblings.next( siblings );
-					this.load();
-				});
-			});
-		});
-*/
+					//					this.table.addColumnDef( )
+				}
+				//this.displayedColumns = this.schema.fields.filter( (x)=>x.displayed ).map( (x)=>x.name );
+				this.viewPromise = Promise.resolve( true );
+			} );
+		} );
 	}
 	onNavigationEnd =( val:NavigationEnd )=>
 	{
-/*		this.target = this.router.url.substring( this.router.url.lastIndexOf('/')+1 );
-		var grandParent = this.route.parent;
-		var parentUrl = this.route.routeConfig.path.substr( 0, this.route.routeConfig.path.length-4 );
-		if( this.target==parentUrl )
-			return;
-		var parent = grandParent.routeConfig.children.find( (x)=>x.path==parentUrl );
-		var paths = [this.target, parent.data.name];
-		for( let x = grandParent; x.routeConfig?.data?.name; x = x.parent )
-			paths.push( x.routeConfig.data.name );
-		this.componentPageTitle.title = paths.join( " | " );
-		this.load();
-*/
+	}
+	edit( fieldName:string, element )
+	{
+		var field = this.schema.fields.find( (x)=>x.name==fieldName );
+		this.graphQL.schema( [field.type.underlyingName] ).then( (x)=>
+		{
+			const dialogRef = this.dialog.open( SelectDialog,
+			{
+				width: '600px',
+				height: '650px',
+				data: { schema: x[0], selectedIds:element[fieldName], query:fieldName, mutation:this.mutation, linkTo:this.parent.id, linkToField: this.parentTypeField, subTo:element.id, subToField: this.schema.subType.idReferenceName, title:StringUtils.capitalize(fieldName), includeDeleted: true }
+			});
+			dialogRef.afterClosed().subscribe( result =>
+			{
+				if( result )
+					this.load();
+			});
+		}).catch( (e)=>console.error(e) );
 	}
 	load()
 	{
-		this.viewPromise = Promise.resolve(true);
-/*		let fetch = ( columns )=>
+		this.viewPromise = null;
+		const valueMember = this.schema.objectCollectionName;
+		let ql = `query{ ${this.parentSelect}(filter:{ id:{eq:${this.parent.id}}}){ ${valueMember}{${this.schema.columns}} } }`;
+		this.graphQL.query( ql ).then( (data:any)=>
 		{
-			let ql = `query{ ${this.fetchName}(target:"${this.target}"){ ${columns} } }`;
-			this.graphQL.query( ql ).then( (data:any)=>
-			{
-				if( data==null )
-					this.cnsle.error( `${this.target} not found` );
-				else
-					this.data = data[this.fetchName];
-
-			}).catch( (e)=>console.error(e) );
-		}
-		this.tabs.length = 0;
-		let columns = this.schema.columns;
-		var lists = this.schema.listFields.map( (x)=>x.type.ofType.name );
-		if( lists.length )
-		{
-			this.graphQL.schema( lists ).then( (tables)=>
-			{
-				for( let table of tables )
-				{
-					this.tabs.push( table )
-					columns = columns.concat( ` ${table.plural}{${table.columns}}` );
-				}
-				fetch( columns );
-			});
-		}
-		else
-			fetch( columns );
-*/
+			this.parent[valueMember].length=0;
+			data[this.parentSelect][valueMember].forEach( x => {this.parent[valueMember].push(x);} );
+			this.viewPromise = Promise.resolve( true );
+		} );
 	}
 	cellClick( row:any ){  this.selection = this.selection == row ? null : row; }
 	addLink()
 	{
-		let selectedIds = this.items.map( (x)=>x.id );
-		const dialogRef = this.dialog.open( SelectDialog,
+		let show = (schema:Table)=>
 		{
-			width: '600px',
-			height: '650px',
-			data: { selectedIds:selectedIds, query:this.table.plural, mutation:`add${this.parentType}${this.table.name}`, linkTo:this.parent.id, title:this.table.display }
-		});
-		dialogRef.afterClosed().subscribe( result =>
+			let selectedIds = this.items.map( (x)=>x.id );
+			const dialogRef = this.dialog.open( SelectDialog,
+			{
+				width: '600px',
+				height: '650px',
+				data: { selectedIds:selectedIds, schema:schema, mutation:this.mutation, linkTo:this.parent.id, linkToField: this.parentTypeField, title:`${this.parent.name} ${this.schema.display}` }
+			});
+			dialogRef.afterClosed().subscribe( result =>
+			{
+				if( result )
+					this.load();
+			});
+		};
+		if( this.schema.subType )
 		{
-			if( result )
-				this.load();
-		});
-
-		//selectedIds:number[], query:string, mutation:string, linkTo:number, title:string
+			this.graphQL.schema( [this.schema.subType.typeName] ).then( (x)=>
+			{
+				show( x[0] );
+			}).catch( (e)=>console.error(e) );
+		}
+		else
+			show( this.schema );
 	}
 	removeLink()
-	{
-
+	{//role permissions = this.schema.subType.objectReferenceName
+		const ql = `{ mutation{ remove${this.mutation}("input":{ "${this.parentTypeField}": ${this.parent.id}, "${this.schema.subType.objectReferenceName}Id": ${this.selection.id}} ) } }`;
+		this.graphQL.query( ql ).then( (x)=>
+		{
+			this.selection = null;
+			this.load();
+		} ).catch( (e)=>{this.cnsle.error(e);} );
 	}
 
-	get haveSelection(){ return this.selection!==undefined; }
+	get haveSelection():boolean{ return !!this.selection; }
 	selection:any|null|undefined;
-	@Input() table:Table;
-	get items(){ return this.parent[this.table.plural]; }
+	@Input() schema:Table;
+	@ViewChild(MatTable, {static: true}) table: MatTable<any>;
+	get items(){ return this.parent[this.schema.objectCollectionName]; }
 	@Input() parent:any;
 	profile:Settings<PageSettings>;
 	get sort(){return this.profile.value.sort; }
-	displayedColumns:string[];// = ["name","target","description","authenticator", "deleted"];
+	get displayedColumns():Field[]{ return this.schema.fields.filter( (x)=>x.displayed && !["created", "updated", "deleted", "target"].includes(x.name) ); }
+	get displayedColumnNames(){ return this.displayedColumns.map( (x)=>x.name ); };// = ["name","target","description","authenticator", "deleted"];
+	get stringColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.SCALAR && x.type.underlyingName=="String" ).map( (x)=>x.name ); }
+	get objectColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.OBJECT ).map( (x)=>x.name ); }
+	get listColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingKind==FieldKind.LIST ).map( (x)=>x.name ); }
+	get dateColumnNames(){ return this.displayedColumns.filter( (x)=>x.type.underlyingName=="DateTime" ).map( (x)=>x.name ); }
+	mutation:string;
 	@Input() parentType:string;
+	get parentSelect(){ return this.parentType.charAt(0).toLowerCase() + this.parentType.slice(1) }
+	get parentTypeField(){ return this.parentSelect+"Id"; }
 	viewPromise:Promise<boolean>;
 	/*
 	get fetchName():string{ return this.schema.jsonName; }

@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { IAuth } from 'jde-material-site';
+import { Observable, Subject } from 'rxjs';
 import { TwsService } from './tws.service';
 //declare var require: any;
 //var googleOptions = require('dist/jde-tws-assets/src/assets/google-auth.json');
@@ -10,52 +11,12 @@ export class TwsAuthService implements IAuth
 	constructor( private tws: TwsService )
 	{}
 
-	enabled():boolean{ return false; }
+	enabled():boolean{ return true; }
+	subscribe():Observable<void>{ return this.subject.asObservable(); };
 	login( token )
 	{
-		this.tws.googleLogin( token );
+		this.tws.googleLogin( token ).then( ()=> {this._loggedIn=true; console.log("googleLogin returned success."); this.subject.next();} ).catch( (e)=>{this._loggedIn=false; this.subject.error(e);} );
 	}
-/*		init( button:HTMLElement ):void
-	{
-		this.googleInit( button );
-	}
-
-public googleInit( button:HTMLElement ):void
-	{
-		if( this.auth2 )
-			return;
-		gapi.load('auth2', () =>
-		{
-			debugger;
-			//this.auth2 = gapi.auth2.init( googleOptions );
-			this.auth2 = gapi.auth2.getAuthInstance();
-			//for( let member in googleOptions )
-			//	this.auth2[member] = googleOptions[member];
-
-			if( button )
-				this.attachSignin( button );
-			else
-				console.error("no login button");
-		});
-	 }
-	 public attachSignin( button:HTMLElement )
-	 {
-		this.auth2.attachClickHandler( button, {},(googleUser) =>
-		{
-			debugger;
-			let profile = googleUser.getBasicProfile();
-			console.log( 'Token || ' + googleUser.getAuthResponse().id_token );
-			console.log( 'ID: ' + profile.getId() );
-			console.log( 'Name: ' + profile.getName() );
-			console.log( 'Image URL: ' + profile.getImageUrl() );
-			console.log( 'Email: ' + profile.getEmail() );
-		},
-		(error) =>
-		{
-			debugger;
-			alert( JSON.stringify(error, undefined, 2) );
-		});
-	}
-	public auth2: any;
-	*/
+	get loggedIn(){return this._loggedIn;} private _loggedIn=false;
+	private subject = new Subject<void>();
 }

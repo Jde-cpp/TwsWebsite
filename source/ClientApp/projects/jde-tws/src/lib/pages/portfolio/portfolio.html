@@ -1,100 +1,107 @@
-<section>
-</section>
-<mat-toolbar>
-	<span [class.negativeValue]="pnl<0" [class.positiveValue]="pnl>0">
-		<span>Daily</span>
-		<span style="margin-left: 12px;" class="numberCell">{{pnl | number:'1.0-0'}}</span>
-		<span style="margin-left: 20px;">{{pnl/valuePrevious | percent:'1.2'}}</span>
-	</span>
-	<span style="margin-left: 50px;" >
-		<span>Net Liq</span>
-		<span style="margin-left: 10px;" class="numberCell">{{value | number:'1.0-0'}}</span>
-	</span>
-	<span>
-		<button mat-raised-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="onTransactClick(true)">Buy</button>
-		<button mat-raised-button color="warn" style="margin-right:10px" [disabled]="selected==null" (click)="onTransactClick(false)" >Sell</button>
-		<button mat-raised-button [disabled]="true" (click)="roll()" >Roll</button><!--[disabled]=!selectedIsOption -->
-	</span>
-	<mat-form-field style="display:inline; margin-left: 100px;">
-		<mat-select [(ngModel)]="selectedAccounts" name="accounts" ngDefaultControl (selectionChange)="accountChange($event.value)" multiple>
-			<mat-option *ngFor="let account of allAccounts | keyvalue" [value]="account.key">{{account.value}}</mat-option>
-		</mat-select>
-	</mat-form-field>
-</mat-toolbar>
-<mat-table #mainTable [dataSource]="holdings" class="mat-elevation-z8" >  <!--  -->
-	<ng-container matColumnDef="profit">
-		<mat-header-cell class="numberField" *matHeaderCellDef> P&L </mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.pnl<0" [class.positiveValue]="element.pnl>0" *matCellDef="let element"> {{element.pnl | number:'1.0-0'}} </mat-cell>
-		<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
+<ng-container *ngIf="viewPromise | async">
+	<mat-toolbar>
+		<span [class.negativeValue]="pnl<0" [class.positiveValue]="pnl>0">
+			<span>Daily</span>
+			<span style="margin-left: 12px;" class="numberCell">{{pnl | number:'1.0-0'}}</span>
+			<span style="margin-left: 20px;">{{pnl/valuePrevious | percent:'1.2'}}</span>
+		</span>
+		<span style="margin-left: 50px;" >
+			<span>Net Liq</span>
+			<span style="margin-left: 10px;" class="numberCell">{{value | number:'1.0-0'}}</span>
+		</span>
+		<span>
+			<button mat-raised-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="onTransactClick(true)">Buy</button>
+			<button mat-raised-button color="warn" style="margin-right:10px" [disabled]="selected==null" (click)="onTransactClick(false)" >Sell</button>
+			<button mat-raised-button [disabled]="true" (click)="roll()" >Roll</button><!--[disabled]=!selectedIsOption -->
+		</span>
+		<mat-form-field style="display:inline; margin-left: 100px;">
+			<mat-select [(ngModel)]="selectedAccounts" name="accounts" ngDefaultControl (selectionChange)="accountChange($event.value)" multiple>
+				<mat-option *ngFor="let account of allAccounts | keyvalue" [value]="account.key">{{account.value}}</mat-option>
+			</mat-select>
+		</mat-form-field>
+		<mat-form-field style="display:inline; margin-left: 100px;">
+			<mat-select [formControl]="foodForm" name="accounts2" multiple>
+				<mat-option value="A" >A</mat-option>
+				<mat-option value="B" >B</mat-option>
+				<mat-option value="C" >C</mat-option>
+			</mat-select>
+		</mat-form-field>
+	</mat-toolbar>
+	<mat-table #mainTable [dataSource]="holdings" class="mat-elevation-z8" >  <!--  -->
+		<ng-container matColumnDef="profit">
+			<mat-header-cell class="numberField" *matHeaderCellDef> P&L </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.pnl<0" [class.positiveValue]="element.pnl>0" *matCellDef="let element"> {{element.pnl | number:'1.0-0'}} </mat-cell>
+			<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+	<ng-container matColumnDef="symbol">
+			<mat-header-cell class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
+			<mat-cell class="symbolField" *matCellDef="let element">{{element.display}}</mat-cell>
+			<mat-footer-cell class="symbolField" *matFooterCellDef>Cash</mat-footer-cell>
 	</ng-container>
-  <ng-container matColumnDef="symbol">
-		<mat-header-cell class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
-		<mat-cell class="symbolField" *matCellDef="let element">{{element.display}}</mat-cell>
-		<mat-footer-cell class="symbolField" *matFooterCellDef>Cash</mat-footer-cell>
-  </ng-container>
-  <ng-container matColumnDef="position">
-		<mat-header-cell class="numberField"  *matHeaderCellDef> POS </mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.position<0" [class.positiveValue]="element.position>0" *matCellDef="let element"> {{element.position | number }} </mat-cell>
-		<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
-  </ng-container>
-  <ng-container matColumnDef="marketValue">
-		<mat-header-cell class="numberField" *matHeaderCellDef> Market </mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.marketValue | number:'1.0-0'}} </mat-cell>
-		<mat-footer-cell class="numberField" [class.negativeValue]="totalCash<0" [class.positiveValue]="totalCash>0" *matFooterCellDef>{{totalCash | number:'1.0-0'}}</mat-footer-cell>
-  </ng-container>
-  <ng-container matColumnDef="averagePrice">
-		<mat-header-cell class="numberField" *matHeaderCellDef> AVG PX </mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.averageCost | number:'1.2-2'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+	<ng-container matColumnDef="position">
+			<mat-header-cell class="numberField"  *matHeaderCellDef> POS </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.position<0" [class.positiveValue]="element.position>0" *matCellDef="let element"> {{element.position | number }} </mat-cell>
+			<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
 	</ng-container>
-	<ng-container matColumnDef="bidSize">
-		<mat-header-cell class="numberField" *matHeaderCellDef>Bid Size</mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bidSize | number:'1.0-0'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+	<ng-container matColumnDef="marketValue">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Market </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.marketValue | number:'1.0-0'}} </mat-cell>
+			<mat-footer-cell class="numberField" [class.negativeValue]="totalCash<0" [class.positiveValue]="totalCash>0" *matFooterCellDef>{{totalCash | number:'1.0-0'}}</mat-footer-cell>
 	</ng-container>
-	<ng-container matColumnDef="bid">
-		<mat-header-cell class="numberField" *matHeaderCellDef>Bid</mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bid | number:'1.2-2'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="ask">
-		<mat-header-cell class="numberField" *matHeaderCellDef>Ask</mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.ask | number:'1.2-2'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="askSize">
-		<mat-header-cell class="numberField" *matHeaderCellDef>Ask Size</mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.askSize | number:'1.0-0'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="volume">
-		<mat-header-cell class="numberField" *matHeaderCellDef> VLM </mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.volume | number:'1.0-0'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="last">
-		<mat-header-cell class="numberField" *matHeaderCellDef> Last </mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.last | number:'1.2-2'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
-	</ng-container>
- 	<ng-container matColumnDef="change">
-		<mat-header-cell class="numberField" *matHeaderCellDef> Change </mat-header-cell>
-		<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.change<0" [class.positiveValue]="element.change>0" *matCellDef="let element"> {{element.change | number:'1.2-2'}} </mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="menu" stickyEnd>
-		<mat-header-cell *matHeaderCellDef></mat-header-cell>
-		<mat-menu #appMenu="matMenu">
-			<ng-template matMenuContent let-element="element" let-holding="holding" let-position="position">
-		  		<button mat-menu-item (click)="close(holding, $event)">Close</button>
-				<button mat-menu-item (click)="trade(holding, $event)">{{position>0 ? "Buy" : "Sell"}}</button>
-				<button mat-menu-item *ngIf="holding.contract.secType=='OPT'" (click)="roll(holding, $event)">Roll</button>
-			</ng-template>
-		</mat-menu>
-		<mat-cell *matCellDef="let element"><button mat-icon-button [matMenuTriggerData]="{holding: element}" [matMenuTriggerFor]="appMenu"><mat-icon>menu</mat-icon> </button></mat-cell>
-		<mat-footer-cell *matFooterCellDef></mat-footer-cell>
-	</ng-container>
-  <mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-  <mat-row mat-row *matRowDef="let row; columns: displayedColumns;" [class.highlight]="selected==row" (click)="cellClick(row)" (dblclick)="cellDblClick(row)"></mat-row>
-  <mat-footer-row *matFooterRowDef="displayedColumns; sticky: true"></mat-footer-row>
-</mat-table>
+	<ng-container matColumnDef="averagePrice">
+			<mat-header-cell class="numberField" *matHeaderCellDef> AVG PX </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.averageCost | number:'1.2-2'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="bidSize">
+			<mat-header-cell class="numberField" *matHeaderCellDef>Bid Size</mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bidSize | number:'1.0-0'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="bid">
+			<mat-header-cell class="numberField" *matHeaderCellDef>Bid</mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.bid | number:'1.2-2'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="ask">
+			<mat-header-cell class="numberField" *matHeaderCellDef>Ask</mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.ask | number:'1.2-2'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="askSize">
+			<mat-header-cell class="numberField" *matHeaderCellDef>Ask Size</mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.askSize | number:'1.0-0'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="volume">
+			<mat-header-cell class="numberField" *matHeaderCellDef> VLM </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.volume | number:'1.0-0'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="last">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Last </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.last | number:'1.2-2'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="change">
+			<mat-header-cell class="numberField" *matHeaderCellDef> Change </mat-header-cell>
+			<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.change<0" [class.positiveValue]="element.change>0" *matCellDef="let element"> {{element.change | number:'1.2-2'}} </mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+		<ng-container matColumnDef="menu" stickyEnd>
+			<mat-header-cell *matHeaderCellDef></mat-header-cell>
+			<mat-menu #appMenu="matMenu">
+				<ng-template matMenuContent let-element="element" let-holding="holding" let-position="position">
+					<button mat-menu-item (click)="close(holding, $event)">Close</button>
+					<button mat-menu-item (click)="trade(holding, $event)">{{position>0 ? "Buy" : "Sell"}}</button>
+					<button mat-menu-item *ngIf="holding.contract.secType=='OPT'" (click)="roll(holding, $event)">Roll</button>
+				</ng-template>
+			</mat-menu>
+			<mat-cell *matCellDef="let element"><button mat-icon-button [matMenuTriggerData]="{holding: element}" [matMenuTriggerFor]="appMenu"><mat-icon>menu</mat-icon> </button></mat-cell>
+			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
+		</ng-container>
+	<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+	<mat-row mat-row *matRowDef="let row; columns: displayedColumns;" [class.highlight]="selected==row" (click)="cellClick(row)" (dblclick)="cellDblClick(row)"></mat-row>
+	<mat-footer-row *matFooterRowDef="displayedColumns; sticky: true"></mat-footer-row>
+	</mat-table>
+</ng-container>

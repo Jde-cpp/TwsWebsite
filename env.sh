@@ -10,4 +10,6 @@ frameworkDir=$(dirname $(readlink -e $baseDir/../WebFramework/control))/control;
 marketProtoDir=$(dirname $(readlink -e $baseDir/../../MarketLibrary/source/types/proto))/proto;
 blocklyProtoDir=$(dirname $(readlink -e $baseDir/../../Blockly/source/types/proto))/proto;
 blocklyDir=$(dirname $(readlink -e $baseDir/../WebBlockly/control))/control;
+appProtoDir=$(dirname $(readlink -e $baseDir/../../AppServer/source/types/proto))/proto;
+
 source $baseDir/../WebFramework/common.sh

@@ -51,7 +51,7 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 		else
 		{
 			this._name = undefined;
-			const oldName = name;
+			const oldName = this.name;
 			const save = x && this.file.name!=x;
 			this.file.name=x;
 			if( save )

@@ -158,7 +158,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	get midPrice():number{ return this.settingsContainer.value.midPrice ?? this.tick.last; } set midPrice(x:number){ if( this.midPrice!=x ){this.settingsContainer.value.midPrice = x; this.settingsContainer.save();} }
 	selectedOption:Option=null;
 	settingsContainer:Settings<SymbolSettings> = new Settings<SymbolSettings>( SymbolSettings, 'OptnTabCmpnnt.', this.profile );
-	get settings(){ return this.settingsContainer ? this.settingsContainer.value : null;}
+	get settings(){ return /*this.settingsContainer ?*/ this.settingsContainer.value/* : null*/;}
 	get tableLength(){ return this.pageSettings.value.tableLength; } set tableLength(x){ if( x && this.pageSettings.value.tableLength!=x ){this.pageSettings.value.tableLength=x; this.pageSettings.save();} }
 	pageSettings = new Settings<PageSettings>( PageSettings, 'OptnTabCmpnnt', this.profile );
 	strikes:number[];

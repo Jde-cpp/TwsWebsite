@@ -19,6 +19,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatDatepickerModule} from '@angular/material/datepicker';
+import {MatPaginatorModule} from '@angular/material/paginator';
 import {MatSelectModule} from '@angular/material/select';
 import {MatSnackBarModule} from '@angular/material/snack-bar';
 import {MatSortModule} from '@angular/material/sort';
@@ -26,6 +27,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
 
+import {SeverityPickerComponent} from 'jde-framework'
 import {NavBarModule} from 'jde-material-site';
 import {ThemePickerModule} from 'jde-material-site';
 import {StyleManager} from 'jde-material-site';
@@ -35,6 +37,7 @@ import {TwsAuthService, TwsService} from 'jde-tws';
 //import{ NewsComponent } from 'jde-tws';
 import{ UserComponent } from './pages/user-management/users/users';
 import{ GraphQLComponent } from './pages/GraphQL/graph-ql-component';
+import{ LogsComponent } from './pages/logs/logs';
 import{ GraphQLDetailComponent } from './pages/GraphQL/detail/graph-ql-detail';
 import{ GraphQLProperties } from './pages/GraphQL/properties/properties';
 import{ GraphQLLinkComponent } from  './pages/GraphQL/links/links';
@@ -104,6 +107,7 @@ const routes: Routes =
 		data: { name: "Settings" },
 		children :
 		[
+			{ path: 'logs', component: LogsComponent, data: { name: "Logs", summary: "View Application Logs" } },
 			{ path: 'accounts/:id', component: GraphQLDetailComponent },
 			{ path: 'accounts', component: GraphQLComponent, data: { name: "Accounts", summary: "View/Modify IB Accounts", display:"description" } },
 			{ path: 'users', component: UserComponent, data: { name: "Users", summary: "View/Modify Users" } },
@@ -122,11 +126,12 @@ const routes: Routes =
 		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent,TradeComponent,WatchComponent,
 		PaginatorComponent,
 		CandlestickComponent,
-		UserComponent, UserEntryDialog, SelectDialog, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLTable, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent,
+		SeverityPickerComponent,
+		UserComponent, UserEntryDialog, SelectDialog, LogsComponent, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLTable, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent,
 	],
   	imports: [
 	  BrowserModule, RouterModule.forRoot( routes, {enableTracing: false} ), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
-	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatExpansionModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
+	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatExpansionModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatPaginatorModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
 	 NavBarModule, ThemePickerModule
   ],
   entryComponents: [/*TransactDialog, RollDialog, OptionEntryDialog,*/ UserEntryDialog, SelectDialog],

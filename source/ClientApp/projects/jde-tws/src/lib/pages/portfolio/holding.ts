@@ -61,7 +61,7 @@ export class Holding extends TickDetails
 		//	console.log( `${this.contract.Symbol} - marketValue=${update.marketValue}` );
 		this.position = update.position;
 		this.marketValue = update.marketValue;
-		this.averageCost = this.isOption ? Math.abs(Math.round(update.averageCost/(this.position*this.contract.multiplier)*100)/100) : update.averageCost;
+		this.averageCost = this.isOption ? Math.abs(Math.round(update.averageCost/(this.contract.multiplier)*100)/100) : update.averageCost;
 		this.realizedPN = update.realizedPnl;
 		this.accountNumber = update.accountNumber;
 	}

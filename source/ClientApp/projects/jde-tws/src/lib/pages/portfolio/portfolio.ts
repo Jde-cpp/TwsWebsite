@@ -1,4 +1,4 @@
-import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ViewEncapsulation } from '@angular/core';
+import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ChangeDetectorRef } from '@angular/core';
 import { MatTable } from '@angular/material/table';
 import {MatDialog} from '@angular/material/dialog';
 import { Observable } from 'rxjs';//,of
@@ -27,16 +27,21 @@ class Settings
 @Component({selector: 'portfolio',styleUrls: ['portfolio.scss'],templateUrl: './portfolio.html'})
 export class PortfolioComponent implements AfterViewInit, OnDestroy
 {
-	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth )
+	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth, private cdr: ChangeDetectorRef )
 	{}
 
 	ngAfterViewInit():void
 	{
+		console.log( `PortfolioComponent::ngAfterViewInit` );
 		this.profileService.get<Settings>( PortfolioComponent.profileKey ).then( (value)=>
 		{
+			//console.log( "this.viewPromise3=true" );
+			//this.viewPromise = Promise.resolve( true );
+
 			this.settings = value;
-			if( this.authorizationService.enabled && !this.authorizationService.loggedIn )
+			if( this.authorizationService.enabled() && !this.authorizationService.loggedIn )
 			{
+				console.log( "authorizationService.subscribe" );
 				this.authorizationSubscription = this.authorizationService.subscribe();
 				this.authorizationSubscription.subscribe({
 					next: ()=>this.onSettingsLoaded(),
@@ -61,8 +66,12 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	onSettingsLoaded()
 	{
 		console.log( "PortfolioComponent::onSettingsLoaded" );
+		//console.log( "this.viewPromise2=true" );
+		//this.viewPromise = Promise.resolve( true );
+
 		this.tws.reqManagedAccts().then( (numbers)=>
 		{
+			//this.cdr.detectChanges();
 			this.allAccounts.clear();
 			for( let account in numbers )
 				this.allAccounts.set( account, numbers[account] );
@@ -79,7 +88,11 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		console.log( `subscribe( ${accountId} )` );
 		var callbacks = this.tws.reqAccountUpdates( accountId );
 		this.requests.set( accountId, callbacks );
-		callbacks[0].subscribe( {next:accountUpdate =>{this.onAccountUpdate(accountUpdate);}, error:  e=>{console.error(e);}} );
+		callbacks[0].subscribe( {next:accountUpdate =>
+		{
+			//console.log( `${accountUpdate.account}[${accountUpdate.key}]=${accountUpdate.value}` );
+			this.onAccountUpdate(accountUpdate);}, error:  e=>{console.error(e);}
+		});
 		callbacks[1].subscribe(
 		{
 			next:x =>
@@ -177,7 +190,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			},
 		});
 		console.log( "this.viewPromise=true" );
-		this.viewPromise = Promise.resolve( true );
+		this.viewPromise = true;//Promise.resolve( true );
+		//this.cdr.detectChanges();
 	}
 	loadPreviousDay( contract:IB.IContract, isMarketOpen:boolean, holding:Holding, day:number )
 	{
@@ -313,7 +327,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			{
 				const index = 0;//+row.index;
 				this.selected = this.selected == row ? null : row;
-				console.log( `selected ${this.selected.display}` );
+				console.log( `selected ${this.selected?.display}` );
 			}
 		},250);
 	}
@@ -351,8 +365,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	@ViewChild('mainTable',{static: false}) _table:MatTable<Holding>;
 	@ViewChild('accountButtons',{static: false}) accountButtons;
 	get settings(){return this._settings || (this.settings=new Settings());} set settings(value){ this._settings = value;} private _settings:Settings;
-	viewPromise:Promise<boolean>;
+	viewPromise:boolean;//:Promise<boolean>;// = Promise.resolve( true );
 	private static profileKey="PortfolioComponent";
 	foodForm = new FormControl( ["A", "B", "C"] );
-
 }

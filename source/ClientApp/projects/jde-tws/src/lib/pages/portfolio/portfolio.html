@@ -1,4 +1,6 @@
-<ng-container *ngIf="viewPromise | async">
+<!-- <div id="foox" style="width: 1000px; background-color: red; height: 20px;">...</div> -->
+<ng-container *ngIf="viewPromise">
+	<!-- <div id="foox2" style="width: 1000px; background-color: green; height: 20px;">...</div> -->
 	<mat-toolbar>
 		<span [class.negativeValue]="pnl<0" [class.positiveValue]="pnl>0">
 			<span>Daily</span>
@@ -12,43 +14,43 @@
 		<span>
 			<button mat-raised-button color="primary" [disabled]="selected==null" style="margin-left :20px; margin-right:10px" (click)="onTransactClick(true)">Buy</button>
 			<button mat-raised-button color="warn" style="margin-right:10px" [disabled]="selected==null" (click)="onTransactClick(false)" >Sell</button>
-			<button mat-raised-button [disabled]="true" (click)="roll()" >Roll</button><!--[disabled]=!selectedIsOption -->
+			<button mat-raised-button [disabled]="true" (click)="roll()" >Roll</button><!--[disabled]=!selectedIsOption-->
 		</span>
 		<mat-form-field style="display:inline; margin-left: 100px;">
 			<mat-select [(ngModel)]="selectedAccounts" name="accounts" ngDefaultControl (selectionChange)="accountChange($event.value)" multiple>
 				<mat-option *ngFor="let account of allAccounts | keyvalue" [value]="account.key">{{account.value}}</mat-option>
 			</mat-select>
 		</mat-form-field>
-		<mat-form-field style="display:inline; margin-left: 100px;">
+		<!-- <mat-form-field style="display:inline; margin-left: 100px;">
 			<mat-select [formControl]="foodForm" name="accounts2" multiple>
 				<mat-option value="A" >A</mat-option>
 				<mat-option value="B" >B</mat-option>
 				<mat-option value="C" >C</mat-option>
 			</mat-select>
-		</mat-form-field>
+		</mat-form-field> -->
 	</mat-toolbar>
-	<mat-table #mainTable [dataSource]="holdings" class="mat-elevation-z8" >  <!--  -->
+	<mat-table #mainTable [dataSource]="holdings" class="mat-elevation-z8" >
 		<ng-container matColumnDef="profit">
 			<mat-header-cell class="numberField" *matHeaderCellDef> P&L </mat-header-cell>
 			<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.pnl<0" [class.positiveValue]="element.pnl>0" *matCellDef="let element"> {{element.pnl | number:'1.0-0'}} </mat-cell>
 			<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
 		</ng-container>
-	<ng-container matColumnDef="symbol">
+		<ng-container matColumnDef="symbol">
 			<mat-header-cell class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
 			<mat-cell class="symbolField" *matCellDef="let element">{{element.display}}</mat-cell>
 			<mat-footer-cell class="symbolField" *matFooterCellDef>Cash</mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="position">
+		</ng-container>
+		<ng-container matColumnDef="position">
 			<mat-header-cell class="numberField"  *matHeaderCellDef> POS </mat-header-cell>
 			<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.position<0" [class.positiveValue]="element.position>0" *matCellDef="let element"> {{element.position | number }} </mat-cell>
 			<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="marketValue">
+		</ng-container>
+		<ng-container matColumnDef="marketValue">
 			<mat-header-cell class="numberField" *matHeaderCellDef> Market </mat-header-cell>
 			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.marketValue | number:'1.0-0'}} </mat-cell>
 			<mat-footer-cell class="numberField" [class.negativeValue]="totalCash<0" [class.positiveValue]="totalCash>0" *matFooterCellDef>{{totalCash | number:'1.0-0'}}</mat-footer-cell>
-	</ng-container>
-	<ng-container matColumnDef="averagePrice">
+		</ng-container>
+		<ng-container matColumnDef="averagePrice">
 			<mat-header-cell class="numberField" *matHeaderCellDef> AVG PX </mat-header-cell>
 			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.averageCost | number:'1.2-2'}} </mat-cell>
 			<mat-footer-cell *matFooterCellDef></mat-footer-cell>

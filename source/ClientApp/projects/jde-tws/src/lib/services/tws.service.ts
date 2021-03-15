@@ -261,9 +261,15 @@ class Connection
 					else
 						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
 				}
-/*				else if( typeId==Results.EResults.Authentication )
+				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
 				{
-					if( this.testCallbacks.has)
+					this.testCallbacks.get( message.message.intValue ).resolve( true );
+					this.testCallbacks.delete( message.message.intValue );
+				}
+				else if( typeId==Results.EResults.Authentication )
+				{
+					console.log( "Debug authenticated." );
+					/*if( this.testCallbacks.has)
 					const accountNumber = message.message.stringValue;
 					if( this.accountUpdateCallbacks.has(accountNumber) )
 					{
@@ -271,12 +277,7 @@ class Connection
 							callback[1].next( null );//message.portfolioUpdate
 					}
 					else
-						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
-				}*/
-				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
-				{
-					this.testCallbacks.get( message.message.intValue ).resolve( true );
-					this.testCallbacks.delete( message.message.intValue );
+						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.*/
 				}
 				else
 				{
@@ -461,7 +462,6 @@ class Connection
 	}
 	error( err ):void
 	{
-		debugger;
 		this.sessionId = null;
 		console.error( "No longer connected to TWS.", err );
 		this.handleConnectionError( err );

@@ -7,6 +7,7 @@ export class TraceEntry
 {
 	constructor( trace:FromServer.ITraceMessage, private applicationStrings:ApplicationStrings )
 	{
+		this.id = ProtoUtilities.toNumber( trace.id );
 		this.instanceId = ProtoUtilities.toNumber( trace.InstanceId );
 		this.time = new Date( ProtoUtilities.toNumber(trace.Time) );
 		this.level = trace.Level;
@@ -37,15 +38,14 @@ export class TraceEntry
 		}
 		return this._message = template;
 	}; _message:string=null;
-	get file():string
-	{
-		return this._file ? this._file: this._file = this.applicationStrings.files.get( this.fileId );
-	}; _file:string;
+	get fileName():string{ const i=this.file.lastIndexOf('/'); return i==-1 ? this.file : this.file.substr(i+1); };
+	get file():string{ return this._file ? this._file: this._file = this.applicationStrings.files.get( this.fileId ); }; _file:string;
 	get functionName():string
 	{
 		return this._function ? this._function: this._function = this.applicationStrings.functions.get( this.functionId );
 	}; _function:string;
 
+	id:number;
 	instanceId:number;
 	level:FromServer.ELogLevel;
 	messageId:number;

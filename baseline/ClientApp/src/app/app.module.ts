@@ -34,7 +34,7 @@ import {StyleManager} from 'jde-material-site';
 
 import {TwsAuthService, TwsService} from 'jde-tws';
 
-//import{ NewsComponent } from 'jde-tws';
+
 import{ UserComponent } from './pages/user-management/users/users';
 import{ GraphQLComponent } from './pages/GraphQL/graph-ql-component';
 import{ LogsComponent } from './pages/logs/logs';
@@ -69,9 +69,9 @@ import { AppComponent } from './app.component';
 //import {ConfigurationDialog} from 'jde-tws'
 import {OrderComponent} from 'jde-tws'
 import {PortfolioComponent} from 'jde-tws';
-import {SnapshotComponent, SnapshotContentComponent, FundamentalsComponent } from 'jde-tws';
+import {SnapshotComponent, SnapshotContentComponent, FundamentalsComponent, NewsComponent, SummaryComponent, WatchComponent, WatchContentComponent, WatchTableComponent } from 'jde-tws';
 import {TradeComponent} from 'jde-tws'
-import {WatchComponent} from 'jde-tws'
+
 
 import {BlocklyViewerComponent} from 'jde-blockly';
 import {BlocklyCategoryList} from 'jde-blockly';
@@ -123,7 +123,7 @@ const routes: Routes =
 @NgModule({
 	declarations: [
 		AppComponent, ComponentCategoryList,
-		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent,TradeComponent,WatchComponent,
+		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent, NewsComponent, SummaryComponent, TradeComponent, WatchComponent, WatchContentComponent, WatchTableComponent,
 		PaginatorComponent,
 		CandlestickComponent,
 		SeverityPickerComponent,

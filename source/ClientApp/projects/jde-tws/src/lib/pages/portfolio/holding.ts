@@ -69,11 +69,20 @@ export class Holding extends TickDetails
 	accountNumber:string;
 	averageCost:number;
 	get basis():number{ return this.averageCost*this.position; }
-	get last(){return super.last || this.previousDay?.last;} set last(value){ super.last = value; }
+	get last()
+	{
+		let v = super.last || this.previousDay?.last;
+		return v==-1 ? (this.bid+this.ask)/2 : v;
+	} set last(value){ super.last = value; }
 	//current:Price = new Price();
 	previousDay:Price;// = new Price()
 	//contract:IB.IContract;
-	get marketValue():number{const primary = this.isOption ? this._marketValue : this.currentPrice*this.position; const secondary = this.isOption ? this.currentPrice*this.position : this._marketValue; return primary || secondary;} set marketValue( value )
+	get marketValue():number
+	{
+		const primary = this.isOption ? this._marketValue : this.currentPrice*this.position; 
+		const secondary = this.isOption ? this.currentPrice*this.position*this.contract.multiplier : this._marketValue; 
+		return primary || secondary;
+	} set marketValue( value )
 	{
 		//if( this.contract.symbol=="ALGT" )
 		//	console.log( `${this.contract.symbol} - marketValue=${value}` );
@@ -98,7 +107,7 @@ export class Holding extends TickDetails
 		if( this.contract.symbol=="AAPL" )
 			this.contract.multiplier = 1.0;
 
-		return this.marketValue/(this.position*this.contract.multiplier)-this.pricePrevious;
+		return this.marketValue/(this.position*this.contract.multiplier)-this.last;
 	}
 	get pricePrevious(){ return this.previousDay?.last; }
 	get marketValuePrevious(){ return this.pricePrevious*this.position*this.contract.multiplier; }

@@ -7,13 +7,18 @@ export * from './lib/pages/snapshot/snapshot';
 export * from './lib/pages/snapshot/snapshot-content';
 export * from './lib/pages/trades/trades';
 export * from './lib/pages/watch/watch';
+export * from './lib/pages/watch/watch-content';
 
 export * from './lib/pages/snapshot/fundamentals/fundamentals';
+export * from './lib/pages/snapshot/news/news';
+export * from './lib/shared/summary/summary';
+export * from './lib/shared/watch-table/watch-table';
+
 /*
 export * from './lib/jde-tws.service';
 
 
-export * from './lib/pages/snapshot/news/news';
+
 */
 
 export {TwsService, IBar} from './lib/services/tws.service';
@@ -34,5 +39,5 @@ export * from './lib/utilities/marketUtilities';
 //export * from './lib/shared/dialogs/transact/transact';
 
 export * from './lib/shared/highcharts/candlestick';
-//export * from './lib/shared/watch-table/watch-table';
+
 //export * from './lib/shared/watch-table/watch-row/watch-row';

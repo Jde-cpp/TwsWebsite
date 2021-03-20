@@ -34,6 +34,10 @@ export class MarketUtilities
 		const mod = day%7;
 		return mod==2 || mod==3 || [18645,18673,18719,18778,18813,18876,18956,18985].indexOf(day)!=-1;
 	}
+	static isExchangeHoliday( day:Day, exchange:IB.Exchanges )
+	{
+		return MarketUtilities.isHoliday( day );
+	}
 
 	static previousTradingDate( value:Date|null=null, tradingHours:Results.IContractHours=null ):Day
 	{
@@ -46,6 +50,23 @@ export class MarketUtilities
 			previous.setDate( previous.getDate()-1 );
 		while( MarketUtilities.isDateHoliday(previous) );
 		return DateUtilities.toDays( previous );
+	}
+	static previousByType( exchange:IB.Exchanges, secType:IB.SecurityType, reference?:Day ):Day
+	{
+		let day = reference;
+		if( !day )
+		{
+			let now = new Date();
+			day = DateUtilities.toDays( now );
+			if( !MarketUtilities.isMarketOpen2(exchange, secType, now) )
+				--day;
+		}
+		while( MarketUtilities.isExchangeHoliday(day, exchange) )
+			--day;
+		do
+			--day;
+		while( MarketUtilities.isExchangeHoliday(day, exchange) );
+		return day;
 	}
 	static previous( contract:IB.IContract, reference?:Day ):Day
 	{

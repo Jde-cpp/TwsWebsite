@@ -126,7 +126,13 @@ export class Tick implements ITickObserver
 		this._close = value;
 	} private _close:number;
 	get delay():number{ return this.isMarketOpen ? null : null;} nextUpdate:number=Date.now();
-	get currentPrice():number{ return this.last>=this.bid && this.last<=this.ask ? this.last : (this.ask+this.bid)/2; }
+	get currentPrice():number
+	{
+		let price = this.markPrice;
+		if( this.last )
+	        price = this.last>=this.bid && this.last<=this.ask ? this.last : (this.ask+this.bid)/2; 
+        return price;	        
+	}
 	halted:boolean;
 	high:number;
 	lastTime: Date;
@@ -177,17 +183,20 @@ export class TickEx extends Tick
 			this.low = bar.low;
 			this.open = bar.open;
 		}
-		else if( this.isMarketOpen || bar.day==previousDay )
-			this.setPreviousDay( bar );
-		else if( bar.day>previousDay )
+		else
 		{
-			this.high = bar.high;//!isMarketOpen && day>previousDay
-			this.low = bar.low;
+			if( this.isMarketOpen || bar.day==previousDay )
+			    this.setPreviousDay( bar );
+			if( bar.day>previousDay || (this.contract.securityType==IB.SecurityType.Option && bar.day==previousDay && MarketUtilities.isMarketOpen2(this.contract.exchange, IB.SecurityType.Stock)) )
+			{
+				this.high = bar.high;//!isMarketOpen && day>previousDay
+				this.low = bar.low;
 
-			this.bid = bar.bid;
-			this.ask = bar.ask;
-			this.volume = ProtoUtilities.toNumber( bar.volume );
-			this.last = ProtoUtilities.toNumber( bar.close );
+				this.bid = bar.bid;
+				this.ask = bar.ask;
+				this.volume = ProtoUtilities.toNumber( bar.volume );
+				this.last = ProtoUtilities.toNumber( bar.close );
+			}
 		}
 	}
 	reqPrevious( tws:TwsService, previousDay:Day ):Promise<void>

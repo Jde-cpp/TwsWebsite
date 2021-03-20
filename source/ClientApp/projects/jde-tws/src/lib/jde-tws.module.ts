@@ -20,7 +20,8 @@ import { SnapshotContentComponent } from './pages/snapshot/snapshot-content';
 import { ConfigurationDialog } from './pages/snapshot/configuration'
 import { WatchComponent } from './pages/watch/watch';
 import { WatchContentComponent } from './pages/watch/watch-content';
-
+import { WatchTableComponent } from './shared/watch-table/watch-table';
+import { WatchRowComponent } from './shared/watch-table/watch-row/watch-row';
 import { RollDialog } from './shared/dialogs/roll/roll-dialog';
 import { ConfirmationDialog } from './shared/dialogs/transact/confirmation';
 import { OptionEntryDialog } from './shared/dialogs/option-entry/option-entry';
@@ -29,11 +30,12 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 import { TradeComponent } from './pages/trades/trades';
 
 
-@NgModule({
+@NgModule(
+{
 	  declarations: [JdeTwsComponent,
 		OrderComponent, PortfolioComponent, TradeComponent, WatchComponent,
 		SnapshotComponent, SnapshotContentComponent, ConfigurationDialog, FundamentalsComponent,
-		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent],
+		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent, WatchTableComponent, WatchRowComponent],
 	imports: [CommonModule, FormsModule, ReactiveFormsModule,
 		MatAutocompleteModule,MatDialogModule,MatIconModule,MatInputModule,MatFormFieldModule,MatMenuModule,MatSelectModule,MatTableModule,MatToolbarModule],
 	entryComponents: [OptionEntryDialog,TransactDialog],

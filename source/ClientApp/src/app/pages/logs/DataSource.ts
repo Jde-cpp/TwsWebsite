@@ -42,12 +42,46 @@ export class DataSource
 		if( this.observable )
 			this.observable.next( values );
 	}
+	locationOf( data:TraceEntry[], entry:TraceEntry, start:number, end:number )//https://stackoverflow.com/questions/1344500/efficient-way-to-insert-a-number-into-a-sorted-array-of-numbers
+	{
+		var result = end;
+		if( data.length>0 && this.compare(data[end-1],entry)==1 )
+		{
+			if( this.compare(data[start], entry) )
+				result = start;
+			else
+			{
+				var pivotIndex = Math.round( start + (end - start) / 2 );
+				var pivot = data[pivotIndex];
+				if( this.compare(entry,pivot)==this.compare(pivot,entry) )
+					result = pivotIndex;
+				else if( end - start <= 1 )
+					result = this.compare(entry,pivot) ? pivotIndex-1 : pivotIndex;
+				else if( this.compare(pivot,entry) )
+					result = this.locationOf( data, entry, pivotIndex, end );
+				else
+					result = this.locationOf( data, entry, start, pivotIndex );
+			}
+		}
+		return result;
+	}
+
 	push( entry:TraceEntry )
 	{
 		entry.index = this.allData.length;
-		this.allData.push( entry );
+		let push = (data)=>
+		{
+			const location = this.locationOf( data, entry, 0, data.length );
+			if( location==data.length )
+				data.push( entry );
+			else if( location==0 )
+				data.unshift( entry );
+			else
+				data.splice( location, 0, entry );
+		}
+		push( this.allData );
 		if( !entry.hidden )
-			this.data.push( entry );
+			push( this.data );
 		if( this.autoScroll )
 			this.setPage();
 	}
@@ -56,30 +90,43 @@ export class DataSource
 		this.data.length=0;
 		this.setPage();
 	}
-	sort( options:Sort )
+	compare( a:TraceEntry, b:TraceEntry )
 	{
+		let active = this.sort.active;
+		let result = 0;
+		if( !active || active=='date' )
+		{
+			if( a.time<b.time )
+				result = -1;
+			else if( a.time>b.time )
+				result = 1;
+			else if( a.id && b.id )
+				result = a.id<b.id ? -1 : 1;
+			else
+				result = a.index<b.index ? -1 : 1;
+		}
+		else if( active=='level' )
+			result = a.level==b.level ? 0 : a.level < b.level ? -1 : 1 ;
+		else if( active=='message' )
+			result = a.message==b.message ? 0 : a.message<b.message ? -1 : 1;
+		else if( active=='file' )
+			result = a.file==b.file ? 0 : a.file<b.file ? -1 : 1;
+		else if( active=='function' )
+			result = a.functionName==b.functionName ? 0 : a.functionName<b.functionName ? -1 : 1;
+		else
+			console.error( `unknown sort '${active}'` );
+
+		return this.sort.direction === 'asc' ? result : -result;
+	}
+	sortData( options:Sort )
+	{
+		this.sort = options;
 		if( !options || !options.active || options.direction === '' )
 			return;
 
 		const values = this.data.slice();
 		const multiplier = options.direction === 'asc' ? 1 : -1;
-		let data = values.sort((a, b) =>
-		{
-			let lessThan = false;
-			if( options.active=='date' )
-				lessThan = a.time<b.time;
-			else if( options.active=='level' )
-				lessThan = a.level<b.level;
-			else if( options.active=='message' )
-				lessThan = a.message<b.message;
-			else if( options.active=='file' )
-				lessThan = a.file<b.file;
-			else if( options.active=='function' )
-				lessThan = a.functionName<b.functionName;
-			else
-				console.error( `unknown sort'${options.active}'` );
-			return (lessThan ? -1 : 1)*multiplier;
-		});
+		let data = values.sort( (a, b) => this.compare(a,b) );
 		let i=-1;
 		for( let row of data )
 			row.index = ++i;
@@ -148,6 +195,7 @@ export class DataSource
 	get length():number{return this.data.length;}
 	get page(){return this._page;} set page(value){this._page=value;this.onPageChange.emit(value);} _page:number; onPageChange= new EventEmitter<number>();
 	//get filter(){return _filter;} set filter( value){_filter=value; applyFilter(value);} string _filter;
+	sort:Sort;
 	observable:Subject<object>;
 	data:TraceEntry[] = [];
 	allData:TraceEntry[] = [];

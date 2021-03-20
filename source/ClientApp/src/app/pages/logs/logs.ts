@@ -43,8 +43,9 @@ export class LogsComponent implements OnInit, OnDestroy
 		var start = beginningOfDay;
 		this._start.setValue( start );*/
 		this.data.onPageChange.subscribe( pageIndex=>this.pageIndex = pageIndex );
-		this.settingsContainer.loadedPromise.then( (value)=>
+		this.settingsContainer.loadedPromise.then( ()=>
 		{
+			this.data.sort = this.settings.sort;
 			this.appService.get().subscribe( applications =>
 			{
 				for( let app of applications )
@@ -99,8 +100,8 @@ export class LogsComponent implements OnInit, OnDestroy
 			this.appService.requestStrings( stringRequests ).subscribe( value =>{this.onStrings(value[0], value[1]);} );
 		}
 
-		let data = stringRequests.Values.length>0 || this.buffer.length ? this.buffer : this.data;
 		entry.hidden = this.settings.hiddenMessages.indexOf(entry.messageId)!=-1;
+		let data = stringRequests.Values.length>0 || this.buffer.length ? this.buffer : this.data;
 		data.push( entry );
 	}
 	onStrings = ( applicationId:number, value:FromServer.IApplicationString ):void =>
@@ -174,7 +175,7 @@ export class LogsComponent implements OnInit, OnDestroy
 	//@ViewChild("table-body") configuration:ConfigureTableComponent;
 	sortData(sort: Sort)
 	{
-		this.data.sort( sort );
+		this.data.sortData( sort );
 		this.sort = sort;
 		this.settingsContainer.save();
   	}
@@ -234,7 +235,7 @@ export class LogsComponent implements OnInit, OnDestroy
 		this.filter = value;
 		this.filterData();
 	}
-	get sort(){return this.settings.sort;} set sort(value){this.settings.sort=value;}
+	get sort(){return this.settings.sort;} set sort(value){ this.data.sort = this.settings.sort = value;}
 	settingsContainer:Settings<LogSettings> = new Settings<LogSettings>( LogSettings, "LogComponent", this.profileService );
 	get settings(){ return this.settingsContainer.value;}
 

@@ -167,7 +167,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				console.error( `this.mktDataSubscriptions.has(${contractId})` );//should never be here, because not in holdings (option underlying?)
 			else
 			{
-				var isMarketOpen = MarketUtilities.isMarketOpen2( contract.primaryExchange, contract.securityType );
+				var isMarketOpen = MarketUtilities.isMarketOpen2( contract.primaryExchange, IB.SecurityType.Stock /*contract.securityType*/ );
 				if( isMarketOpen )
 				{
 					let subscription = this.tws.reqMktData( contractId, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );
@@ -186,7 +186,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			next: ( bar:Results.IDaySummary ) =>
 			{
 				var holding = this.holdings.find( x=>x.contractId==bar.contractId );
-				holding.setDaySummary( bar,  MarketUtilities.previous(holding.contract) );
+				holding.setDaySummary( bar,  MarketUtilities.previousByType(holding.contract.exchange, IB.SecurityType.Stock) );
 			},
 		});
 		console.log( "this.viewPromise=true" );

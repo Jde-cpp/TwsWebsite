@@ -6,6 +6,7 @@ import {EventEmitter} from '@angular/core';
 
 import * as AppFromServer from 'jde-cpp/FromServer';
 import FromServer = AppFromServer.Jde.ApplicationServer.Web.FromServer;
+export class PageStats{ constructor( public length?:number, public startIndex?:number ){} };
 
 export class DataSource
 {
@@ -30,24 +31,22 @@ export class DataSource
 	{
 		if( pageSize>0 )
 			this.pageSize=pageSize;
-		if( start==-1 )
-			start = Math.max( this.data.length-this.pageSize, 0 );
-		this.page = Math.floor( start/this.pageSize );
-		if( start!=-1 )
-			start = this.page*this.pageSize;
+		const showEnd = start==-1 || start+pageSize>=this.data.length;
+		start = showEnd ? Math.max( this.data.length-this.pageSize, 0 ) : start;
 		let values = new Array<TraceEntry>();
 		var end = Math.min( start+this.pageSize, this.data.length );
 		for( let i=start; i<end; ++i )
 			values.push( this.data[i] );
 		if( this.observable )
 			this.observable.next( values );
+		return start;
 	}
 	locationOf( data:TraceEntry[], entry:TraceEntry, start:number, end:number )//https://stackoverflow.com/questions/1344500/efficient-way-to-insert-a-number-into-a-sorted-array-of-numbers
 	{
 		var result = end;
 		if( data.length>0 && this.compare(data[end-1],entry)==1 )
 		{
-			if( this.compare(data[start], entry) )
+			if( this.compare(entry, data[start])==-1 )
 				result = start;
 			else
 			{
@@ -66,10 +65,16 @@ export class DataSource
 		return result;
 	}
 
-	push( entry:TraceEntry )
+	pushArray( entries:TraceEntry[] ):PageStats
+	{
+		let result = null;
+		entries.forEach( (x)=>result = this.push(x) );
+		return result;
+	}
+	push( entry:TraceEntry ):PageStats
 	{
 		entry.index = this.allData.length;
-		let push = (data)=>
+		let push2 = (data)=>
 		{
 			const location = this.locationOf( data, entry, 0, data.length );
 			if( location==data.length )
@@ -79,11 +84,13 @@ export class DataSource
 			else
 				data.splice( location, 0, entry );
 		}
-		push( this.allData );
+		push2( this.allData );
+		let result = new PageStats( this.data.length );
 		if( !entry.hidden )
-			push( this.data );
+			push2( this.data );
 		if( this.autoScroll )
-			this.setPage();
+			result.startIndex = this.setPage();
+		return result;
 	}
 	clear()
 	{
@@ -94,7 +101,7 @@ export class DataSource
 	{
 		let active = this.sort.active;
 		let result = 0;
-		if( !active || active=='date' )
+		if( !active || active=='time' )
 		{
 			if( a.time<b.time )
 				result = -1;
@@ -124,14 +131,15 @@ export class DataSource
 		if( !options || !options.active || options.direction === '' )
 			return;
 
-		const values = this.data.slice();
-		const multiplier = options.direction === 'asc' ? 1 : -1;
-		let data = values.sort( (a, b) => this.compare(a,b) );
-		let i=-1;
-		for( let row of data )
-			row.index = ++i;
+		//const values = this.data.slice();
+		//const multiplier = options.direction === 'asc' ? 1 : -1;
+		this.allData = this.allData.sort( (a, b) => this.compare(a,b) );
+		this.data = this.data.sort( (a, b) => this.compare(a,b) );
+		//let i=-1;
+		//for( let row of data )
+		//	row.index = ++i;
 
-		this.data = data;
+		//this.data = data;
 		this.setPage();
 	}
 	select( dataIndex:number )
@@ -151,32 +159,34 @@ export class DataSource
 		if( this.observable )
 			this.observable.next( values );
 	}
-	filterData( messageIds:number[], filter2:string, index:number, level:FromServer.ELogLevel )
+	filterData( messageIds:number[], filter2:string, index:number, level:FromServer.ELogLevel ):PageStats
 	{
 		const filter = filter2 ? filter2.trim().toLowerCase() : null;
-		let visibleData:TraceEntry[] = [];
-		let haveIndex = index==-1;
-		let pastIndex = false;
+		//let visibleData:TraceEntry[] = [];
+		this.data.length = 0;
+		//let haveIndex = index==-1;
+		//let pastIndex = false;
 		let selectedIndex = -1;
-		let visibleIndex = 0;
+		//let visibleIndex = 0;
 		for( let entry of this.allData )
 		{
-			if( !haveIndex && !pastIndex )
-				pastIndex = entry.index==index;
+			//if( !haveIndex && !pastIndex )
+			//	pastIndex = entry.index==index;
+			if( selectedIndex==-1 && entry.index==index )
+				selectedIndex = this.data.length;
 			entry.hidden = messageIds.indexOf(entry.messageId)!=-1;
-			if( !entry.hidden && entry.level>=level && (filter==null || entry.message.toLowerCase().indexOf(filter)!=-1) )
-			{
-				++visibleIndex;
-				if( !haveIndex && pastIndex )
-				{
-					selectedIndex = visibleIndex;
-					haveIndex = true;
-				}
-				visibleData.push( entry );
-			}
+			if( entry.hidden || entry.level<level || (filter!=null && entry.message.toLowerCase().indexOf(filter)==-1) )
+				continue;
+			//++visibleIndex;
+			//if( selectedIndex==-1 && entry.index>=index )
+			//	selectedIndex = this.data.length+1;
+			this.data.push( entry );
 		}
-		this.data = visibleData;
+		if( selectedIndex>=this.data.length )
+			selectedIndex = this.data.length-1;
+		//this.data = visibleData;
 		this.setPage( selectedIndex );
+		return new PageStats( this.data.length, selectedIndex );
 	}
 	applyFilter( filter:string, hiddenIds:number[] )
 	{

@@ -3,7 +3,7 @@ import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import {MatDatepickerInputEvent} from '@angular/material/datepicker';
 //import {MatOptionSelectionChange} from '@angular/material/select';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 import { TraceEntry } from './TraceEntry';
 import { DataSource } from './DataSource';
 import {Application} from '../../services/app/application';
@@ -101,8 +101,43 @@ export class LogsComponent implements OnInit, OnDestroy
 		}
 
 		entry.hidden = this.settings.hiddenMessages.indexOf(entry.messageId)!=-1;
-		let data = stringRequests.Values.length>0 || this.buffer.length ? this.buffer : this.data;
-		data.push( entry );
+		if( stringRequests.Values.length>0 || this.buffer.length )
+			this.buffer.push( entry );
+		else
+			this.push( [entry] );
+//		if( stringRequests.Values.length==0 && this.buffer.length )
+//			this.onStrings( applicationId, null );
+	}
+	push( entries:TraceEntry[] )
+	{
+		let fnctn = ( entries2:TraceEntry[] )=>
+		{
+			var changes = this.data.pushArray( entries2 );
+			if( changes.length )
+				this.lengthChange.next( changes.length );
+			if( changes.startIndex )
+				this.startIndexChange.next( changes.startIndex );
+			this.pushTimeout = null;
+		};
+		const now = new Date();
+		let timeout = this.pushTimeout==null;
+		if( !timeout )
+		{
+			entries = this.pushTimeout.entries.concat( entries );
+			clearTimeout( this.pushTimeout.id );
+			timeout = this.pushTimeout.end>now.getTime();
+			if( !timeout )
+				fnctn( entries );
+		}
+		if( timeout )
+		{
+			this.pushTimeout =
+			{
+				entries: entries,
+				end: this.pushTimeout ? this.pushTimeout.end : now.getTime()+1000,
+				id: setTimeout( ()=>{ fnctn(entries) }, 250 )
+			};
+		}
 	}
 	onStrings = ( applicationId:number, value:FromServer.IApplicationString ):void =>
 	{
@@ -111,15 +146,17 @@ export class LogsComponent implements OnInit, OnDestroy
 		var applicationStrings = this.applicationStrings.get( applicationId );
 		if( !applicationStrings )
 			return;
-		applicationStrings.set( <FromClient.EStringRequest>value.StringRequestType, value.Id, value.Value );
+		if( value )
+			applicationStrings.set( <FromClient.EStringRequest>value.StringRequestType, value.Id, value.Value );
 		let i=0;
+		let entries = [];
 		for( ; i<this.buffer.length; ++i )
 		{
 			let entry = this.buffer[i];
-			const haveStrings = entry.message!=null && entry.file!=null && entry.functionName!=null;
+			const haveStrings = (entry.messageId || entry.message!=null) && (!entry.fileId || entry.file!=null) && ( !entry.functionId || entry.functionName!=null );
 			//haveStrings = entry.message!=null && entry.file!=null && entry.functionName!=null;
 			if( haveStrings )
-				this.data.push( entry );
+				entries.push( entry );
 			else
 			{
 				//console.log( `~(${entry.messageId}) haveStrings='${haveStrings}' message='${entry.message}' && ${entry.file} && ${entry.functionName} - ${entry.lineNumber}, buffer.length=${this.buffer.length-i}` );
@@ -127,7 +164,10 @@ export class LogsComponent implements OnInit, OnDestroy
 			}
 		}
 		if( i>0 )
+		{
 			this.buffer.splice( 0, i );
+			this.push( entries );
+		}
 	//	if( !this.buffer.length )
 	//		console.log( 'no buffer length' );
 	}
@@ -143,7 +183,10 @@ export class LogsComponent implements OnInit, OnDestroy
 		if( JSON.stringify(this.currentSubscription)!=JSON.stringify(subscription) )
 		{
 			//this.profileService.put<Settings>( LogsComponent.profileKey, this.settings );
+			this.buffer.length=0;
 			this.data.clear();
+			this.startIndexChange.next( 0 );
+			this.lengthChange.next( 0 );
 			this.unsubscribe();
 			this.level = level;
 			this.currentSubscription = subscription;
@@ -181,9 +224,14 @@ export class LogsComponent implements OnInit, OnDestroy
   	}
 	pageChangeEvent( event )
 	{
-		const offset = event.pageIndex * event.pageSize;
-		this.selectedIndex = null;
-		this.data.setPage( offset, event.pageSize );
+		//const offset = event.pageIndex * event.pageSize;
+		if( this.selectedEntry )
+		{
+			let index = this.data.data.findIndex( (x)=>x.index==this.selectedIndex );
+			if( index<event.startIndex || index>event.startIndex+event.pageLength )
+				this.selectedEntry = null;
+		}
+		this.data.setPage( event.startIndex, event.pageLength );
 	}
 	cellClick( event, i )
 	{
@@ -191,10 +239,12 @@ export class LogsComponent implements OnInit, OnDestroy
 		var index = +row.attributes["indx"].nodeValue;
 		this.selectedIndex = index==this.selectedIndex ? null : index;
 	}
-	get selectedEntry():TraceEntry{return this.selectedIndex==null ? null : this.data.allData[this.selectedIndex]; }
 	hideSelectedMessage()
 	{
+		this.settings.level = FromServer.ELogLevel.Information;
 		this.settings.hiddenMessages.push( this.selectedEntry.messageId );
+		this.settings.level = FromServer.ELogLevel.Debug;
+		this.settingsContainer.save();
 		this.filterData();
 	}
 	clearHiddenMessages()
@@ -204,27 +254,31 @@ export class LogsComponent implements OnInit, OnDestroy
 	}
 	filterData()
 	{
-		this.data.filterData( this.settings.hiddenMessages, this.filter, this.selectedEntry ? this.selectedEntry.index : -1, this.level );
+		var changes = this.data.filterData( this.settings.hiddenMessages, this.filter, this.selectedEntry ? this.selectedEntry.index : -1, this.level );
+		if( changes.length )
+			this.lengthChange.next( changes.length );
+		if( changes.startIndex )
+		{
+			this.selectedEntry = this.data.data[changes.startIndex];
+			this.startIndexChange.next( changes.startIndex );
+		}
 	}
 	navigateNext()
 	{
 		const messageId = this.selectedEntry.messageId;
-		const index = this.selectedIndex;
-		const size = this.data.allData.length;
-		const stop = size+index;
-		let foundIndex = index;
-		for( let i=index+1; i!=stop; ++i )
+		const currentIndex = this.data.data.findIndex( (x)=>x.index==this.selectedIndex );
+		const size = this.data.data.length;
+		const stop = size+currentIndex;
+		let foundIndex = currentIndex;
+		for( let i=currentIndex+1; i!=stop && foundIndex==currentIndex; ++i )
 		{
-			const i2 = i<size ? i : i-size;
-			if( this.data.allData[i2].messageId==messageId )
-			{
+			const i2 = i%size;//<size ? i : i-size;
+			if( this.data.data[i2].messageId==messageId )
 				foundIndex = i2;
-				break;
-			}
 		}
-		if( foundIndex!=index )
+		if( foundIndex!=currentIndex )
 		{
-			this.selectedIndex = foundIndex;
+			this.selectedEntry = this.data.data[foundIndex];
 			this.data.select( foundIndex );
 		}
 		else
@@ -235,7 +289,9 @@ export class LogsComponent implements OnInit, OnDestroy
 		this.filter = value;
 		this.filterData();
 	}
-	get sort(){return this.settings.sort;} set sort(value){ this.data.sort = this.settings.sort = value;}
+	get sort(){return this.settings.sort;} set sort(value)
+	{
+		this.data.sort = this.settings.sort = value;}
 	settingsContainer:Settings<LogSettings> = new Settings<LogSettings>( LogSettings, "LogComponent", this.profileService );
 	get settings(){ return this.settingsContainer.value;}
 
@@ -247,7 +303,7 @@ export class LogsComponent implements OnInit, OnDestroy
 	get paused(){return this.data.paused;} set paused(value){this.data.paused=value;}
 //	private socket:WebSocketSubject<string>;
 	connected = false;
-	displayedColumns : string[] = [ 'date', 'level', 'message', 'function', 'file', 'line' ];
+	displayedColumns : string[] = [ 'time', 'level', 'message', 'function', 'file', 'line' ];
 	//configuration = { displayHeader:true }
 	@ViewChild('mainTable',{static: false}) _table:MatTable<TraceEntry>;
 
@@ -261,15 +317,18 @@ export class LogsComponent implements OnInit, OnDestroy
 	static DefaultSubscription:ISubscription={ applicationId: 0, level:  FromServer.ELogLevel.None, start:null };
 	private currentSubscription:ISubscription=LogsComponent.DefaultSubscription;//actual subscribtion
 	private instanceId:number; //instance in dropdown
+	lengthChange = new Subject<number>();
+	startIndexChange = new Subject<number>();
 	private get level():FromServer.ELogLevel{ return this.settings.level; } private set level( value:FromServer.ELogLevel ){ this.settings.level=value; }
 	private get limit():number{return this.settings.limit;} private set limit(value:number){ this.settings.limit = value; }
 	private get application():Application|null{ return this.applications.find( (existing)=>{return existing.id==this.applicationId;} ); }
 	private applications:Application[]=[];
 	private subscription:Observable<[number,FromServer.ITraceMessage]>
 	private applicationStrings:Map<number,ApplicationStrings> = new Map<number,ApplicationStrings>();
+	private pushTimeout:{ entries: TraceEntry[], id:any, end:number };
+	get selectedIndex(){ return this.selectedEntry?.index; } set selectedIndex(x){ this.selectedEntry = this.data.data.find( (y)=>y.index==x ); }
+	get selectedEntry(){return this._selectedEntry; } set selectedEntry(x){ this._selectedEntry=x;} _selectedEntry:TraceEntry;
 	private statusSubscription:Observable<FromServer.IStatuses>;
-	//private static profileKey="logs";
-	private selectedIndex:number|null=null;
 	viewPromise:Promise<boolean>;
 }
 

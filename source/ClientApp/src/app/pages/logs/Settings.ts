@@ -32,7 +32,7 @@ export class LogSettings implements IAssignable<LogSettings>
 		this.applicationId = other.applicationId;
 		this.level = other.level;
 		this.limit = other.limit;
-		this.hiddenMessages = other.hiddenMessages;
+		this.hiddenMessages = [...other.hiddenMessages];
 		this.start = other.start;
 	}
 

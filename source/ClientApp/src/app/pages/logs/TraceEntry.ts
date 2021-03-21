@@ -38,7 +38,7 @@ export class TraceEntry
 		}
 		return this._message = template;
 	}; _message:string=null;
-	get fileName():string{ const i=this.file.lastIndexOf('/'); return i==-1 ? this.file : this.file.substr(i+1); };
+	get fileName():string{ const i=this.file ? this.file.lastIndexOf('/') : -1; return i==-1 ? this.file : this.file.substr(i+1); };
 	get file():string{ return this._file ? this._file: this._file = this.applicationStrings.files.get( this.fileId ); }; _file:string;
 	get functionName():string
 	{

@@ -29,7 +29,6 @@ import { TransactDialog } from './shared/dialogs/transact/transact';
 import {QuantityComponent} from './shared/widgets/quantity/quantity'
 import { TradeComponent } from './pages/trades/trades';
 
-
 @NgModule(
 {
 	  declarations: [JdeTwsComponent,

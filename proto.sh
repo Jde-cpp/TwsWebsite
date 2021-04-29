@@ -1,7 +1,5 @@
 source ./env.sh;
-cd $clientDir;
-#npm install protobufjs --save;
-cd node_modules;
+cd $clientDir/node_modules;
 moveToDir jde-cpp;
 
 	ln -s $marketProtoDir/ib.proto .;

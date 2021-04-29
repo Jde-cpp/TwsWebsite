@@ -1,12 +1,7 @@
 {
   "$schema": "../../node_modules/ng-packagr/ng-package.schema.json",
   "dest": "../../dist/jde-tws",
-	"lib":
-	{
-		"entryFile": "src/projects.ts",
-		"umdModuleIds":
-		{
-			"jde-framework": "jde-framework"
-		}
-	}
+  "lib": {
+    "entryFile": "src/projects.ts"
+  }
 }

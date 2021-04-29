@@ -2,15 +2,10 @@
   "name": "jde-tws",
   "version": "0.0.1",
   "peerDependencies": {
-    "@angular/common": "^10.2.0",
-	 "@angular/core": "^10.2.0",
-	 "rxjs": "~6.6.3"
+    "@angular/common": "^11.2.8",
+    "@angular/core": "^11.2.8"
   },
   "dependencies": {
     "tslib": "^2.0.0"
-  },
-  "scripts":
-  {
-		"copy-proto": "copyfiles -V -u 1 \"src/lib/proto/*.d.ts\" \"../../dist/jde-tws/esm2015\""
   }
 }

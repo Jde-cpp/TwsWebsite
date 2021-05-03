@@ -46,6 +46,7 @@ import{ GraphQLTable } from  './pages/GraphQL/table/table';
 import{ UserEntryDialog } from './pages/user-management/users/dialog/user-dialog';
 import{ CandlestickComponent } from 'jde-tws';
 import {SelectDialog} from './pages/GraphQL/select-dialog/select-dialog';
+import {InvestorsComponent} from './pages/Edgar/investors';
 /*
 import{ OptionTableComponent } from 'jde-tws';
 import{ OptionTabComponent } from 'jde-tws';
@@ -126,6 +127,7 @@ const routes: Routes =
 		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent, NewsComponent, SummaryComponent, TradeComponent, WatchComponent, WatchContentComponent, WatchTableComponent,
 		PaginatorComponent,
 		CandlestickComponent,
+		InvestorsComponent,
 		SeverityPickerComponent,
 		UserComponent, UserEntryDialog, SelectDialog, LogsComponent, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLTable, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent,
 	],

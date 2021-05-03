@@ -56,5 +56,11 @@
 				<option-tab [tick]="tick" [index]="3" [tabEvents]="tabEvents.asObservable()"></option-tab>
 			</ng-template>
 		</mat-tab>
+		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>shopping_bag</mat-icon>Investors</ng-template>
+			<ng-template matTabContent>
+				<investors [index]="4" [detail]="detail" [tabEvents]="tabEvents.asObservable()"></investors>
+			</ng-template>
+		</mat-tab>
 	</mat-tab-group>
 </div>

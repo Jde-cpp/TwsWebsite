@@ -175,52 +175,6 @@
 				}
 			}
 		},
-		"jde-blockly": {
-			"projectType": "library",
-			"root": "projects/jde-blockly",
-			"sourceRoot": "projects/jde-blockly/src",
-			"prefix": "lib",
-			"architect": {
-				"build": {
-					"builder": "@angular-devkit/build-angular:ng-packagr",
-					"options":
-					{
-						"tsConfig": "projects/jde-blockly/tsconfig.lib.json",
-						"project": "projects/jde-blockly/ng-package.json"
-					},
-					"configurations": {
-						"production": {
-							"tsConfig": "projects/jde-blockly/tsconfig.lib.prod.json"
-						}
-					}
-				},
-				"test": {
-					"builder": "@angular-devkit/build-angular:karma",
-					"options": {
-						"main": "projects/jde-blockly/src/test.ts",
-						"tsConfig": "projects/jde-blockly/tsconfig.spec.json",
-						"karmaConfig": "projects/jde-blockly/karma.conf.js"
-					}
-				},
-				"lint": {
-					"builder": "@angular-devkit/build-angular:tslint",
-					"options": {
-						"tsConfig": [
-							"projects/jde-blockly/tsconfig.lib.json",
-							"projects/jde-blockly/tsconfig.spec.json"
-						],
-						"exclude": [
-							"**/node_modules/**"
-						]
-					}
-				},
-				"serve":
-				{
-					"builder": "@angular-devkit/build-angular:dev-server",
-					"options": { "sourceMap": {"scripts":true} }
-				}
-			}
-		},
 		"jde-material-site": {
 			"projectType": "library",
 			"root": "projects/jde-material-site",
@@ -380,6 +334,46 @@
 						"tsConfig": [
 							"projects/jde-tws-assets/tsconfig.lib.json",
 							"projects/jde-tws-assets/tsconfig.spec.json"
+						],
+						"exclude": [
+							"**/node_modules/**"
+						]
+					}
+				}
+			}
+		},
+		"jde-blockly": {
+			"projectType": "library",
+			"root": "projects/jde-blockly",
+			"sourceRoot": "projects/jde-blockly/src",
+			"prefix": "lib",
+			"architect": {
+				"build": {
+					"builder": "@angular-devkit/build-angular:ng-packagr",
+					"options": {
+						"tsConfig": "projects/jde-blockly/tsconfig.lib.json",
+						"project": "projects/jde-blockly/ng-package.json"
+					},
+					"configurations": {
+						"production": {
+							"tsConfig": "projects/jde-blockly/tsconfig.lib.prod.json"
+						}
+					}
+				},
+				"test": {
+					"builder": "@angular-devkit/build-angular:karma",
+					"options": {
+						"main": "projects/jde-blockly/src/test.ts",
+						"tsConfig": "projects/jde-blockly/tsconfig.spec.json",
+						"karmaConfig": "projects/jde-blockly/karma.conf.js"
+					}
+				},
+				"lint": {
+					"builder": "@angular-devkit/build-angular:tslint",
+					"options": {
+						"tsConfig": [
+							"projects/jde-blockly/tsconfig.lib.json",
+							"projects/jde-blockly/tsconfig.spec.json"
 						],
 						"exclude": [
 							"**/node_modules/**"

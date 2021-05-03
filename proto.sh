@@ -9,6 +9,8 @@ moveToDir jde-cpp;
 	ln -s $blocklyProtoDir/blockly.proto .;
 	ln -s $appProtoDir/FromClient.proto .;
 	ln -s $appProtoDir/FromServer.proto .;
+	ln -s $edgarProtoDir/edgar.proto .;
+
 	npx pbjs -r ib_root -t static-module -w es6 -o ib.js ib.proto; npx pbts -o ib.d.ts ib.js
 	npx pbjs -r request_root -t static-module -w es6 -o requests.js requests.proto;npx pbts -o requests.d.ts requests.js;
 	npx pbjs -r result_root -t static-module -w es6 -o results.js results.proto;npx pbts -o results.d.ts results.js;
@@ -16,6 +18,7 @@ moveToDir jde-cpp;
 	npx pbjs -r blockly_root -t static-module -w es6 -o blockly.js blockly.proto;npx pbts -o blockly.d.ts blockly.js;
 	npx pbjs -r from_client_root -t static-module -w es6 -o FromClient.js FromClient.proto;npx pbts -o FromClient.d.ts FromClient.js;
 	npx pbjs -r from_server_root -t static-module -w es6 -o FromServer.js FromServer.proto;npx pbts -o FromServer.d.ts FromServer.js;
+	npx pbjs -r edgar_root -t static-module -w es6 -o edgar.js edgar.proto;npx pbts -o edgar.d.ts edgar.js;
 
 	rm ib.proto;
 	rm requests.proto;
@@ -24,3 +27,4 @@ moveToDir jde-cpp;
 	rm blockly.proto;
 	rm FromClient.proto;
 	rm FromServer.proto;
+	rm edgar.proto;

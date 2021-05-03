@@ -30,10 +30,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	@HostBinding('class.mat-drawer-container') public highlighted: boolean = true;
 	constructor( private tws:TwsService, private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
-	{
-		//console.log( 'SnapshotComponent::SnapshotComponent' );
-//		throw 'SnapshotComponent::SnapshotComponent';
-	}
+	{}
 
 	ngOnInit():void
 	{}
@@ -41,7 +38,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{
 		this.profile.loadedPromise.then( ()=>
 		{
-			//this.settings.previousContractIds = [756733];
+			this.settings.previousContractIds = [756733];
 			this.tws.reqIds( this.previousContractIds ).then( (results)=>
 			{
 				//results.map( details=> details.detail.length==1 ? holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 );

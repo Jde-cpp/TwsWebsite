@@ -7,16 +7,18 @@ import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'
 import { ProtoUtilities } from 'jde-framework';
 import {ObservableUtilities} from '../utilities/ObservableUtilities';
 import { Table, IGraphQL, Mutation, DateUtilities } from 'jde-framework';
-import { MarketUtilities } from '../utilities/marketUtilities';
+import { ContractPK, MarketUtilities } from '../utilities/marketUtilities';
 
 import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
+import * as Edgar2 from 'jde-cpp/edgar'; import Edgar = Edgar2.Jde.Markets.Edgar.Proto;
 
 type ResolveGeneric = (any) => void;
 type ClientId = number;
 type StringMap = { [k: string]: string };
+type Cik = number;
 export interface IBar
 {
 	time:Date;
@@ -775,13 +777,24 @@ class Connection
 	googleLogin( token:string ):Promise<void>{ console.log( `googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
 	query( ql: string ):Promise<any>
 	{
-		console.log( `query( ${ql} )` ); return this.sendStringPromise2<any>(ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>
+		console.log( `query( ${ql} )` );
+		return this.sendStringPromise2<any>(ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>
+		{
+			return result.stringResult;
+		}, (rslt:Results.IStringResult)=>
+		{
+			return rslt.value.length ? JSON.parse(rslt.value).data : null;
+		} );
+	}
+	investors( id:ContractPK ):Promise<Edgar.IInvestors>
 	{
-		return result.stringResult;
-	}, (rslt:Results.IStringResult)=>
+		return this.sendGenericPromise<Edgar.IInvestors>( Requests.ERequests.Investors, [id], (result)=>{return result.investors}, (x:Edgar.IInvestors)=>x );
+	}
+	filings( cik:Cik ):Promise<Edgar.Filing[]>
 	{
-		return rslt.value.length ? JSON.parse(rslt.value).data : null;
-	} ); }
+		return this.sendGenericPromise<Edgar.Filing[]>( Requests.ERequests.Filings, [cik], (result)=>{return result.filings}, (x:Edgar.IFilings)=>x.values );
+	}
+
 
 	//get( url:string ):Promise<string>{ console.log( `get( ${url} )` ); return this.sendStringPromise2<string>( url, Requests.ERequests.RestGet, (x)=>x.stringResult, (x)=>x.value); };
 	//delete( url:string ):Promise<void>{ console.log( `delete( ${url} )` ); return this.sendStringPromise2<void>( url, Requests.ERequests.RestDelete, (x)=>x.stringResult); };
@@ -865,6 +878,8 @@ export class TwsService implements IGraphQL
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
 	cancelMktDataSingle( x:TickObservable ):void{ new Map<number,TickObservable>( [[0,x]]).values(); }
+	investors( id:ContractPK ):Promise<Edgar.IInvestors>{ return this.connection.investors(id); }
+	filings( cik:Cik ):Promise<Edgar.Filing[]>{ return this.connection.filings(cik); }
 	reqExecutions( query:Requests.IRequestExecutions=new Requests.RequestExecutions() ):ExecutionObservable{ return this.connection.reqExecutions( query ); }
 	reqFundamentals( contractId:number ):Promise<{ [k:string]: number }>{ return this.connection.reqFundamentals( contractId ); }
 	reqHistoricalData( contract:IB.IContract, date:Date, days:number, barSize:Requests.BarSize, display:Requests.Display, useRth:boolean, keepUpToDate:boolean ):Promise<IBar[]>{ return this.connection.reqHistoricalData(contract, date, days, barSize, display, useRth, keepUpToDate); }

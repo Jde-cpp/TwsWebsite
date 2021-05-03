@@ -113,4 +113,4 @@ source/ClientApp/projects/jde-tws/src/lib/jde-tws.service.ts
 source/ClientApp/src/angular.json
 *.d.ts
 source/ClientApp/projects/tws-proto/*
-
+source/ClientApp/projects/jde-blockly2/*

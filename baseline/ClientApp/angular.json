@@ -27,9 +27,9 @@
 				 "assets": [
 					"src/favicon.ico",
 					"src/assets",
-					{ "glob": "*", "input": "dist/jde-material-site/src/assets", "output": "assets"},
-					{ "glob": "*", "input": "dist/jde-material-site/src/assets/img", "output": "assets/img"},
-					{ "glob": "*", "input": "dist/jde-material-site/src/assets/img/homepage", "output": "assets/img/homepage"},
+					{ "glob": "*", "input": "dist/jde-material/src/assets", "output": "assets"},
+					{ "glob": "*", "input": "dist/jde-material/src/assets/img", "output": "assets/img"},
+					{ "glob": "*", "input": "dist/jde-material/src/assets/img/homepage", "output": "assets/img/homepage"},
 					{ "glob": "*", "input": "dist/jde-blockly-assets/src/assets/blocks", "output": "assets/blocks"}
 				 ],
 				 "styles": [
@@ -175,38 +175,38 @@
 				}
 			}
 		},
-		"jde-material-site": {
+		"jde-material": {
 			"projectType": "library",
-			"root": "projects/jde-material-site",
-			"sourceRoot": "projects/jde-material-site/src",
+			"root": "projects/jde-material",
+			"sourceRoot": "projects/jde-material/src",
 			"prefix": "lib",
 			"architect": {
 				"build": {
 					"builder": "@angular-devkit/build-angular:ng-packagr",
 					"options": {
-						"tsConfig": "projects/jde-material-site/tsconfig.lib.json",
-						"project": "projects/jde-material-site/ng-package.json"
+						"tsConfig": "projects/jde-material/tsconfig.lib.json",
+						"project": "projects/jde-material/ng-package.json"
 					},
 					"configurations": {
 						"production": {
-							"tsConfig": "projects/jde-material-site/tsconfig.lib.prod.json"
+							"tsConfig": "projects/jde-material/tsconfig.lib.prod.json"
 						}
 					}
 				},
 				"test": {
 					"builder": "@angular-devkit/build-angular:karma",
 					"options": {
-						"main": "projects/jde-material-site/src/test.ts",
-						"tsConfig": "projects/jde-material-site/tsconfig.spec.json",
-						"karmaConfig": "projects/jde-material-site/karma.conf.js"
+						"main": "projects/jde-material/src/test.ts",
+						"tsConfig": "projects/jde-material/tsconfig.spec.json",
+						"karmaConfig": "projects/jde-material/karma.conf.js"
 					}
 				},
 				"lint": {
 					"builder": "@angular-devkit/build-angular:tslint",
 					"options": {
 						"tsConfig": [
-							"projects/jde-material-site/tsconfig.lib.json",
-							"projects/jde-material-site/tsconfig.spec.json"
+							"projects/jde-material/tsconfig.lib.json",
+							"projects/jde-material/tsconfig.spec.json"
 						],
 						"exclude": [
 							"**/node_modules/**"

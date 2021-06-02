@@ -1,7 +1,7 @@
 source ./env.sh;
 cd $clientDir
-ng generate library jde-material-site;
-cd $clientDir/projects/jde-material-site/
+ng generate library jde-material;
+cd $clientDir/projects/jde-material/
 addHard $materialDir ng-package.json;
 cd src;
 rm public-api.ts;
@@ -37,7 +37,7 @@ addHard $materialDir/src/styles _tables.scss
 addHard $materialDir/src/styles _tables-theme.scss
 
 cd ../lib
-addHard $materialDir/src/lib jde-material-site.module.ts
+addHard $materialDir/src/lib jde-material.module.ts
 
 moveToDir shared
 addHardDir $materialDir/src/lib/shared documentation-items

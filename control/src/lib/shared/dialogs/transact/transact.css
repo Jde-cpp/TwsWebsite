@@ -1,0 +1,29 @@
+input[type=number]
+{
+	text-align: right;
+}
+.number
+{
+	text-align: right;
+}
+
+.buy
+{
+	color: green;
+}
+
+.sell
+{
+	color: red;
+}
+
+.confirmationBuy
+{
+	color: royalblue;
+}
+.rowHeader
+{
+	overflow: hidden;
+	white-space: nowrap;
+	padding-right: 10px;
+}

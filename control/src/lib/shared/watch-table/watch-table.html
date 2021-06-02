@@ -1,0 +1,20 @@
+<div class="watchRow" style="text-align: center">
+	<mat-label class="symbol">Symbol</mat-label>
+	<span *ngIf="viewable( 'shares' )" class="shares">Shares</span>
+	<span class="chart"></span>
+	<span class="size">Bid Sz</span>
+	<mat-label class="amount">Bid</mat-label>
+	<mat-label class="amount">Ask</mat-label>
+	<mat-label class="size">Ask Sz</mat-label>
+	<mat-label class="amount">Last</mat-label>
+	<mat-label class="change">Change</mat-label>
+	<mat-label class="range">Range</mat-label>
+	<mat-label class="volume">Volume</mat-label>
+	<!-- <mat-label class="shareCount">Short</mat-label> -->
+	<mat-label *ngIf="viewable( 'inventory' )" class="shareCount">Inventory</mat-label>
+</div>
+<ng-template #container></ng-template>
+
+<!-- <div > -->
+	<!-- <watch-row *ngFor="let tick of ticks; let i = index" (symbolEmitter)="onChangeSymbol(i,$event)" (editEmitter)="onChangeEdit(i,$event)" class="watchRow" [id]="i" [tick]="tick" [editEvents]="editEvents" ></watch-row> -->
+<!-- </div> -->

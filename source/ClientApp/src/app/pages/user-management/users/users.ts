@@ -6,7 +6,7 @@ import { IProfile, IErrorService, Settings} from 'jde-framework'
 import { UserEntryDialog } from './dialog/user-dialog';
 
 //import * as um2 from 'src/app/proto/UserManagement'; import UM = um2.Jde.UM;
-import { ComponentPageTitle } from 'jde-material-site';
+import { ComponentPageTitle } from 'jde-material';
 import { IGraphQL } from 'projects/jde-framework/src/lib/services/IGraphQL';
 
 export interface IUser

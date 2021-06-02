@@ -1,0 +1,26 @@
+<ng-container *ngIf="viewPromise | async">
+	<mat-toolbar>
+		<span>
+			<span style="height:74px; overflow: hidden;">
+				<mat-form-field appearance="fill">
+					<mat-label>Name</mat-label>
+					<input matInput onclick="this.select();" [ngModel]="name" (keyup.enter)="name = $event.target.value" (blur)="name = $event.target.value">
+				</mat-form-field>
+			</span>
+			<!-- <button mat-raised-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="onTransactClick(true)">Buy</button>
+			<button mat-raised-button color="warn" [disabled]="!selection" (click)="onTransactClick(false)" >Sell</button> -->
+			<span></span>
+			<button mat-icon-button color="primary" [disabled]="!canAdd" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('insert')"><mat-icon>add</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="!canAdd" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('delete')"><mat-icon>remove</mat-icon></button>
+			<span></span>
+			<!-- <button mat-icon-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('cut')"><mat-icon>content_cut</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('copy')"><mat-icon>content_copy</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('paste')"><mat-icon>content_paste</mat-icon></button> -->
+			<span></span>
+			<!-- <mat-checkbox [(ngModel)]="isPortfolio">Portfolio</mat-checkbox> -->
+		</span>
+	</mat-toolbar>
+	<watch-table [file]="file" [changeTable]="changeTable" [isPortfolio]="isPortfolio" (selectedChanged)=onSelectedChanged($event)></watch-table>
+		<!-- style="display: flex; flex-direction: row;" -->
+		<!-- <watch-row style="display: flex; flex-direction: row; flex-wrap:wrap;justify-content: flex-start; align-items: flex-start;" *ngFor="let contract of details" [details]="contract" ></watch-row> -->
+	</ng-container>

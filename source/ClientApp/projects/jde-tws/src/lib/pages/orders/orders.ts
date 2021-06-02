@@ -10,7 +10,7 @@ import { MarketUtilities } from '../../utilities/marketUtilities';
 import { ProtoUtilities } from 'jde-framework';
 import { Settings } from 'jde-framework'
 import {DataSource,Order} from './DataSource'
-import { ComponentPageTitle } from 'jde-material-site';
+import { ComponentPageTitle } from 'jde-material';
 
 //import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;

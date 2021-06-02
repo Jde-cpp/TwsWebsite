@@ -1,0 +1,86 @@
+//@import "~_variables.scss";
+
+table {
+	width: 100%;
+ }
+
+div.table
+{
+	/* display: -webkit-box; */
+	flex-grow: 1;
+	flex-basis: 100vh;
+	/* height: 100px; */
+	overflow: auto;
+}
+
+.level
+{
+	flex: 0 0 85px;
+}
+
+.number
+{
+	flex: 0 0 25px;
+	text-align: right;
+	justify-content: flex-end;
+}
+
+.function
+{
+	flex: 0 0 125px;
+}
+
+.table-row
+{
+	height: 30px;
+	min-height: 30px;
+}
+.verticalBoundry
+{
+	background-color: gray;
+	/* border-left-color: brown;
+	border-left-width: 1em;
+	border-left-style: solid; */
+}
+
+.outOfMoney
+{
+	/* background-color: aqua;
+	color: black; */
+	background-color: rgba( 0, 0, 255, .05 );
+}
+
+.cell
+{
+	border-top-width: 1px;
+	border-bottom-width: 1px;
+	border-top-style: solid;
+	border-bottom-style: solid;
+	border-top-color: transparent;
+	border-bottom-color: transparent;
+}
+
+.highlightHorizontal
+{
+	@extend .cell;
+	background-image:linear-gradient( hsla(0,0%,0%,.15) 100%, transparent 100% ); // darker
+	margin-top: -1px;
+	margin-bottom: -1px;
+	border-bottom-color:  orange;
+	border-top-color: orange;
+}
+
+.row:hover
+{
+	@extend .highlightHorizontal;
+	border-bottom-width: 2px;
+}
+
+table.mat-table
+{
+	display: table;
+}
+.stdDev
+{
+	background-color: darkblue;
+}

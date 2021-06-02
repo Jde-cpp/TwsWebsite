@@ -108,16 +108,16 @@ if [ $link -eq 1 ]; then
 
 npm install blockly --save
 npm install google-closure-library --save
-npm install @types/long --save;
+#npm install @types/long --save;
 npm install highcharts --save;
 npm install highcharts-angular --save
-npm install material-design-icons
-ng add @angular/material;
+#npm install material-design-icons
+#ng add @angular/material;
 
 npm install
 
 cd $clientApp
 ng build jde-framework
-ng build jde-material-site;
+ng build jde-material;
 ng build jde-blockly;
 ng build jde-tws;

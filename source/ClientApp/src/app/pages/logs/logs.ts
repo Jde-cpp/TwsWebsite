@@ -11,7 +11,7 @@ import {AppService} from '../../services/app/app.service';
 import {ApplicationStrings} from './Application';
 import {LogSettings} from './Settings';
 import { Settings } from 'jde-framework'
-import { ComponentPageTitle } from 'jde-material-site';
+import { ComponentPageTitle } from 'jde-material';
 import { IProfile } from 'jde-framework';
 import {IErrorService} from 'jde-framework'
 import { DateUtilities } from 'jde-framework';

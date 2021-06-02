@@ -3,7 +3,7 @@ import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import { IProfile, IErrorService, Settings} from 'jde-framework'
 import { TwsService } from 'jde-tws';
-import { ComponentPageTitle } from 'jde-material-site';
+import { ComponentPageTitle } from 'jde-material';
 import { Observable, Subscription } from 'rxjs';
 import * as myBlockly2 from 'jde-cpp/edgar'; import Edgar = myBlockly2.Jde.Markets.Edgar.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;

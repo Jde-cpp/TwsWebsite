@@ -1,0 +1,20 @@
+.watchRow
+{
+	display: flex;
+	text-align: right;
+	/*justify-content:center*/
+}
+
+.highlight
+{
+	/* background-color: aqua;
+	color: black; */
+	border-color: orange;
+	border-width: 1px;
+	border-style: solid;
+}
+
+.stripe
+{
+	background: rgba(138, 113, 113, 0.404);
+}

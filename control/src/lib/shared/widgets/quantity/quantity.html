@@ -1,0 +1,7 @@
+<mat-form-field style="width: 100%;">
+	<input matInput placeholder="{{placeholder}}" style="text-align:right" [matAutocomplete]="autox" class="number" type="number" [step]="step" min="{{min}}" [ngModel]="value" (ngModelChange)="value=$event" (focus)="focusChange.emit(true)" (focusout)="focusChange.emit(false)" >
+</mat-form-field>
+<mat-autocomplete #autox="matAutocomplete">
+	<mat-option *ngFor="let option of options" [value]="option">{{option}}</mat-option>
+	<!-- autoValues(value) -->
+</mat-autocomplete>

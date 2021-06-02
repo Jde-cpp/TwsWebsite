@@ -5,7 +5,7 @@ import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import { IProfile, IErrorService, Settings, IGraphQL, Table, FieldKind, Field} from 'jde-framework'
 
-import { ComponentPageTitle } from 'jde-material-site';
+import { ComponentPageTitle } from 'jde-material';
 import { Subject } from 'rxjs';
 
 @Component( {selector: 'graph-ql-component', styleUrls: ['graph-ql-component.css'], templateUrl: './graph-ql-component.html'} )

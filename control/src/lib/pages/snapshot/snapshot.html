@@ -1,0 +1,10 @@
+<mat-tab-group *ngIf="viewPromise | async" #symbolTabs [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)">
+	<!-- [(selectedIndex)]="settings.selectedIndex" -->
+	<mat-tab *ngFor="let detail of details; let i = index">
+		<ng-template mat-tab-label>{{detail.contract.symbol}}</ng-template>
+		<ng-template matTabContent>
+			<snapshot-content (symbolEvent)="onSymbol($event)" [detail]="detail" [index]="i" [indexSelectedSymbol]="selectedIndex" [pageSettings]="settingsContainer"></snapshot-content>
+		</ng-template>
+	</mat-tab>
+</mat-tab-group>
+

@@ -1,0 +1,60 @@
+<h2 mat-dialog-title [ngStyle]="{'background': backgroundColor}">{{description}}</h2>
+<mat-dialog-content>
+	<div style="display: flex;align-items: center; justify-content: center;">
+		<span>{{underlyingSymbol}}</span>
+		<mat-form-field style="flex:0;flex-basis: 120px;width:120px; margin-left:10px">
+			<mat-select style="width: 120px;" [value]="expiration" (selectionChange)="onExpirationChange($event)">
+				<mat-option style="width: 120px;" *ngFor="let expiration of expirations | keyvalue" [value]="expiration.key">{{expiration.value}}</mat-option>
+			</mat-select>
+		</mat-form-field>
+		<mat-form-field style="flex:0;flex-basis: 120px;width: 120px; margin-left:10px">
+			<mat-select [disabled]="strikes.size<2" (selectionChange)="onStrikeChange($event)" [value]="strike" style="width: 120px;">
+				<mat-option style="width: 120px;" *ngFor="let strike2 of strikes  | keyvalue" [value]="strike2.key">{{strike2.key}}</mat-option>
+			</mat-select>
+		</mat-form-field>
+		<button mat-raised-button style="margin-left:10px;margin-right:20px" (click)="isCall=!isCall">{{optionTypeName}}</button>
+	</div>
+	<div style="display: flex;align-items: center; justify-content: center;">
+		<mat-form-field style="width:70px" floatLabel="always">
+			<input matInput type="number" disabled=true placeholder="Bid Size" [ngModel]="bidSize">
+		</mat-form-field>
+		<!-- <span>{{bidSize | number:'1.0-0'}}</span> -->
+		<button mat-stroked-button (click)="limit=bid">{{bid | number:'1.2-2'}}</button>
+		<button mat-stroked-button (click)="limit=ask">{{ask | number:'1.2-2'}}</button>
+		<mat-form-field style="width:70px" floatLabel="always">
+			<input matInput type="number" disabled=true placeholder="Ask Size" [ngModel]="askSize">
+		</mat-form-field>
+	</div>
+	<div style="display: flex; justify-content: center;">
+		<mat-form-field style="width:100px">
+			<input matInput placeholder="Quantity" [matAutocomplete]="autox" class="number" type="number" step="1" [ngModel]="quantity | number:'1.0-0'" (ngModelChange)="quantity=$event">
+		</mat-form-field>
+		<mat-autocomplete #autox="matAutocomplete">
+			<mat-option *ngFor="let option of autoValues(quantity)" [value]="option">{{option}}</mat-option>
+		</mat-autocomplete>
+		<mat-form-field style="width:100px">
+			<input matInput placeholder="Limit" [matAutocomplete]="limitx" class="number" type="number" step="0.01" [ngModel]="limit | number:'1.2-2'" (ngModelChange)="limit=$event">
+		</mat-form-field>
+		<mat-autocomplete #limitx="matAutocomplete">
+			<mat-option *ngFor="let option of autoAmount(limit)" [value]="option">{{option}}</mat-option>
+		</mat-autocomplete>
+	</div>
+	<div style="display: flex; justify-content: center;" *ngIf="blocks?.length">
+		<mat-form-field>
+			<mat-select [(ngModel)]="blockExecutingId">
+				<mat-option *ngFor="let block of blocks" [value]="block.id">{{block.name}}</mat-option>
+			</mat-select>
+		</mat-form-field>
+	</div>
+</mat-dialog-content>
+<mat-dialog-actions style="flex: content; flex-direction: row;align-items: flex-start;display: flex;">
+	<button mat-raised-button [class.buy]="isBuy" [class.sell]="!isBuy" style="margin-left:10px;margin-right:20px" (click)="isBuy=!isBuy">{{isBuy ? "Buy" : "Sell"}}</button>
+	<!-- <mat-radio-group [(ngModel)]="_isBuy" style="align-self: flex-start;" >
+		<mat-radio-button value="Buy">Buy</mat-radio-button>
+		<mat-radio-button style="margin-left: 10px;" value="Sell">Sell</mat-radio-button>
+	</mat-radio-group> -->
+	<span style="margin-left: auto;" >
+		<button mat-icon-button [class.buy]="isBuy" [class.sell]="!isBuy" [disabled]="submitting" (click)="submitting=true;onSubmitClick()"><mat-icon>done</mat-icon>{{isBuy ? "Buy" : "Sell"}} {{isCall ? "Call" : "Put"}}</button>
+		<button style="margin-left:50px;margin-right:20px" mat-icon-button (click)="onCancelClick()"><mat-icon>cancel</mat-icon>Cancel</button>
+	</span>
+</mat-dialog-actions>

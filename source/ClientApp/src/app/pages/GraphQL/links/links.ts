@@ -6,7 +6,7 @@ import { MatColumnDef, MatHeaderRowDef, MatNoDataRow, MatRowDef, MatTable } from
 import { IProfile, IErrorService, Settings} from 'jde-framework'
 import {StringUtils} from '../../../utilities/StringUtils'
 
-import { ComponentPageTitle } from 'jde-material-site';
+import { ComponentPageTitle } from 'jde-material';
 import { IGraphQL, Table, Field, FieldKind } from 'jde-framework';
 import { filter } from 'rxjs/operators';
 import { SelectDialog } from '../select-dialog/select-dialog';

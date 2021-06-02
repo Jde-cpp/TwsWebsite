@@ -5,7 +5,7 @@ import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import { IProfile, IErrorService, Settings} from 'jde-framework'
 
-import { ComponentPageTitle } from 'jde-material-site';
+import { ComponentPageTitle } from 'jde-material';
 import { IGraphQL, Table, FieldKind } from 'projects/jde-framework/src/lib/services/IGraphQL';
 import { CdkColumnDef } from '@angular/cdk/table';
 import { Subject } from 'rxjs';

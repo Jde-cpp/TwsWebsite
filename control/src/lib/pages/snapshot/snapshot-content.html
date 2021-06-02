@@ -1,0 +1,66 @@
+<div *ngIf="loadedPromise | async">
+	<mat-toolbar>
+		<mat-toolbar-row style="height:74px">
+			<div style="height:74px; overflow: hidden;">
+				<mat-form-field appearance="fill">
+					<mat-label>Symbol</mat-label>
+					<input matInput #symbolInput onclick="this.select();" [ngModel]="symbol" (keyup.enter)="setSymbol($event.target.value)" (blur)="setSymbol($event.target.value)">
+				</mat-form-field>
+			</div>
+			<div id="chart" style="min-width: 240px"></div>
+			<table style="width:1300px">
+				<thead><tr><td>Bid Sz</td><td>Bid</td><td>Ask</td><td>Ask Sz</td><td>Last</td><td>Change</td><td>Range</td><td>Volume</td><!--<td>Short</td>--><td>Inventory</td></tr></thead>
+				<tbody><tr>
+					<td class="numberCell">{{tick?.bidSize || null | number:'1.0-0'}}</td>
+					<td class="numberCell">{{tick?.bid | number:'1.2-2'}}</td>
+					<td class="numberCell">{{tick?.ask | number:'1.2-2'}}</td>
+					<td class="numberCell">{{tick?.askSize | number:'1.0-0'}}</td>
+					<td class="numberCell" title="{{tick?.currentPrice==tick?.last ? null : tick?.last}}" [class.positiveValue]="tick?.change>0">{{tick?.currentPrice | number:'1.2-2'}}</td>
+					<td class="numberCell" [class.negativeValue]="tick?.change<0" [class.positiveValue]="tick?.change>0">{{tick?.change | number:'1.2-2'}} ({{tick?.change/tick?.close*100 | number:'1.1-1'}}%)</td>
+					<td class="numberCell">{{tick?.low| number:'1.2-2'}} - {{tick?.high | number:'1.2-2'}}</td>
+					<td class="numberCell" *ngIf="tick==null || !tick.volumeAverage">{{volumeDisplay}}</td>
+					<td class="numberCell" *ngIf="tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</td>
+					<td class="numberCell">{{tick?.shortableAvailable/1000 | number:'1.0-0'}}K</td>
+				</tr></tbody>
+			</table>
+			<span>
+				<button mat-raised-button color="primary" style="margin-right:10px" (click)="onTransactClick(true)">Buy</button>
+				<button mat-raised-button color="warn" (click)="onTransactClick(false)" >Sell</button>
+				<button mat-icon-button (click)="onConfigurationClick()"><mat-icon>settings</mat-icon></button>
+			</span>
+		</mat-toolbar-row>
+	</mat-toolbar>
+	<div id="chart2"></div>
+	<mat-tab-group #tabs (selectedTabChange)="onTabChange($event)" >
+		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Fundamentals</ng-template>
+			<ng-template matTabContent>
+				<fundamentals [tick]="tick" [index]="0" [value]="fundamentals" [tabEvents]="tabEvents.asObservable()"></fundamentals>
+			</ng-template>
+		</mat-tab>
+		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>News</ng-template>
+			<ng-template matTabContent>
+				<news [tick]="tick" [index]="1" [tabEvents]="tabEvents.asObservable()"></news>
+			</ng-template>
+		</mat-tab>
+		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
+			<ng-template matTabContent>
+				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="2" [tabEvents]="tabEvents.asObservable()"></candlestick>
+			</ng-template>
+		</mat-tab>
+		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Options</ng-template>
+			<ng-template matTabContent>
+				<option-tab [tick]="tick" [index]="3" [tabEvents]="tabEvents.asObservable()"></option-tab>
+			</ng-template>
+		</mat-tab>
+		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>shopping_bag</mat-icon>Investors</ng-template>
+			<ng-template matTabContent>
+				<investors [index]="4" [detail]="detail" [tabEvents]="tabEvents.asObservable()"></investors>
+			</ng-template>
+		</mat-tab>
+	</mat-tab-group>
+</div>

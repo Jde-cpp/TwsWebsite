@@ -16,7 +16,7 @@ import {TransactDoModal} from '../../shared/dialogs/transact/transact'
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import { IAuth } from 'jde-material-site';
+import { IAuth } from 'jde-material';
 import { FormControl } from '@angular/forms';
 
 class Settings

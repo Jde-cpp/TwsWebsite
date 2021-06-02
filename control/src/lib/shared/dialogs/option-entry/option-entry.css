@@ -1,0 +1,18 @@
+input[type=number]
+{
+	text-align: right;
+}
+.number
+{
+	text-align: right;
+}
+
+.buy
+{
+	color: green;
+}
+
+.sell
+{
+	color: red;
+}

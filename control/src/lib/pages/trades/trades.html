@@ -1,0 +1,73 @@
+<ng-container *ngIf="viewPromise | async">
+	<mat-toolbar style="height:120px">
+		<div style="align-content: center; margin: auto;">
+			<div style="display: inline-block;vertical-align: top;">
+				<div style="display: inline-block">
+					<date-range [settings]="dateRange"></date-range>
+					<button mat-icon-button primary><mat-icon class="iconButton" (click)="load()">cloud_download</mat-icon></button>
+				</div>
+				<div>
+					<!-- <mat-checkbox [(ngModel)]="groupBySymbol">Group by Symbol</mat-checkbox> -->
+				</div>
+			</div>
+			<tws-summary [data]="data" style="margin-left:10px"></tws-summary>
+		</div>
+		<!-- <div style="align-content: center; margin: auto">
+			<tws-summary [data]="data"></tws-summary>
+		</div> -->
+	</mat-toolbar>
+	<div style="align-content: center; margin: auto;  text-align: center; background-color: black">
+		<mat-table style="display: inline-block;width:1200px" #mainTable matSort [dataSource]="data" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
+			<ng-container matColumnDef="symbol">
+				<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
+				<mat-cell class="symbolField" *matCellDef="let element"> {{element.symbol}} </mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="shares">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> Shares </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{element.shares | number:'1.0-0'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="openTime">
+				<mat-header-cell mat-sort-header class="dateTimeHeader" *matHeaderCellDef> Open </mat-header-cell>
+				<mat-cell class="dateTimeField" *matCellDef="let element"> {{element.openTime | date: "MM/dd/yy HH:mm:ss"}} </mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="closeTime">
+				<mat-header-cell mat-sort-header class="dateTimeHeader" *matHeaderCellDef> Close </mat-header-cell>
+				<mat-cell class="dateTimeField" *matCellDef="let element"> {{element.closeTime | date: "HH:mm:ss"}} </mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="openPrice">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> Open </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{element.openPrice | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="closePrice">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> Close </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{element.closePrice | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="return_">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> Return </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{element.return_==null ? null : (element.return_-1)*100 | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="openLongPrediction">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> OLong </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{(element.openLongPrediction-1)*100 | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="openShortPrediction">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> OShort </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{(element.openShortPrediction-1)*-100 | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="closeLongPrediction">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> CLong </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{element.closeLongPrediction==0 ? null : (element.closeLongPrediction-1)*100 | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="closeShortPrediction">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> CShort </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{element.closeShortPrediction==0 ? null : (element.closeShortPrediction-1)*-100 | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<ng-container matColumnDef="commissions">
+				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> Commissions </mat-header-cell>
+				<mat-cell class="numberField" *matCellDef="let element">{{element.commissions | number:'1.2-2'}}</mat-cell>
+			</ng-container>
+			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
+			<mat-row mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+		</mat-table>
+	</div>
+</ng-container>

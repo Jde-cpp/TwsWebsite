@@ -1,0 +1,10 @@
+<div *ngIf="settingsContainer?.loadedPromise | async" style="display: flex;justify-content: center;align-items: center;">
+	<span>
+		<date-range [settings]="settings.dateRange" (settingsChange)="onDateRangeChange($event)"></date-range>
+	</span>
+	<link-select placeholder="Zoom" (selectChange)="zoomChange($event)" [options]="this.settings.zoom"></link-select>
+	<link-select placeholder="Candle Stick Length" (selectChange)="candleStickChange($event)" [options]="candleSticks"></link-select>
+	<mat-checkbox style="align-content: center; justify-content: center;" [(ngModel)]="settings.showVolume" (ngModelChange)=run();>Volume</mat-checkbox>
+</div>
+<div id="container"></div>
+<!-- <div id="container2" style="min-height:500px;background-color: grey; width:100%; height: 100%;"></div> -->

@@ -127,8 +127,9 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 				if( !tick.close )
 					console.log( `No previous day close for '${this.detail.contract.symbol}'` );
 				this.showChart();
-				this.tabs.selectedIndex = this.settingsSymbolContainer.value.tabIndex;
-				this.tabEvents.next( this.tabs?.selectedIndex ?? this.settingsSymbolContainer.value.tabIndex ?? 0 );
+				console.log( `this.tabs.selectedIndex = ${this.settingsSymbolContainer.value.tabIndex}` );
+				//this.tabs.selectedIndex = this.settingsSymbolContainer.value.tabIndex;
+				this.tabEvents.next( this.tabs.selectedIndex ?? this.settingsSymbolContainer.value.tabIndex ?? 0 );
 			},
 			error: e=>
 			{
@@ -326,6 +327,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			xAxis: {labels:{enabled:showLarge}, visible:true,  ordinal: false, min: minTime, max: maxTime, maxRange: range, minRange:range, plotLines:[{color: '#FF0000', width: 2, value: plotLine}]},
 			rangeSelector: { selected: 0, inputEnabled: false, buttonTheme: {visibility: 'hidden'}, labelStyle: {visibility: 'hidden'} }
 		};
+		window.Highcharts = Highcharts;
 		Highcharts.stockChart( showLarge ? 'chart2' : 'chart', options );
 	}
 	onError = ( error: Results.IError ):void =>
@@ -337,12 +339,12 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	onTabChange( event:MatTabChangeEvent )
 	{
 		console.log( "SnapshotContentComponent::onTabChange" );
-		if( this.settingsSymbolContainer.value.tabIndex!=event.index )
+/*		if( this.settingsSymbolContainer.value.tabIndex!=event.index )
 		{
 			this.settingsSymbolContainer.value.tabIndex = event.index;
 			this.settingsSymbolContainer.save();
-			this.tabEvents.next( event.index );
-		}
+		}*/
+		//this.tabEvents.next( event.index );
 	}
 
 	get contract():IB.IContract{ return this.detail ? this.detail.contract : null; }

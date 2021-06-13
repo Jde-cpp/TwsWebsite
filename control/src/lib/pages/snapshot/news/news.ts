@@ -26,20 +26,44 @@ class Article
 	get display():string
 	{
 		var dateDisplay = DateUtilities.display( new Date(this.ib.time*1000) );
-		return `${dateDisplay} - ${this.ib.headline}`;
+		return `${dateDisplay} - ${this.header}`;
 	}
-
 	article:string;
-//	articlePromise
-	get articleLoad():Promise<string>
+	articleLoad():Promise<string>
 	{
-		return new Promise( (resolve, reject)=>
+		if( !this.viewPromise )
 		{
-			this.tws.reqNewsArticle(this.ib.providerCode, this.ib.articleId).then( (article)=>
+			this.viewPromise = new Promise( async (resolve)=>
 			{
-				resolve( article.value );
-			}).catch( (e)=>reject(e) );
-		});
+				const article = await this.tws.reqNewsArticle( this.ib.providerCode, this.ib.articleId );
+				if( article.isText )
+				{
+					var value = article.value;
+					console.log( this.header );
+					console.log( value );
+					if( value.startsWith(this.header) )
+						value = value.substr( this.header.length );
+					if( value.startsWith("&#10;") )
+						value = value.substr( 5 );
+					this.content = value.split( "&#10;" ).join( "<br/>" );
+				}
+				else
+					this.content = article.value;
+
+				resolve( this.content );
+			});
+		}
+		return this.viewPromise;
+	}
+	content:string;
+	viewPromise:Promise<string>;
+	get id(){ return this.ib.articleId; }
+	get header()
+	{
+		let start = this.ib.headline.indexOf('}')+1;
+		if( this.ib.headline[start]=='!' )
+			++start;
+		return this.ib.headline.substr( start );
 	}
 }
 
@@ -47,13 +71,16 @@ class Article
 export class NewsComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private tws:TwsService, @Inject('IProfile') private profileService: IProfile )
-	{}
+	{
+	}
 	ngOnInit()
 	{
+		console.log( "NewsComponent::ngOnInit" );
 		this.tabSubscription = this.tabEvents.subscribe( {next: value=>{this.isActive = this.index==value;}} );
 	}
 	ngAfterViewInit()
 	{
+		console.log( "NewsComponent::ngAfterViewInit" );
 		let request = ()=>
 		{
 			this.tws.reqHistoricalNews( this.tick.contractId, NewsComponent.settings.value.providers, 15 ).then( (collection)=>
@@ -87,14 +114,20 @@ export class NewsComponent implements OnInit, AfterViewInit, OnDestroy
 	}
 	ngOnDestroy()
 	{
-		//this.pageSettings.save();
+		NewsComponent.settings.save();
 
 	}
+	openGroup( articleId )
+	{
+		let a = this.collection.find( (x)=>x.id==articleId );
+		a.articleLoad();
+	}
+
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 	@Input() index:number;
 	@Input() tick:TickDetails;
 
-	collection=new Array<Article>();
+	collection = new Array<Article>();
 	isActive:boolean;
 	static settings:Settings<NewsSettings>;
 	viewPromise:Promise<boolean>;

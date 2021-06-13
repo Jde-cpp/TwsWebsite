@@ -60,7 +60,7 @@ class Connection
 	constructor( /*private cnsl: IErrorService*/ )
 	{
 		//this.socket = webSocket<protobuf.Buffer>( {url: 'wss://PL1USPMU0029WS:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
-		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://duffy2:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
+		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		//this.socket.binary(true);
 		this.socket.subscribe(
 			( msg ) => this.addMessage( msg ),
@@ -329,6 +329,8 @@ class Connection
 						continue;
 
 					requestPromise.resolve( requestPromise.transformInput ? requestPromise.transformInput(messageValue) : messageValue );
+					//complete?
+					this.testCallbacks.delete( id );
 					break;
 				}
 				if( !found )
@@ -464,6 +466,7 @@ class Connection
 	}
 	error( err ):void
 	{
+		debugger;
 		this.sessionId = null;
 		console.error( "No longer connected to TWS.", err );
 		this.handleConnectionError( err );
@@ -575,7 +578,7 @@ class Connection
 		const id = this.getRequestId();
 		console.log( `(${id})reqNewsArticle( ${providerCode}, ${articleId} )` );
 		const variable = { id:id, providerCode:providerCode, articleId: articleId };
-		return this.sendPromise2<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle!=null;}, null );
+		return this.sendPromise2<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle;}, null );
 	}
 	reqContractDetails( contract:IB.IContract ):Promise<Results.IContractDetail[]>
 	{
@@ -858,10 +861,12 @@ export class TwsService implements IGraphQL
 	{
 		return new Promise<Results.IContractDetail>( (resolve,reject)=>this.reqSymbol(symbol).then( (x)=>
 		{
-			for( let i=0; i<x.length && x.length>1; ++i )
+			for( let i=0; i<x.length; )
 			{
 				if( x[i].contract.currency!=MarketUtilities.DefaultCurrency() )
 					 x.splice( i, 1 );
+				else
+					++i;
 			}
 			if( x.length==1 )
 				resolve( x[0] );

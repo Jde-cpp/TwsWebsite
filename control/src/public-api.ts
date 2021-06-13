@@ -26,11 +26,13 @@ export {TwsService, IBar} from './lib/services/tws.service';
 export * from './lib/services/tws.auth.service'
 export {BlocklyService} from './lib/services/blockly.service';
 
+export * from './lib/services/Tick';
 /*
+export * from './lib/shared/highcharts/candlestick';
 export * from './lib/services/ExecutionObserver';
 export * from './lib/services/IOrderObserver';
 export * from './lib/services/ITickObserver';
-export * from './lib/services/Tick';
+
 export * from './lib/utilities/marketUtilities';
 */
 
@@ -39,6 +41,6 @@ export * from './lib/utilities/marketUtilities';
 //export * from './lib/shared/dialogs/roll/roll-dialog';
 //export * from './lib/shared/dialogs/transact/transact';
 
-export * from './lib/shared/highcharts/candlestick';
+
 
 //export * from './lib/shared/watch-table/watch-row/watch-row';

@@ -1,13 +1,10 @@
 <ng-container *ngIf="viewPromise | async">
-	<mat-expansion-panel *ngFor="let entry of collection" hideToggle>
+	<mat-expansion-panel (opened)="openGroup(entry.id)" *ngFor="let entry of collection" hideToggle>
 		<mat-expansion-panel-header>
-			<mat-panel-title>{{entry.display}}</mat-panel-title>
-			<!-- <mat-panel-description>This is a summary of the content</mat-panel-description> -->
+			<mat-panel-title style="opacity: 0.7;">{{entry.display}}</mat-panel-title>
 		</mat-expansion-panel-header>
-		<ng-template matExpansionPanelContent>{{article(entry) | async}}</ng-template>
 		<ng-template matExpansionPanelContent>
-			<ng-container *ngIf="articleLoad(entry) | async">{{article(entry)}}</ng-container>
+			<ng-container *ngIf="entry.viewPromise | async"><div  style="margin-left: 15px" [innerHTML]="entry.content"></div></ng-container>
 	  </ng-template>
-
 	</mat-expansion-panel>
 </ng-container>

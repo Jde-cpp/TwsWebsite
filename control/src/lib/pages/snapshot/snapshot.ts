@@ -11,10 +11,11 @@ import {PageSettings} from './PageSettings'
 import * as IbResults from 'jde-cpp/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
-@Component( {selector: 'snapshot', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html', styles: [`:host {'class': 'mat-drawer-container'}`]} )
+@Component( {selector: 'snapshot.mat-drawer-container', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html'} )
+//, styles: [`:host {'class': 'mat-drawer-container';}`]
 export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 {
-	@HostBinding('class.mat-drawer-container') public highlighted: boolean = true;
+	//@HostBinding('class.mat-drawer-container') public highlighted: boolean = true;
 	constructor( private tws:TwsService, private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
@@ -39,7 +40,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 						console.error( `contract returned zero contracts.` );
 				}
 				this.selected.setValue( this.settings.selectedIndex );
-				this.viewPromise = Promise.resolve(true);
+				this.viewPromise = Promise.resolve( true );
 			});
 		});
 		this.selected.valueChanges.subscribe( value=>

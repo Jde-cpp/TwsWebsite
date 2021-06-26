@@ -22,6 +22,7 @@ import {OrderComponent} from './pages/orders/orders';
 import { PortfolioComponent } from './pages/portfolio/portfolio';
 import { FundamentalsComponent } from './pages/snapshot/fundamentals/fundamentals';
 import { NewsComponent } from './pages/snapshot/news/news';
+import { RedditComponent } from './pages/snapshot/reddit/reddit';
 import { TwitterComponent } from './pages/snapshot/twitter/twitter';
 import { SnapshotComponent } from './pages/snapshot/snapshot';
 import { SnapshotContentComponent } from './pages/snapshot/snapshot-content';
@@ -45,7 +46,7 @@ import { TradeComponent } from './pages/trades/trades';
 	  declarations: [
 		OrderComponent, PortfolioComponent, TradeComponent, SummaryComponent, WatchComponent,
 		SnapshotComponent, SnapshotContentComponent, ConfigurationDialog, FundamentalsComponent, NewsComponent,
-		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,TwitterComponent,QuantityComponent, WatchContentComponent,
+		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,RedditComponent,TwitterComponent,QuantityComponent, WatchContentComponent,
 		OptionTableComponent, WatchTableComponent, WatchRowComponent],
 	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
 		MatButtonModule, MatAutocompleteModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatTableModule,MatTabsModule,MatToolbarModule,

@@ -49,6 +49,10 @@
 			<ng-template matTabContent><twitter [tick]="tick" [index]="1"></twitter></ng-template>
 		</mat-tab>
 		<mat-tab>
+			<ng-template mat-tab-label><img style="width:24px; height: 24px;" src="https://styles.redditmedia.com/t5_2th52/styles/communityIcon_b37n2zfs8k861.png?width=256&s=a9cb63319055ded916e5b12ff03f1e8c63ae6911"/>Reddit</ng-template>
+			<ng-template matTabContent><reddit [tick]="tick" [index]="1"></reddit></ng-template>
+		</mat-tab>
+		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
 			<ng-template matTabContent>
 				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="2" [tabEvents]="tabEvents.asObservable()"></candlestick>

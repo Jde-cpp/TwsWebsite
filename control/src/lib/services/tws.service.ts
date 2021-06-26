@@ -64,7 +64,7 @@ type AccountUpdateMultiCallback = (accountUpdate: Results.IAccountUpdateMulti)=>
 type AccountUpdateType = [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>];
 class Connection
 {
-	constructor( /*private cnsl: IErrorService*/ )
+	constructor()
 	{
 		//this.socket = webSocket<protobuf.Buffer>( {url: 'wss://PL1USPMU0029WS:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
@@ -304,14 +304,7 @@ class Connection
 				if( this.testCallbacks.has(id) )
 				{
 					let x =  this.testCallbacks.get( id );
-					//try
-					{
-						x.resolve( x.transformInput(message.stringResult) );
-					}
-					//catch( e )
-					//{
-					//	x.reject( e );
-					//}
+					x.resolve( x.transformInput(message.stringResult) );
 					this.testCallbacks.delete( id );
 				}
 				else
@@ -752,7 +745,7 @@ class Connection
 		this.orders.set( id, new Order(contract, order, callback) );
 		return callback;
 	}
-
+	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.sendPromise2( "reddit", {id:this.getRequestId(), symbol:symbol, sort:sort}, (m)=>m.reddit ); }
 	reqOpenOrders():OrderObservable
 	{
 		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestOpenOrders}}) );
@@ -785,7 +778,7 @@ class Connection
 		return callback;
 	}
 
-	sendPromise2<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput:TransformInput ):Promise<TResult>
+	sendPromise2<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput?:TransformInput ):Promise<TResult>
 	{
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
 		return new Promise<TResult>( (resolve,reject)=>
@@ -807,10 +800,6 @@ class Connection
 	{
 		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, transform );
 	}
-/*	StringRequest( type:Requests.ERequests, name:string ):Requests.IStringRequest
-	{
-		return {id: this.getRequestId(), "type": type, "name": name};
-	}*/
 	static transformStringList( result:Results.IStringList ){ return result.values; }
 	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
 	portfolios():Promise<string[]>{ return this.sendGenericPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
@@ -839,20 +828,6 @@ class Connection
 		return this.sendGenericPromise<Edgar.Filing[]>( Requests.ERequests.Filings, [cik], (result)=>{return result.filings}, (x:Edgar.IFilings)=>x.values );
 	}
 
-
-	//get( url:string ):Promise<string>{ console.log( `get( ${url} )` ); return this.sendStringPromise2<string>( url, Requests.ERequests.RestGet, (x)=>x.stringResult, (x)=>x.value); };
-	//delete( url:string ):Promise<void>{ console.log( `delete( ${url} )` ); return this.sendStringPromise2<void>( url, Requests.ERequests.RestDelete, (x)=>x.stringResult); };
-	/*patch<T>( url:string, item:string ):Promise<void>
-	{
-		console.log( `patch( ${url}, ${item} )` );
-		return this.sendPromise2<Requests.IRestRequest,void>( "restRequest", {id: this.getRequestId(), type: Requests.ERequests.RestPatch, url: url, item: item }, (x)=>x.stringResult, null );
-	}
-	post( url:string, item:string ):Promise<number>
-	{
-		console.log( `post( ${url}, ${item} )` );
-		return this.sendPromise2<Requests.IRestRequest,number>( "restRequest", {id: this.getRequestId(), type: Requests.ERequests.RestPost, url: url, item: item }, (x)=>x.stringResult, (msg:Results.StringResult)=>+msg.value );
-	}*/
-
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
 	private socket:WebSocketSubject<protobuf.Buffer>;
 	private sessionId:number|Long|null;
@@ -880,7 +855,7 @@ class Connection
 @Injectable( {providedIn: 'root'} )
 export class TwsService implements IGraphQL
 {
-	constructor( /*@Inject('IErrorService') private cnsl: IErrorService*/ )
+	constructor()
 	{}
 
 	reqManagedAccts():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.accounts ) resolve( TwsService.accounts ); else this.connection.reqManagedAccts().then( (x)=>{TwsService.accounts=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
@@ -935,6 +910,7 @@ export class TwsService implements IGraphQL
 
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number, blockId?:string ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit, blockId); }
+	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.connection.reddit( symbol, sort ); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }

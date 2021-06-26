@@ -1,0 +1,22 @@
+
+img.BRFG
+{
+	content: url("https://briefing.com/favicon.ico")
+}
+img.BRFUPDN
+{
+	content: url("../../../../../assets/img/outline_emoji_people_black_24dp.png")
+}
+img.articleIcon
+{
+	width: 20px;
+	height: 20px;
+}
+.expand
+{
+	opacity: 0.7
+}
+.noExpand
+{
+	opacity: 1.0
+}

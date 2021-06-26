@@ -55,7 +55,7 @@ import {CanActivateComponentSidenav} from 'jde-material';
 import {ThemeStorage} from 'jde-material';
 import { ComponentCategoryList } from 'jde-material';
 import { ComponentSidenav } from 'projects/jde-material/src/lib/pages/component-sidenav/component-sidenav';
-import { News2Component } from './test/news/news';
+//import { TwitterComponent } from './test/twitter/twitter';
 
 
 //Testing:
@@ -69,7 +69,7 @@ const routes: Routes =
 	{ path: 'snapshot', component: SnapshotComponent },
 	{ path: 'trades', component: TradeComponent },
 	{ path: 'orders', component: OrderComponent },
-	{ path: 'news', component: News2Component },
+//	{ path: 'twitter', component: TwitterComponent },
 	{ path: 'watch', component: WatchComponent },
 	{
 		path: 'blockly',
@@ -101,7 +101,7 @@ const routes: Routes =
 
 @NgModule({
 	declarations: [
-		AppComponent, News2Component
+		AppComponent//, TwitterComponent
 	/*	, ComponentCategoryList,
 		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent, SummaryComponent, TradeComponent, WatchComponent, WatchContentComponent, WatchTableComponent,
 		PaginatorComponent,

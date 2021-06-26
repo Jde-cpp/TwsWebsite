@@ -33,17 +33,20 @@
 	<div id="chart2"></div>
 	<mat-tab-group #tabs (selectedTabChange)="onTabChange($event)" >
 		<mat-tab>
-			<ng-template mat-tab-label><mat-icon>description</mat-icon>News2</ng-template>
-			<!-- <news [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></news> -->
-			<ng-template matTabContent>
-				<news [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></news>
-			</ng-template>
-		</mat-tab>
-		<!-- <mat-tab>
 			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Fundamentals</ng-template>
 			<ng-template matTabContent>
 				<fundamentals [tick]="tick" [index]="1" [value]="fundamentals" [tabEvents]="tabEvents.asObservable()"></fundamentals>
 			</ng-template>
+		</mat-tab>
+		<mat-tab>
+			<ng-template mat-tab-label><mat-icon>description</mat-icon>News</ng-template>
+			<ng-template matTabContent><news [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></news></ng-template>
+		</mat-tab>
+		<mat-tab>
+			<ng-template mat-tab-label>
+				<img style="width:24px; height: 24px;" src="assets/img/twitter_social_icons_circle_blue.svg"/>Twitter
+			</ng-template>
+			<ng-template matTabContent><twitter [tick]="tick" [index]="1"></twitter></ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
@@ -62,6 +65,6 @@
 			<ng-template matTabContent>
 				<investors [index]="4" [detail]="detail" [tabEvents]="tabEvents.asObservable()"></investors>
 			</ng-template>
-		</mat-tab> -->
+		</mat-tab>
 	</mat-tab-group>
 </div>

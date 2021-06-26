@@ -34,7 +34,6 @@ export class SymbolSettings implements IAssignable<SymbolSettings>
 		this.shortInterestDate=value.shortInterestDate;
 		this.tabIndex = value.tabIndex;
 	}
-	//chartSettings:IChartSettings = {	start: new Date(Date.now()-1000*60*60*24*7), zoomHours:24, barSize: Requests.BarSize.Minute30 };
 	shortInterest:number;shortInterestDate:Date;
 	tabIndex:number;
 }
@@ -44,18 +43,11 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 {
 	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{
-		//console.log( 'SnapshotComponent::SnapshotComponent' );
-//		throw 'SnapshotComponent::SnapshotComponent';
 	}
 	ngOnInit()
 	{
 		console.log( `(${this.detail && this.detail.contract ? this.detail.contract.symbol : 'null'})SnapshotContentComponent::ngOnInit` );
 		this.settingsSymbolContainer = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
-		// var contract = new IB.Contract();
-		// contract.symbol = symbol;
-		// contract.securityType = "STK";
-		// contract.exchange = "SMART";
-		// contract.currency = "USD";
 	}
 	ngAfterViewInit():void
 	{
@@ -86,7 +78,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	onConfigurationClick()
 	{
 		var data:ConfigurationData = { symbolSettings: this.settingsSymbolContainer, pageSettings: this.pageSettings }
-		const dialogRef = this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
+		this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
 	}
 	onContractDetails():void
 	{
@@ -127,8 +119,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 				if( !tick.close )
 					console.log( `No previous day close for '${this.detail.contract.symbol}'` );
 				this.showChart();
-				console.log( `this.tabs.selectedIndex = ${this.settingsSymbolContainer.value.tabIndex}` );
-				//this.tabs.selectedIndex = this.settingsSymbolContainer.value.tabIndex;
 				this.tabEvents.next( this.tabs.selectedIndex ?? this.settingsSymbolContainer.value.tabIndex ?? 0 );
 			},
 			error: e=>
@@ -136,68 +126,20 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 				console.error(e);
 			}
 		});
-	/*	var isPreOpening = MarketUtilities.isPreOpening( this.contract.primaryExchange, this.contract.securityType );
-		this.tws.reqHistoricalData( this.contract, now, 1, Requests.BarSize.Day, Requests.Display.Trades, !isPreOpening, false ).subscribe(
-		{
-			next: ( bar:Bar ) =>
-			{
-				if( !this.tick.close )
-					this.tick.close = bar.close;
-				else
-				{
-					this.tick.last = bar.close;
-					//this.tick.close = bar.Close-bar.Open;
-					this.tick.low = bar.low;
-					this.tick.high = bar.high;
-					this.tick.volume = <number>bar.volume;
-				}
-				/*bars.push(bar);* /
-			},
-			complete: ()=> {},
-			error:  e=>{ console.error(e); this.cnsle.error("Could not connect to Tws.", e); }
-		});*/
-		//}
 		if( this.subscription )
 			this.tws.cancelMktDataSingle( this.subscription );
 		const ticks = [Requests.ETickList.Inventory, Requests.ETickList.HistoricalVolatility_, Requests.ETickList.ImpliedVolatility_, (this.tick.isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
-/*		if( isMarketOpen )
-			ticks.push( Requests.ETickList.PlPrice );
-		else*/
 
 		this.subscription = this.tws.reqMktData( this.contract.id, ticks, false );
 		this.subscription.subscribe2( this.tick );
-/*		if( this.symbol!=this.previousSymbols[0] )
-		{
-			var values:string[] = [];
-			const symbol = details.contract.symbol;
-			values.push( symbol );
-			this.previousSymbols.forEach( previous=>{ if(symbol!=previous)values.push(previous); } );
-			this.previousSymbols = values;
-			this.settingsContainer.save();
-			//this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
-		}*/
 	}
 	onTransactClick( buy:boolean )
 	{
 		TransactDoModal( this.dialog, this.profileService, this.tws, this.detail, this.tick, buy );
-/*		const dialogRef = this.dialog.open(TransactDialog, {
-			width: '600px', autoFocus: false,
-			data: { details: this.details, tick: this.tick, isBuy: buy }
-		});
-		dialogRef.afterClosed().subscribe(result =>
-		{
-			// if( result && this.settings.limit!=result.limit )
-			// {
-			// 	this.settings.limit = result.limit;
-			// 	this.subscribe( this.applicationId, this.level );
-			// }
-		});*/
 	}
 	setShortInterest( value, date )
 	{
 		console.log( `setShortInterest = ${value}` );
-		//this.settingsSymbol.shortInterest = value;
-		//this.settingsSymbol.shortInterestDate = date;
 		this.settingsSymbolContainer.save();
 	}
 
@@ -274,15 +216,9 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			color: tick.currentPrice>tick.close ? "green" : "red"
 		};
 		const plotLine = minTime>liquidStart ? regularEnd.getTime() : liquidStart;
-		//let yAxisLength = Math.sqrt( statResult.variance )*tick.open/8;
 		const midpoint = (maxValue+minValue)/2;
 		let yAxisLength = (maxValue-minValue)/2;
-		//while( minValue<midpoint-yAxisLength || maxValue>midpoint+yAxisLength )
-		//	yAxisLength*=2;
-
-		//console.log( `min: ${midpoint-yAxisLength}, max: ${midpoint+yAxisLength}, time=${new Date(minTime)}->${new Date(maxTime)} range=${range}` );
 		theme( Highcharts );
-		//console.log( `plotline=${new Date(plotLine)}` );
 		let height = showLarge ? "470px" : "74px";
 		let width = showLarge ? null : 240;
 		let options:Highcharts.Options =
@@ -339,12 +275,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	onTabChange( event:MatTabChangeEvent )
 	{
 		console.log( "SnapshotContentComponent::onTabChange" );
-/*		if( this.settingsSymbolContainer.value.tabIndex!=event.index )
-		{
-			this.settingsSymbolContainer.value.tabIndex = event.index;
-			this.settingsSymbolContainer.save();
-		}*/
-		//this.tabEvents.next( event.index );
 	}
 
 	get contract():IB.IContract{ return this.detail ? this.detail.contract : null; }
@@ -358,7 +288,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	loadedPromise:Promise<boolean>;
 	get primaryName():string{ return this.detail ? `${this.detail.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
 	settingsSymbolContainer:Settings<SymbolSettings>;
-	profile:Settings<SymbolSettings>; //= new Settings<SymbolSettings>( SymbolSettings, "SnapshotComponent", this.profileService );
+	profile:Settings<SymbolSettings>;
 
 	get symbol():string{ return this.tick.contract.symbol; }
 	@Output() symbolEvent = new EventEmitter<Results.IContractDetail>();

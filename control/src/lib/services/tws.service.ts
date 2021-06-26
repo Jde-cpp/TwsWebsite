@@ -41,11 +41,18 @@ export interface ITicker
 }
 type GetResult = (result:Results.IMessageUnion)=>any;//gets the result, null if not same message.
 type Resolve = (x:any)=>void;
+type IsComplete=(x:any)=>boolean;
 type Reject = (x:Results.IError)=>void;
 type TransformInput = (x:any)=>any;
 export class RequestPromise
 {
 	constructor( public result:GetResult, public resolve:Resolve, public reject:Reject, public transformInput:TransformInput=null )
+	{}
+};
+
+export class RequestObservable
+{
+	constructor( public result:GetResult, public next:Resolve, public complete:IsComplete, public reject:Reject, public transformInput:TransformInput=null )
 	{}
 };
 
@@ -334,6 +341,21 @@ class Connection
 					break;
 				}
 				if( !found )
+				{
+					for( let [id,observer] of this.observers )
+					{
+						const messageValue = observer.result( message );
+						found = messageValue && messageValue["requestId"]==id;
+						if( !found )
+							continue;
+
+						observer.next( observer.transformInput ? observer.transformInput(messageValue) : messageValue );
+						if( observer.complete(messageValue) )
+							this.observers.delete( id );
+						break;
+					}
+				}
+				if( !found )
 					console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
 			}
 		}
@@ -419,6 +441,11 @@ class Connection
 				this.fundamentalCallbacks.get( id )[1]( error );
 				this.fundamentalCallbacks.delete( id );
 			}
+			else if( this.observers.has(id) )
+			{
+				this.observers.get( id ).reject( error );
+				this.observers.delete( id );
+			}
 			else
 			{
 				var requestsTypes:Map<number, RequestPromise>[] = [ this.testCallbacks, this.optionParamCallbacks ];
@@ -466,7 +493,7 @@ class Connection
 	}
 	error( err ):void
 	{
-		debugger;
+	//	debugger;
 		this.sessionId = null;
 		console.error( "No longer connected to TWS.", err );
 		this.handleConnectionError( err );
@@ -566,12 +593,12 @@ class Connection
 		}
 		return this.sendPromise2<Requests.IRequestHistoricalData,IBar[]>( "historicalData", {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000}, (result)=>{return result.historicalData}, toBars );
 	}
-	reqHistoricalNews( contractId, providerCodes:string[], totalResults:number, start:Date, end:Date ):Promise<Results.HistoricalNewsCollection>
+	news( contractId, providerCodes:string[], totalResults:number, start:Date, end:Date ):Promise<Results.NewsCollection>
 	{
 		const id = this.getRequestId();
-		console.log( `(${id})reqHistoricalNews( ${contractId}, [${providerCodes.join()}] )` );
+		console.log( `(${id})news( ${contractId}, [${providerCodes.join()}] )` );
 		const variable = { id:id, contractId:contractId, providerCodes:providerCodes, totalResults: totalResults, start: start ? start.getTime() : 0, end: end ? end.getTime() : 0 };
-		return this.sendPromise2<Requests.IHistoricalNewsRequest,Results.HistoricalNewsCollection>( "historicalNewsRequest", variable, (x)=>{return x.historicalNews;}, null );
+		return this.sendPromise2<Requests.IHistoricalNewsRequest,Results.NewsCollection>( "historicalNewsRequest", variable, (x)=>{return x.news;}, null );
 	}
 	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>
 	{
@@ -702,6 +729,19 @@ class Connection
 		this.flexCallbacks.set( id, callback );
 		return callback;
 	}
+	tweets( symbol:string ):[Observable<Results.ITweets>,Promise<Results.ITweetAuthors>]
+	{
+		const id = this.getRequestId();
+		console.debug( `tweets( '${id}', '${symbol}' )` );
+		const msg = new Requests.RequestUnion( {stringRequest: {id: id, name: symbol, type: Requests.ERequests.Tweets}} );
+		this.send( msg );
+
+		const callback = new Subject<Results.ITweets>();
+		var observable = new RequestObservable( (m)=>m.tweets, (t)=>callback.next(t), (t:Results.ITweets)=>t.earliestTime!=0, (e)=>callback.error(e) );
+		this.observers.set( id, observable );
+		const promise = new Promise<Results.ITweetAuthors>( (resolve,reject)=>{this.testCallbacks.set( id, new RequestPromise((m)=>m.tweetAuthors, resolve, reject));} );
+		return [callback,promise];
+	}
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number, blockId:string ):OrderObservable
 	{
 		const id = this.getRequestId();
@@ -830,6 +870,7 @@ class Connection
 
 	private flexCallbacks = new Map<number,Subject<Results.Flex>>();
 	private testCallbacks = new Map<number, RequestPromise>();
+	private observers = new Map<number,RequestObservable>();
 	private optionParamCallbacks = new Map<number, RequestPromise>();
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();
 	private orders = new Map<number,Order>();
@@ -844,7 +885,7 @@ export class TwsService implements IGraphQL
 
 	reqManagedAccts():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.accounts ) resolve( TwsService.accounts ); else this.connection.reqManagedAccts().then( (x)=>{TwsService.accounts=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
 	reqNewsProviders():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.newsProviders ) resolve( TwsService.newsProviders ); else this.connection.reqNewsProviders().then( (x)=>{TwsService.newsProviders=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
-	reqHistoricalNews( contractId, providerCodes:string[], totalResults:number, start:Date=null, end:Date=null ):Promise<Results.HistoricalNewsCollection>{ return this.connection.reqHistoricalNews(contractId, providerCodes, totalResults, start, end); }
+	news( contractId, providerCodes:string[], totalResults:number, start:Date=null, end:Date=null ):Promise<Results.NewsCollection>{ return this.connection.news(contractId, providerCodes, totalResults, start, end); }
 	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>{ return this.connection.reqNewsArticle(providerCode, articleId); }
 
 	reqContract( contract:IB.IContract ):Promise<Results.IContractDetail[]>{ return this.connection.reqContractDetails(contract); }
@@ -900,6 +941,7 @@ export class TwsService implements IGraphQL
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
+	tweets( symbol:string ):[Observable<Results.ITweets>,Promise<Results.ITweetAuthors>]{ return this.connection.tweets( symbol ); }
 	watchs():Promise<string[]>{ return this.connection.watchs(); };
 	portfolios():Promise<string[]>{ return this.connection.portfolios(); };
 	watch( name:string ):Promise<Watch.File>{ return this.connection.watch(name); };

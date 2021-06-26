@@ -16,13 +16,13 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-//import {platformBrowserDynamic} from '@angular/platform-browser-dynamic';
 
 
 import {OrderComponent} from './pages/orders/orders';
 import { PortfolioComponent } from './pages/portfolio/portfolio';
 import { FundamentalsComponent } from './pages/snapshot/fundamentals/fundamentals';
 import { NewsComponent } from './pages/snapshot/news/news';
+import { TwitterComponent } from './pages/snapshot/twitter/twitter';
 import { SnapshotComponent } from './pages/snapshot/snapshot';
 import { SnapshotContentComponent } from './pages/snapshot/snapshot-content';
 import { ConfigurationDialog } from './pages/snapshot/configuration';
@@ -45,14 +45,13 @@ import { TradeComponent } from './pages/trades/trades';
 	  declarations: [
 		OrderComponent, PortfolioComponent, TradeComponent, SummaryComponent, WatchComponent,
 		SnapshotComponent, SnapshotContentComponent, ConfigurationDialog, FundamentalsComponent, NewsComponent,
-		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent,
+		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,TwitterComponent,QuantityComponent, WatchContentComponent,
 		OptionTableComponent, WatchTableComponent, WatchRowComponent],
 	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
 		MatButtonModule, MatAutocompleteModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatTableModule,MatTabsModule,MatToolbarModule,
 		BrowserAnimationsModule],
 	entryComponents: [OptionEntryDialog,TransactDialog],
 	exports: [OrderComponent, PortfolioComponent, SnapshotComponent,SnapshotContentComponent, TradeComponent, WatchComponent],
-	// , RollDialog,OptionEntryDialog
 	providers: []
 })
 export class JdeTwsModule { }

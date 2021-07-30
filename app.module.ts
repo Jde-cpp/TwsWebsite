@@ -118,7 +118,7 @@ const routes: Routes =
 	 MatExpansionModule,
 	//  SnapshotComponent, PortfolioComponent, SnapshotComponent, TradeComponent, OrderComponent, WatchComponent, BlocklySidenav, BlocklyViewerComponent
   ],
-  entryComponents: [/*TransactDialog, RollDialog, OptionEntryDialog,*/ UserEntryDialog],
+  /*entryComponents: [TransactDialog, RollDialog, OptionEntryDialog, UserEntryDialog],*/
   providers: [
 		{provide: 'IProfile', useClass: LocalStorageProfile},
 		{provide: 'IErrorService', useClass: DefaultErrorService},

@@ -3,6 +3,7 @@ echo 'jde-tws-proto.sh';
 pushd `pwd` > /dev/null;
 pushd `pwd` > /dev/null;
 baseDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )";
+$baseDir/../WebFramework/jde-framework-proto.sh
 cd $baseDir;
 jdeRoot=$baseDir/../..;
 if ! source ./env.sh; then exit 1; fi;
@@ -33,12 +34,6 @@ if test ! -f results.d.ts; then publicMarket[results]=result_root; fi;
 if test ! -f watch.d.ts; then publicMarket[watch]=watch_root; fi;
 create $publicMarketsProtoDir publicMarket;
 
-declare -A app;
-if test ! -f FromClient.d.ts; then app[FromClient]=from_client_root; fi;
-if test ! -f FromServer.d.ts; then app[FromServer]=ib_root; fi;
-create $appProtoDir app;
-
-#echo blocklyProtoDir=$blocklyProtoDir
 declare -A blockly;
 if test ! -f blockly.d.ts; then blockly[blockly]=blockly_root; fi;
 create $blocklyProtoDir blockly;

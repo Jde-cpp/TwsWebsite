@@ -136,7 +136,7 @@ const routes: Routes =
 	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatExpansionModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatPaginatorModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
 	 NavBarModule, ThemePickerModule
   ],
-  entryComponents: [/*TransactDialog, RollDialog, OptionEntryDialog,*/ UserEntryDialog, SelectDialog],
+  /*entryComponents: [TransactDialog, RollDialog, OptionEntryDialog, UserEntryDialog, SelectDialog],*/
   providers: [
 		{provide: 'IProfile', useClass: LocalStorageProfile},
 		{provide: 'IErrorService', useClass: DefaultErrorService},

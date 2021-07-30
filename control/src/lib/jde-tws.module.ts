@@ -51,7 +51,7 @@ import { TradeComponent } from './pages/trades/trades';
 	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
 		MatButtonModule, MatAutocompleteModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatTableModule,MatTabsModule,MatToolbarModule,
 		BrowserAnimationsModule],
-	entryComponents: [OptionEntryDialog,TransactDialog],
+	/*entryComponents: [OptionEntryDialog,TransactDialog],*/
 	exports: [OrderComponent, PortfolioComponent, SnapshotComponent,SnapshotContentComponent, TradeComponent, WatchComponent],
 	providers: []
 })

@@ -283,7 +283,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		var puts = ['put-oi', 'put-oiChange', 'put-volume', 'put-last', 'put-bid_size', 'put-bid', 'put-ask', 'put-ask_size' ];
 		var columns = this.optionType!=(IB.SecurityRight.Call | IB.SecurityRight.Put) ? all : [];
 		if( (this.optionType & IB.SecurityRight.Call)!=0 ) columns.push( ...calls );
-		if( this.optionType==3 ) columns.push( ...all );
+		if( <number>this.optionType==3 ) columns.push( ...all );
 		if( (this.optionType & IB.SecurityRight.Put)!=0 ) columns.push( ...puts );
 		return columns;
 	}

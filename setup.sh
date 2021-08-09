@@ -22,7 +22,7 @@ cd dist/my-workspace;
 moveToDir assets; moveToDir img;
 mklink twitter_social_icons_circle_blue.svg ../../../../projects/jde-tws/src/assets/img;
 mklink outline_emoji_people_black_24dp.png ../../../../projects/jde-tws/src/assets/img;
-mklink theme-demo-icon.svg ../../../../projects/jde-tws/src/assets/img;
+mklink theme-demo-icon.svg ../../../../projects/jde-material/src/assets/img;
 cd ..;
 mklink deeppurple-amber.css ../../../projects/jde-material/src/assets;
 mklink pink-bluegrey.css ../../../projects/jde-material/src/assets;

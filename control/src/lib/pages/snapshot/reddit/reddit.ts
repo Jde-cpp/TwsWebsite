@@ -60,9 +60,9 @@ export class RedditComponent implements OnInit, AfterViewInit, OnDestroy
 	{
 		RedditComponent.settings.save();
 	}
-	openGroup( articleId )
+	block( articleId )
 	{
-		setTimeout( ()=>twttr.widgets.load(), 500 );
+		console.log( 'block' );
 	}
 
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;

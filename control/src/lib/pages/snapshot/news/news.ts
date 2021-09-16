@@ -77,8 +77,10 @@ class GoogleArticle extends Article
 			url = "https://www.etfstream.com/images/cropped-ETFStream-02-32x32.png";
 		else if( this.goog.sourceUrl=="https://www.financialexpress.com" )
 			url = "https://images.financialexpress.com/2021/02/FE-favicon-32x32.png";
-			else if( this.goog.sourceUrl=="https://www.investors.com" )
+		else if( this.goog.sourceUrl=="https://www.investors.com" )
 			url = "https://www.google.com/s2/favicons?domain=newhome.investors.com";
+		else if( this.goog.sourceUrl=="https://www.fxstreet.com" )
+			url = "https://staticcontent.fxstreet.com/website/static-html/favicon.ico";
 		return url;
 	}
 	get link():string{ return this.goog.link; }

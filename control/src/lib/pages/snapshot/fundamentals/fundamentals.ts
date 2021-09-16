@@ -18,7 +18,7 @@ export class Fundamentals
 	get( key:string ):number|null{ return this.values ? this.values[key] : null; }
 	get marketCap():number|null{ return this.get("MKTCAP")*1000000; };
 	private get nPrice():number|null{ return this.get("NPRICE"); };
-	get averageVolume():number|null{ return -1; }
+	//get averageVolume():number|null{ return this.tick.averageVolume; }
 	get low52Week():number|null{ return this.get("NLOW"); }
 	get high52Week():number|null{ return this.get("NHIG"); }
 	get beta():number|null{ return this.get("BETA"); }
@@ -191,7 +191,7 @@ export class FundamentalsComponent implements OnInit, AfterViewInit, OnDestroy
 
 	get open(){return this.tick.open;}
 	get previousClose(){return this.tick.close;}
-	get averageVolume(){ return this.value?.averageVolume;}
+	get averageVolume(){ return this.tick.volumeAverage;}
 	get marketCapDisplay(){ return MarketUtilities.numberDisplay(this.value.marketCap, this.decimalPipe); }
 	get sharesDisplay(){ return MarketUtilities.numberDisplay(this.value.sharesOutstanding, this.decimalPipe); }
 	get priceEarnings(){ return this.tick.currentPrice/this.value.eps;}

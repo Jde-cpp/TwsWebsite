@@ -16,8 +16,8 @@ import { IProfile } from 			'jde-framework';
 import { TwsService } from '../../services/tws.service';
 import { TickObservable } from '../../services/ITickObserver';
 import { TickDetails } from '../../services/Tick';
-import {DateUtilities} from 		'jde-framework'
 import { MarketUtilities } from 	'../../utilities/marketUtilities';
+import {DateUtilities} from 		'jde-framework'
 import {MathUtilities, StatResult} from  'jde-framework';
 import { ProtoUtilities } from 'jde-framework';
 import {Settings, IAssignable} from 'jde-framework'
@@ -112,6 +112,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 					tick.ask = bar.ask;
 					tick.volume = ProtoUtilities.toNumber( bar.volume );
 					tick.last = ProtoUtilities.toNumber( bar.close );
+
+					tick.open = bar.open;
 				}
 			},
 			complete:()=>
@@ -128,7 +130,9 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		});
 		if( this.subscription )
 			this.tws.cancelMktDataSingle( this.subscription );
-		const ticks = [Requests.ETickList.Inventory, Requests.ETickList.HistoricalVolatility_, Requests.ETickList.ImpliedVolatility_, (this.tick.isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)];
+		var ticks = [Requests.ETickList.Inventory, Requests.ETickList.HistoricalVolatility_, Requests.ETickList.ImpliedVolatility_, Requests.ETickList.PlPrice];
+		if( !this.tick.isMarketOpen )
+			ticks.push( Requests.ETickList.MiscStats );
 
 		this.subscription = this.tws.reqMktData( this.contract.id, ticks, false );
 		this.subscription.subscribe2( this.tick );

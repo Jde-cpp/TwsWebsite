@@ -81,7 +81,7 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 		if( this.settings.showVolume )
 		{
 			series.push( <SeriesColumnOptions>{type: 'column',name: 'Volume',data: volume,yAxis: 1} );//,dataGrouping: { units: groupingUnits }
-			yAxis.push( {labels: { align: 'right', x: -3 }, title: {text: 'Volume'}, top: '65%', height: '35%', offset: "0", lineWidth: 2} );
+			yAxis.push( {labels: { align: 'right', x: -3 }, title: {text: 'Volume'}, top: '65%', height: '35%', offset: 0, lineWidth: 2} );
 		}
 		this.chart = Highstock.stockChart( 'container',
 		{

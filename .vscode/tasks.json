@@ -1,0 +1,45 @@
+{
+   "version": "2.0.0",
+   "tasks": [
+      {
+         "label": "buildMaterial",
+         "type": "shell",
+			"command": "ng build jde-material --watch",
+			"options": { "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"presentation": { "echo": true, "panel": "dedicated", "clear": true },
+		},
+      {
+         "label": "buildFramework",
+         "type": "shell",
+			"command": "ng build jde-framework --watch",
+			"options": {  "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"presentation": { "echo": true, "panel": "dedicated", "clear": true },
+		},
+      {
+         "label": "buildTws",
+         "type": "shell",
+			"command": "ng build jde-tws --watch",
+			"options": {  "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"presentation": { "echo": true, "panel": "dedicated", "clear": true },
+		},
+      {
+         "label": "buildBlockly",
+         "type": "shell",
+			"command": "ng build jde-blockly --watch",
+			"options": {  "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"presentation": { "echo": true, "panel": "dedicated", "clear": true },
+		},
+      {
+         "label": "serve",
+         "type": "shell",
+			"command": "ng serve",
+			"options": {  "cwd": "${workspaceFolder}" },
+			"group": "build",
+			"presentation": { "echo": true, "panel": "dedicated", "clear": true },
+		},
+	]
+}

@@ -3,7 +3,7 @@
 		<div style="width: 250px;">
 			<div class="row"><span class="description">Open</span><span class="value">{{open | number:'1.2-2'}}</span></div>
 			<div class="row"><span class="description">Previous Close</span><span class="value">{{ previousClose | number:'1.2-2' }}</span></div>
-			<div class="row"><span class="description">Avg. Volume</span><span class="value">{{averageVolume}}</span></div>
+			<div class="row"><span class="description">Avg. Volume</span><span class="value">{{averageVolume  | number:'1.0-0' }}</span></div>
 			<div class="row"><span class="description">Market Cap</span><span class="value">{{marketCapDisplay}}</span></div>
 			<div class="row"><span class="description">52-Week Range</span><span class="value"><span>{{value.low52Week | number:'1.2-2'}}</span>-<span>{{value.high52Week | number:'1.2-2'}}</span></span></div>
 		</div>

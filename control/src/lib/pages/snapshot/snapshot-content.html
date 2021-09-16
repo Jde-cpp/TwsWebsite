@@ -35,39 +35,39 @@
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Fundamentals</ng-template>
 			<ng-template matTabContent>
-				<fundamentals [tick]="tick" [index]="1" [value]="fundamentals" [tabEvents]="tabEvents.asObservable()"></fundamentals>
+				<fundamentals [tick]="tick" [index]="0" [value]="fundamentals" [tabEvents]="tabEvents.asObservable()"></fundamentals>
 			</ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>description</mat-icon>News</ng-template>
-			<ng-template matTabContent><news [tick]="tick" [index]="0" [tabEvents]="tabEvents.asObservable()"></news></ng-template>
+			<ng-template matTabContent><news [tick]="tick" [index]="1" [tabEvents]="tabEvents.asObservable()"></news></ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label>
 				<img style="width:24px; height: 24px;" src="assets/img/twitter_social_icons_circle_blue.svg"/>Twitter
 			</ng-template>
-			<ng-template matTabContent><twitter [tick]="tick" [index]="1"></twitter></ng-template>
+			<ng-template matTabContent><twitter [tick]="tick" [index]="2"></twitter></ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label><img style="width:24px; height: 24px;" src="https://styles.redditmedia.com/t5_2th52/styles/communityIcon_b37n2zfs8k861.png?width=256&s=a9cb63319055ded916e5b12ff03f1e8c63ae6911"/>Reddit</ng-template>
-			<ng-template matTabContent><reddit [tick]="tick" [index]="1"></reddit></ng-template>
+			<ng-template matTabContent><reddit [tick]="tick" [index]="3"></reddit></ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
 			<ng-template matTabContent>
-				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="2" [tabEvents]="tabEvents.asObservable()"></candlestick>
+				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="4" [tabEvents]="tabEvents.asObservable()"></candlestick>
 			</ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Options</ng-template>
 			<ng-template matTabContent>
-				<option-tab [tick]="tick" [index]="3" [tabEvents]="tabEvents.asObservable()"></option-tab>
+				<option-tab [tick]="tick" [index]="5" [tabEvents]="tabEvents.asObservable()"></option-tab>
 			</ng-template>
 		</mat-tab>
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>shopping_bag</mat-icon>Investors</ng-template>
 			<ng-template matTabContent>
-				<investors [index]="4" [detail]="detail" [tabEvents]="tabEvents.asObservable()"></investors>
+				<investors [index]="6" [detail]="detail" [tabEvents]="tabEvents.asObservable()"></investors>
 			</ng-template>
 		</mat-tab>
 	</mat-tab-group>

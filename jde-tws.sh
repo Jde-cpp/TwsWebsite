@@ -11,5 +11,6 @@ cd src/app;
 addHard app.module.ts $scriptDir;
 addHard app.component.scss $scriptDir/baseline/ClientApp/src/app;
 addHard app.component.html $scriptDir/baseline/ClientApp/src/app;
+addHard app.component.ts $scriptDir/baseline/ClientApp/src/app;
 
 popd > /dev/null;

@@ -4,7 +4,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import {Routes, RouterModule} from '@angular/router';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {TwsAuthService, TwsService} from 'jde-tws';
 import {BlocklyViewerComponent} from 'jde-blockly';
 import {BlocklyCategoryList} from 'jde-blockly';
 import {BlocklySidenav} from 'jde-blockly'
@@ -43,9 +42,11 @@ import{ GraphQLDetailComponent } from 'jde-framework';
 import{ UserEntryDialog } from 'jde-framework';
 import { AppComponent } from './app.component';
 
-import {OrderComponent} from 'jde-tws'
+import {TwsAuthService} from 'jde-tws';
+import {TwsService} from 'jde-tws';
+import {OrderComponent} from 'jde-tws';
 import {PortfolioComponent} from 'jde-tws';
-import { SnapshotComponent, WatchComponent } from 'jde-tws';
+import { WatchComponent } from 'jde-tws';
 import {TradeComponent} from 'jde-tws'
 
 import {LocalStorageProfile} from 'jde-framework'
@@ -54,13 +55,23 @@ import {DefaultErrorService } from 'jde-framework'
 import {CanActivateComponentSidenav} from 'jde-material';
 import {ThemeStorage} from 'jde-material';
 import { ComponentCategoryList } from 'jde-material';
-import { ComponentSidenav } from 'projects/jde-material/src/lib/pages/component-sidenav/component-sidenav';
-//import { TwitterComponent } from './test/twitter/twitter';
+import { ComponentSidenav } from 'jde-material';
 
+//import { SnapshotComponent } from './test/snapshot/snapshot';
+import { SnapshotComponent } from 'jde-tws';
+/*
+import { SnapshotContentComponent } from './test/snapshot/snapshot-content';
+import { ConfigurationDialog } from './test/snapshot/configuration';
+import { FundamentalsComponent } from './test/snapshot/fundamentals/fundamentals';
+import { NewsComponent } from './test/snapshot/news/news';
+import { TwitterComponent } from './test/snapshot/twitter/twitter';
+import { RedditComponent } from './test/snapshot/reddit/reddit';
+import { CandlestickComponent } from 'jde-tws';
+import { InvestorsComponent } from './pages/Edgar/investors';
 
 //Testing:
 import {MatExpansionModule} from '@angular/material/expansion';
-
+*/
 
 const routes: Routes =
 [
@@ -101,12 +112,13 @@ const routes: Routes =
 
 @NgModule({
 	declarations: [
-		AppComponent//, TwitterComponent
+		AppComponent,
+		//SnapshotComponent, SnapshotContentComponent,ConfigurationDialog,FundamentalsComponent, NewsComponent, TwitterComponent, RedditComponent, InvestorsComponent
+		//, CandlestickComponent
 	/*	, ComponentCategoryList,
-		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, SnapshotComponent, SnapshotContentComponent, FundamentalsComponent, SummaryComponent, TradeComponent, WatchComponent, WatchContentComponent, WatchTableComponent,
+		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, FundamentalsComponent, SummaryComponent, TradeComponent, WatchComponent, WatchContentComponent, WatchTableComponent,
 		PaginatorComponent,
 		CandlestickComponent,
-		InvestorsComponent,
 		SeverityPickerComponent,
 		UserComponent, UserEntryDialog, LogsComponent, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLTable, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent,*/
 	],
@@ -115,8 +127,8 @@ const routes: Routes =
 	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatPaginatorModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
 	 NavBarModule,
 	 ThemePickerModule,
-	 MatExpansionModule,
-	//  SnapshotComponent, PortfolioComponent, SnapshotComponent, TradeComponent, OrderComponent, WatchComponent, BlocklySidenav, BlocklyViewerComponent
+	 //MatExpansionModule,
+	  SnapshotComponent, PortfolioComponent, SnapshotComponent, TradeComponent, OrderComponent, WatchComponent, BlocklySidenav, BlocklyViewerComponent
   ],
   /*entryComponents: [TransactDialog, RollDialog, OptionEntryDialog, UserEntryDialog],*/
   providers: [

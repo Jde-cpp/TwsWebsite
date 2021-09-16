@@ -2,7 +2,8 @@ import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBi
 import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
-import { TwsService } from '../../services/tws.service';
+//import { TwsService } from '../../services/tws.service';
+import { TwsService } from 'jde-tws';
 import { IProfile } from 'jde-framework';
 import {IErrorService} from 'jde-framework'
 import {Settings} from 'jde-framework'
@@ -25,7 +26,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{
 		this.profile.loadedPromise.then( ()=>
 		{
-			this.settings.previousContractIds = [756733];
+			//this.settings.previousContractIds = [756733];
 			this.tws.reqIds( this.previousContractIds ).then( (results)=>
 			{
 				//results.map( details=> details.detail.length==1 ? holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 );
@@ -45,11 +46,11 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		});
 		this.selected.valueChanges.subscribe( value=>
 		{
-			/*if( this.settings.selectedIndex != value )
+			if( this.settings.selectedIndex != value )
 			{
 			    this.settings.selectedIndex = value;
 			    this.profile.save();
-			}*/
+			}
 		});
 	}
 	ngOnDestroy()

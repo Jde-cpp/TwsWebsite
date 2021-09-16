@@ -100,3 +100,4 @@ source/ClientApp/src/angular.json
 my-workspace/*
 baseline2/*
 source/ClientApp/*
+backup/*

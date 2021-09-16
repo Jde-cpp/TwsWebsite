@@ -14,37 +14,51 @@
 *  Upload msi.
     *  Broadcast
 *  Refresh Libraries
-    *  Clang - 10
+    *  Clang - 12
         ```
+		mkdir build;cd build;
 		cmake -G "Unix Makefiles" -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi" -DCMAKE_BUILD_TYPE=Release ../llvm
-        cmake --build . -j4
+        cmake --build . -j8
         sudo make install
-		mkdir build-compiler-rt;cd build-compiler-rt
+		cd ..;mkdir build-compiler-rt;cd build-compiler-rt
 		cmake ../compiler-rt  `pwd`/../build/bin/llvm-config
 		make -j;
 		sudo make install
 		cd lib/linux
 		source=`pwd`
-		cd /usr/local/lib/clang/11.0.1
+		cd /usr/local/lib/clang/12.0.1
 		sudo mkdir lib;cd lib;
 		sudo mkdir linux;cd linux
-		sudo ln -s /home/duffyj/code/libraries/llvm-project/build-compiler-rt/lib/linux/libclang_rt.asan_cxx-x86_64.a .
+		sudo ln -s $REPO_DIR/llvm-project/build-compiler-rt/lib/linux/libclang_rt.asan_cxx-x86_64.a .
 		sudo ln -s /home/duffyj/code/libraries/llvm-project/build-compiler-rt/lib/linux/libclang_rt.asan-x86_64.a .
 		```
+    *  Boost - 1.77
+	   ```
+       export CXX='clang++';export CXXFLAGS='-std=c++20 -stdlib=libc++';export LDFLAGS='-stdlib=libc++';export CC='clang';
+       ./bootstrap.sh --with-toolset=clang
 
-	 *  Protocol buffers - 3.13
+		```
+	 *  Protocol buffers - 3.17.3
         ```
 		  tput reset;export CXX='clang++';export CXXFLAGS='-std=c++20 -stdlib=libc++';export LDFLAGS='-stdlib=libc++';export CC='clang';./configure;
 	     tput reset;make -j7
 		  ```
-    *  fmt.lib - 7.1.0
+    *  fmt.lib - 8.0.1
 	     *  `mkdir build;cd build; cmake -DBUILD_SHARED_LIBS=TRUE  ..`
 		  *  `make -j8`
-	 *  https://github.com/nlohmann/json - 3.9.1
-	 *  https://github.com/gabime/spdlog - 1.8.1
+	 *  https://github.com/nlohmann/json - 3.10.1
+	 *  https://github.com/gabime/spdlog - 1.9.2
 	 	  *  `mkdir build && cd build; cmake .. && make -j`
+	 * MySql 8.0.26
+	     *  https://dev.mysql.com/downloads/connector/cpp/
+		  * https://github.com/mysql/mysql-connector-cpp
+			   * mkdir build;cd build;mkdir release;cd release;
+            * export CXX='clang++';export CXXFLAGS='-std=c++20 -stdlib=libc++';export LDFLAGS='-stdlib=libc++';export CC='clang';
+            * cmake ../..
+            * cmake --build . --config release
+            * source=`pwd`;cd $JDE_DIR/bin/asan;n -s $source/libmysqlcppconn8.so .;cd ../release;ln -s $source/libmysqlcppconn8.so .
 	 *  tws-api - 9.80.03
-	     * copy [Makefile](https://raw.githubusercontent.com/johnduffynh/tws-api/master/source/cppclient/client/Makefile?token=ACSJSEN4UNO7HQI5DY3PQOK7VEDJK) to /source/cppclient/client
+	     * copy Makefile to /source/cppclient/client
 		  * `mkdir .release;mkdir .debug;mkdir .obj;cd .obj;mkdir debug;mkdir release;cd ..`
 		  * `make DEBUG=0 -j;make -j`
 	 *  https://tukaani.org/xz/ - 5.2.5 (windows only)

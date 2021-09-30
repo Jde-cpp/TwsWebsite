@@ -24,7 +24,7 @@ class Cell
 	equals( rhs ):boolean{ return rhs!=null && rhs && rhs.order.id===this.order.id && rhs.control==this.control; }
 };
 
-@Component( {selector: 'orders', styleUrls: ['orders.css'], templateUrl: './orders.html'} )
+@Component( {selector: 'orders.main-content.mat-drawer-container', styleUrls: ['orders.css'], templateUrl: './orders.html'} )
 export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )

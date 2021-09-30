@@ -97,7 +97,11 @@ source/ClientApp/projects/*
 source/ClientApp/src/app/pages/tws/blockly/index/blockly-index.xxx.scss
 source/ClientApp/src/angular.json
 *.d.ts
-my-workspace/*
 baseline2/*
 source/ClientApp/*
 backup/*
+my-workspace/*
+my-workspace2/*
+my-workspace3/*
+jde-cpp/*
+

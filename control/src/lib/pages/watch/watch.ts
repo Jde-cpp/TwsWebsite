@@ -5,18 +5,8 @@ import { IProfile } from 'jde-framework';
 import { TwsService } from '../../services/tws.service';
 import { Settings } from 'jde-framework'
 import { ComponentPageTitle } from 'jde-material';
-/*
-import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';
-import IB = ib2.Jde.Markets.Proto;
 
-import * as IbRequests from 'dist/jde-tws-assets/src/assets/proto/requests';
-import Requests = IbRequests.Jde.Markets.Proto.Requests;
-
-import * as IbResults from 'dist/jde-tws-assets/src/assets/proto/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
-*/
-
-@Component( {selector: 'watch', styleUrls: ['watch.css'], templateUrl: './watch.html'} )
+@Component( {selector: 'watch.main-content.mat-drawer-container', styleUrls: ['watch.css'], templateUrl: './watch.html'} )
 export class WatchComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )

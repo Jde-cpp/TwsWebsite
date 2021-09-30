@@ -12,7 +12,7 @@ declare const twttr;
 class RedditSettings
 {
 	assign( value:RedditSettings )
-	{}
+	{ }
 }
 class Entry
 {
@@ -32,7 +32,7 @@ class Entry
 	get url(){ return "https://reddit.com/anyuser/status/"+this.id; }*/
 }
 
-@Component({ selector: 'reddit', styleUrls: ['reddit.css'], templateUrl: './reddit.html' })
+@Component({ selector: 'reddit', styleUrls: ['reddit.scss'], templateUrl: './reddit.html' })
 export class RedditComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private tws:TwsService, @Inject('IProfile') private profileService: IProfile )

@@ -3,7 +3,7 @@ import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
 //import { TwsService } from '../../services/tws.service';
-import { TwsService } from 'jde-tws';
+import { TwsService } from '../../services/tws.service';
 import { IProfile } from 'jde-framework';
 import {IErrorService} from 'jde-framework'
 import {Settings} from 'jde-framework'
@@ -12,11 +12,9 @@ import {PageSettings} from './PageSettings'
 import * as IbResults from 'jde-cpp/results';
 import Results = IbResults.Jde.Markets.Proto.Results;
 
-@Component( {selector: 'snapshot.mat-drawer-container', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html'} )
-//, styles: [`:host {'class': 'mat-drawer-container';}`]
+@Component( {selector: 'snapshot.main-content.mat-drawer-container', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html'} )
 export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 {
-	//@HostBinding('class.mat-drawer-container') public highlighted: boolean = true;
 	constructor( private tws:TwsService, private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
@@ -24,12 +22,10 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	{}
 	ngAfterViewInit():void
 	{
-		this.profile.loadedPromise.then( ()=>
+		this.profile2.loadedPromise.then( ()=>
 		{
-			//this.settings.previousContractIds = [756733];
 			this.tws.reqIds( this.previousContractIds ).then( (results)=>
 			{
-				//results.map( details=> details.detail.length==1 ? holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 );
 				this.details = [];
 				for( var details of results )
 				{
@@ -42,32 +38,31 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 				}
 				this.selected.setValue( this.settings.selectedIndex );
 				this.viewPromise = Promise.resolve( true );
-			});
+			}).catch( e=>this.cnsle.error("Could not connect", e) );
 		});
 		this.selected.valueChanges.subscribe( value=>
 		{
 			if( this.settings.selectedIndex != value )
 			{
 			    this.settings.selectedIndex = value;
-			    this.profile.save();
+			    this.profile2.save();
 			}
 		});
 	}
 	ngOnDestroy()
 	{
 		this.settings.selectedIndex = this.selected.value;
-		this.profile.save();
+		this.profile2.save();
 	}
 	onSymbol( detail:Results.IContractDetail )
 	{
-		//console.log( contractId );
 		let index = this.previousContractIds.indexOf( detail.contract.id );
 		if( index==-1 )
 		{
 			this.details.unshift( detail );
 			this.previousContractIds.unshift( detail.contract.id );
 			this.selected.setValue( 0 );
-			this.profile.save();
+			this.profile2.save();
 			setTimeout( ()=> this.symbolTabs.selectedIndex = 0, 0 );
 		}
 		//this.tabEvents.next( index );
@@ -78,6 +73,10 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 		// this.profile.save();
 		// //this.profileService.put<Settings>( SnapshotComponent.profileKey, this.settings );
 		// this.setSymbol( this.previousSymbols[index] );
+	}
+	onTabChange( e )
+	{
+		this.selected.setValue( e );
 	}
 	get previousContractIds(){ return this.settings.previousContractIds; }
 	// } set previousSymbols(value)
@@ -101,8 +100,8 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	details:Results.IContractDetail[];
 	selected = new FormControl(0);
 	get selectedIndex(){ return this.selected.value; }
-	profile:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
-	get settings():PageSettings{ return this.profile ? this.profile.value : null; }
+	profile2:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
+	get settings():PageSettings{ return this.profile2 ? this.profile2.value : null; }
 
 
 	@ViewChild( 'symbolTabs', {static: false} ) symbolTabs;

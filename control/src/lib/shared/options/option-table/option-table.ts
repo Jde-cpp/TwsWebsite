@@ -19,8 +19,17 @@ import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests';
 import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { DateUtilities, Day } from 'jde-framework';
-import { PageSettings } from '../option-tab/option-tab';
-import { max } from 'rxjs/operators';
+
+export class PageSettings //implements IPageEvent
+{
+	assign( value:any )
+	{
+		if( value.tableLength!=undefined )
+			this.tableLength = value.tableLength;
+	}
+	tableLength:number=12;
+	sort:Sort;
+};
 
 @Component({ selector: 'option-table', styleUrls: ['option-table.scss'], templateUrl: './option-table.html' })
 export class OptionTableComponent implements OnInit, OnDestroy
@@ -304,7 +313,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	@Input() startStrike:number;
 	@Input() endStrike:number;
 	@Input() pageEvents:Observable<PageEvent>; private _pageSubscription:Subscription;
-	@Input() set pageSettings(x){ this._pageSettings=x;} get pageSettings(){return this._pageSettings;} _pageSettings:PageSettings; //set pageSettings(x){ this.pageSettings; } get tableLength(){ return this.pageInfo.pageLength; }
+	@Input() set pageSettings(x){ this._pageSettings=x;} get pageSettings(){return this._pageSettings;} _pageSettings:PageSettings;
 	@Input() tick:TickDetails;
 	get pageLength():number{ return this.pageSettings.tableLength; } set pageLength(x){ this.pageSettings.tableLength=x; }
 	get volatilityHistorical():number{ return this.tick.volatilityHistorical; }

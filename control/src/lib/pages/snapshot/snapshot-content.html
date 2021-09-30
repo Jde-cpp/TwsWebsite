@@ -17,7 +17,7 @@
 					<td class="numberCell">{{tick?.askSize | number:'1.0-0'}}</td>
 					<td class="numberCell" title="{{tick?.currentPrice==tick?.last ? null : tick?.last}}" [class.positiveValue]="tick?.change>0">{{tick?.currentPrice | number:'1.2-2'}}</td>
 					<td class="numberCell" [class.negativeValue]="tick?.change<0" [class.positiveValue]="tick?.change>0">{{tick?.change | number:'1.2-2'}} ({{tick?.change/tick?.close*100 | number:'1.1-1'}}%)</td>
-					<td class="numberCell">{{tick?.low| number:'1.2-2'}} - {{tick?.high | number:'1.2-2'}}</td>
+					<td class="range">{{tick?.low | number:'1.2-2'}} - {{tick?.high | number:'1.2-2'}}</td>
 					<td class="numberCell" *ngIf="tick==null || !tick.volumeAverage">{{volumeDisplay}}</td>
 					<td class="numberCell" *ngIf="tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</td>
 					<td class="numberCell">{{tick?.shortableAvailable/1000 | number:'1.0-0'}}K</td>
@@ -31,7 +31,7 @@
 		</mat-toolbar-row>
 	</mat-toolbar>
 	<div id="chart2"></div>
-	<mat-tab-group #tabs (selectedTabChange)="onTabChange($event)" >
+	<mat-tab-group #tabs [selectedIndex]="selectedTab.value" (selectedTabChange)="onTabChange($event)">
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Fundamentals</ng-template>
 			<ng-template matTabContent>

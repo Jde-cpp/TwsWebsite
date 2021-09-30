@@ -35,12 +35,10 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		console.log( `PortfolioComponent::ngAfterViewInit` );
 		this.profileService.get<Settings>( PortfolioComponent.profileKey ).then( (value)=>
 		{
-			debugger;
-			//console.log( "this.viewPromise3=true" );
-			//this.viewPromise = Promise.resolve( true );
-
 			this.settings = value;
-			if( this.authorizationService.enabled() && !this.authorizationService.loggedIn )
+			if( !this.authorizationService.enabled() )
+				this.tws.googleLogin( "" ).then( ()=>this.onSettingsLoaded() ).catch( (e)=>{debugger; console.error(e.message);} );
+			else if( !this.authorizationService.loggedIn )
 			{
 				console.log( "authorizationService.subscribe" );
 				this.authorizationSubscription = this.authorizationService.subscribe();

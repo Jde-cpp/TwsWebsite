@@ -91,5 +91,5 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 class PageSettings implements IAssignable<PageSettings>
 {
 	assign(other){this.sort=other.sort;}
-	sort:Sort;
+	sort:Sort={ active: "closeTime", direction: 'desc' };
 }

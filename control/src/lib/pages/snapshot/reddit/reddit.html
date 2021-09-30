@@ -1,18 +1,20 @@
 <ng-container *ngIf="viewPromise | async">		<!---->
-	<mat-expansion-panel *ngFor="let entry of collection">
+	<mat-expansion-panel class="expansion-headers-align" *ngFor="let entry of collection">
 		<mat-expansion-panel-header>
+
 			<mat-panel-title [ngClass]="expand" >
-				<img class=profile_pic [src]=entry.imgSrc/>
-				<span class=tweet_text>{{entry.display}}</span>
-				<span class="separator">
-					<!-- <button mat-icon-button disabled aria-label="Block user" (click)="block(entry.id)"><mat-icon>highlight_off</mat-icon></button> -->
+				<!-- <img class=profile_pic [src]=entry.imgSrc/> -->
+				<!-- <span class=tweet_text></span> -->
+				<!-- <span class="separator">
+					<! -- <button mat-icon-button disabled aria-label="Block user" (click)="block(entry.id)"><mat-icon>highlight_off</mat-icon></button> -- >
 					<span title=block class="material-icons mdc-icon-button" (click)="block(entry.id)">highlight_off</span>
-				</span>
+				</span> -->
+				<mat-panel-description>{{entry.display}}<mat-icon>highlight_off</mat-icon></mat-panel-description>
 			</mat-panel-title>
 		</mat-expansion-panel-header>
 		<ng-template matExpansionPanelContent>
 			<ng-container>
-				<div  style="margin-left: 15px" [innerHTML]="entry.content"></div>
+				<div style="margin-left: 15px" [innerHTML]="entry.content"></div>
 			</ng-container>
 	  </ng-template>
 	</mat-expansion-panel>

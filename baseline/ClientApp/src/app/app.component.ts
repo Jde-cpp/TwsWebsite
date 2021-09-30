@@ -1,7 +1,7 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, Renderer2 } from '@angular/core';
+import { Component, Inject, Renderer2, ViewEncapsulation } from '@angular/core';
 
-@Component( {selector: 'app-root', templateUrl: './app.component.html', styleUrls: ['./app.component.scss'] })
+@Component( {selector: 'app-root', templateUrl: './app.component.html', styleUrls: ['./app.component.scss'], encapsulation: ViewEncapsulation.None })
 export class AppComponent
 {
 	constructor (

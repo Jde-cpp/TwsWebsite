@@ -56,6 +56,7 @@ import {CanActivateComponentSidenav} from 'jde-material';
 import {ThemeStorage} from 'jde-material';
 import { ComponentCategoryList } from 'jde-material';
 import { ComponentSidenav } from 'jde-material';
+import { DisabledAuthService } from 'jde-material';
 
 //import { SnapshotComponent } from './test/snapshot/snapshot';
 import { SnapshotComponent } from 'jde-tws';
@@ -111,30 +112,21 @@ const routes: Routes =
 ];
 
 @NgModule({
-	declarations: [
-		AppComponent,
-		//SnapshotComponent, SnapshotContentComponent,ConfigurationDialog,FundamentalsComponent, NewsComponent, TwitterComponent, RedditComponent, InvestorsComponent
-		//, CandlestickComponent
-	/*	, ComponentCategoryList,
-		BlocklyCategoryList,BlocklyViewerComponent,PortfolioComponent,OrderComponent, FundamentalsComponent, SummaryComponent, TradeComponent, WatchComponent, WatchContentComponent, WatchTableComponent,
-		PaginatorComponent,
-		CandlestickComponent,
-		SeverityPickerComponent,
-		UserComponent, UserEntryDialog, LogsComponent, GraphQLComponent, GraphQLDetailComponent, GraphQLProperties, GraphQLTable, GraphQLLinkComponent, LinkSelectComponent, DateRangeComponent,*/
-	],
+	declarations: [AppComponent],
   	imports: [
 	  BrowserModule, RouterModule.forRoot( routes, {enableTracing: false} ), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
 	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatPaginatorModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
 	 NavBarModule,
 	 ThemePickerModule,
 	 //MatExpansionModule,
-	  SnapshotComponent, PortfolioComponent, SnapshotComponent, TradeComponent, OrderComponent, WatchComponent, BlocklySidenav, BlocklyViewerComponent
+	  /*SnapshotComponent, PortfolioComponent, SnapshotComponent, TradeComponent, OrderComponent, WatchComponent,*/
+	  //BlocklySidenav, BlocklyViewerComponent
   ],
   /*entryComponents: [TransactDialog, RollDialog, OptionEntryDialog, UserEntryDialog],*/
   providers: [
 		{provide: 'IProfile', useClass: LocalStorageProfile},
 		{provide: 'IErrorService', useClass: DefaultErrorService},
-		{provide: 'IAuth', useClass: TwsAuthService},
+		{provide: 'IAuth', useClass: DisabledAuthService},
 		{provide: 'IGraphQL', useClass: TwsService},
 		CanActivateComponentSidenav, StyleManager, ThemeStorage, DecimalPipe
 	],

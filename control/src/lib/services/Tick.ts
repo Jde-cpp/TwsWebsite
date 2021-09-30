@@ -5,11 +5,9 @@ import { TwsService } from './tws.service';
 import { Day } from 'jde-framework';
 import { ProtoUtilities } from 'jde-framework';
 
-//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-//import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
-//import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+
 export class Tick implements ITickObserver
 {
 	constructor( public isMarketOpen:boolean )
@@ -84,7 +82,7 @@ export class Tick implements ITickObserver
 		if( type==45 )
 			this.lastTime = new Date( parseInt(value)*1000 );
 		else if( type!=32 && type!=33 && type!=84 && type!=48 )//bid/ask/last exchange/RT_VOLUME
-			console.log( `onStringTick( '${Results.ETickType[type]}', '${value}')` );
+			console.log( `onStringTick( '${Results.ETickType[type]}', '${value.substr(0,120)}')` );
 	}
 	onEndTick():void
 	{
@@ -130,8 +128,8 @@ export class Tick implements ITickObserver
 	{
 		let price = this.markPrice;
 		if( this.last )
-	        price = this.last>=this.bid && this.last<=this.ask ? this.last : (this.ask+this.bid)/2; 
-        return price;	        
+	        price = this.last>=this.bid && this.last<=this.ask ? this.last : (this.ask+this.bid)/2;
+        return price;
 	}
 	halted:boolean;
 	high:number;

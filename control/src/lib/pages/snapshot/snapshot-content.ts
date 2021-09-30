@@ -1,26 +1,22 @@
 import { AfterViewInit, ElementRef, EventEmitter, Inject, Input, Component, OnInit, OnDestroy, Output,  ViewChild, ChangeDetectorRef } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
+import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {MatTabChangeEvent} from '@angular/material/tabs';
 import { Subject } from 'rxjs';
 
 import theme from 'highcharts/themes/dark-unica';
 import * as Highcharts from 'highcharts/highstock';
+import { DateUtilities, MathUtilities, IAssignable, IErrorService, IProfile, ProtoUtilities, Settings, StatResult} from 'jde-framework'
+
 import {ConfigurationData,ConfigurationDialog} from './configuration'
 import {Fundamentals } from './fundamentals/fundamentals'
 import {PageSettings} from './PageSettings'
 import { TransactDoModal } from '../../shared/dialogs/transact/transact'
-
-import {IErrorService} from 		'jde-framework'
-import { IProfile } from 			'jde-framework';
 import { TwsService } from '../../services/tws.service';
 import { TickObservable } from '../../services/ITickObserver';
 import { TickDetails } from '../../services/Tick';
 import { MarketUtilities } from 	'../../utilities/marketUtilities';
-import {DateUtilities} from 		'jde-framework'
-import {MathUtilities, StatResult} from  'jde-framework';
-import { ProtoUtilities } from 'jde-framework';
-import {Settings, IAssignable} from 'jde-framework'
 
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests';  import Requests = IbRequests.Jde.Markets.Proto.Requests;
@@ -42,8 +38,8 @@ export class SymbolSettings implements IAssignable<SymbolSettings>
 export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
-	{
-	}
+	{}
+
 	ngOnInit()
 	{
 		console.log( `(${this.detail && this.detail.contract ? this.detail.contract.symbol : 'null'})SnapshotContentComponent::ngOnInit` );
@@ -56,12 +52,13 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::run initialized=${initialized}` );
 		if( !initialized )
 			return;
-		this.settingsSymbolContainer.loadedPromise.then( ()=>{this.onContractDetails();} );
+		this.settingsSymbolContainer.loadedPromise.then( ()=>{this.settingsLoaded();} );
 	}
 	ngOnDestroy()
 	{
 		if( this.subscription )
 			this.tws.cancelMktDataSingle( this.subscription );
+		this.settingsSymbolContainer.save();
 	}
 
 	setSymbol( symbol:string )
@@ -80,8 +77,9 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		var data:ConfigurationData = { symbolSettings: this.settingsSymbolContainer, pageSettings: this.pageSettings }
 		this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
 	}
-	onContractDetails():void
+	settingsLoaded():void
 	{
+		this.selectedTab.setValue( this.settingsSymbolContainer.value.tabIndex );
 		let tick = this.tick = new TickDetails( this.detail );
 		this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} ).catch( (e)=>
 		{
@@ -125,6 +123,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			},
 			error: e=>
 			{
+				debugger;
 				console.error(e);
 			}
 		});
@@ -276,30 +275,30 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		console.log( message );
 		this.snackBar.open( message, '', {duration: 2000} );
 	};
-	onTabChange( event:MatTabChangeEvent )
+	onTabChange( e:MatTabChangeEvent )
 	{
 		console.log( "SnapshotContentComponent::onTabChange" );
+		this.selectedTab.setValue( this.settingsSymbolContainer.value.tabIndex = e.index );
 	}
 
 	get contract():IB.IContract{ return this.detail ? this.detail.contract : null; }
-	//get chartSettings(){ return this.settingsSymbol.chartSettings; }
 	fundamentals:Fundamentals;
 	@Input() index:number;
-	@Input() set indexSelectedSymbol(value){ this._indexSelectedSymbol=value; /*if( this.index==this.indexSelectedSymbol ) this.run();*/ } get indexSelectedSymbol(){ return this._indexSelectedSymbol;} private _indexSelectedSymbol:number;
-	@Input() pageSettings:Settings<PageSettings>;
+	@Input() set indexSelectedSymbol(value){ this._indexSelectedSymbol=value; } get indexSelectedSymbol(){ return this._indexSelectedSymbol;} private _indexSelectedSymbol:number;
+	@Input() set pageSettings(value){ this._pageSettings=value; } get pageSettings(){ return this._pageSettings;} private _pageSettings:Settings<PageSettings>;
 	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetail;
 
 	loadedPromise:Promise<boolean>;
-	get primaryName():string{ return this.detail ? `${this.detail.longName}` : ''; }//{ return this.details ? `${this.contract.Symbol} - ${this.details.LongName}` : ''; }
-	settingsSymbolContainer:Settings<SymbolSettings>;
-	profile:Settings<SymbolSettings>;
+	get primaryName():string{ return this.detail ? `${this.detail.longName}` : ''; }
 
-	get symbol():string{ return this.tick.contract.symbol; }
-	@Output() symbolEvent = new EventEmitter<Results.IContractDetail>();
+	selectedTab = new FormControl(0);
+	settingsSymbolContainer:Settings<SymbolSettings>;
 	subscription:TickObservable;
+	@Output() symbolEvent = new EventEmitter<Results.IContractDetail>();
+	get symbol():string{ return this.tick.contract.symbol; }
+	@ViewChild('symbolInput', {static: false} ) symbolInput;
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;
-	@ViewChild('symbolInput', {static: false} ) symbolInput;
 	tick: TickDetails;
 	get volumeDisplay()
 	{

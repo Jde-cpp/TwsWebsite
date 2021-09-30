@@ -4,14 +4,11 @@ import { HttpClient } from '@angular/common/http';
 import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
 import {SeriesCandlestickOptions,SeriesColumnOptions} from "highcharts";
 import * as Highstock from "highcharts/highstock";
-//import * as Highcharts from "highcharts";
 import { TickEx } from '../../services/Tick';
 
 import {IErrorService} from 'jde-framework'
 import { IProfile } from 'jde-framework';
 import { TwsService, IBar } from '../../services/tws.service';
-//import {Highcharts} from 'highcharts/es-modules/parts/Globals.js'
-//import * as Highcharts from 'highcharts'
 import { Day, DateUtilities } from 'jde-framework';
 import {Settings, IAssignable} from 'jde-framework'
 
@@ -34,14 +31,12 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 		{
 			this.isActive = this.index==value;
 		}} );
-
 	}
 	ngAfterViewInit():void
 	{
 		console.log( 'CandlestickComponent::ngAfterViewInit' );
 		this.settingsContainer = new Settings<ChartSettings>( ChartSettings, `Candlestick.${this.contract.symbol}`, this.profile );
 		this.settingsContainer.loadedPromise.then( ()=>{this.run();} );
-		//Highstock.setOptions( { global: {useUTC: false}} );
 	}
 	ngOnDestroy()
 	{
@@ -55,8 +50,6 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 	run = ():void =>
 	{
 		console.log( 'CandlestickComponent::run' );
-		//if( !this.isActive )
-		//	return;
 
 		var end = this.end || MarketUtilities.currentTradingDay();
 		var days = this.start ? end-this.start+1 : 1;
@@ -67,11 +60,8 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 	onHistoricalData = ( bars: IBar[] ):void=>
 	{
 		var ohlc = [], volume = [];
-	//	var groupingUnits = [['week', [1]], ['month',[1, 2, 3, 4, 6]]];
 		bars.forEach( bar=>
 		{
-			//var time = new Date( (<number>bar.time)*1000);
-			//console.log( `${time} - ${bar.open} ${bar.low} ${bar.high} ${bar.close}` );
 			let milliseconds = bar.time.getTime();
 			ohlc.push( [milliseconds, bar.open, bar.high, bar.low, bar.close] );
 			volume.push( [milliseconds,bar.volume] );
@@ -118,7 +108,6 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 	}
 	candleStickChange( _:BarSize )
 	{
-		//console.log( `timeFrame = ${this.settingsContainer.value.candleSticks.selected}` );
 		this.settingsContainer.save();
 		this.run();
 	}
@@ -133,7 +122,6 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 	get start():Day|null{ return this.settingsContainer.value.dateRange.start; }
 	get end():Day|null{ return this.settingsContainer.value.dateRange.end ?? this.settingsContainer.value.dateRange.max; }
 	set zoomHours(value:number){this._zoomHours=value;this.run();} get zoomHours(){return this._zoomHours;} private _zoomHours: number;
-	//set barSize(value){this._barSize=value;this.run();} get barSize(){return this._barSize;} private _barSize: Requests.BarSize=Requests.BarSize.Minute;
 	get settings(){ return this.settingsContainer.value; }
 	settingsContainer:Settings<ChartSettings>;
 	isActive:boolean;

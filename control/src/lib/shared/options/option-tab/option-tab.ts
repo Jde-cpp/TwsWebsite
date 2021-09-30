@@ -97,7 +97,6 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	onOptionsStartIndexChange( indexMidPrice:[number,number] )
 	{
 		let [index,midPrice] = indexMidPrice;
-		console.log( `OptionTab::onOptionsStartIndexChange( index='${index}', midPrice='${midPrice}' )` );
 		this.midPrice=midPrice;
 		this.startIndexChange.next( index );
 	}

@@ -81,275 +81,283 @@ class Connection
 		const transmission = Results.Transmission.decode( bytearray );
 		for( const message of transmission.messages )
 		{
-			if( message.tickPrice )
+			try
 			{
-				const callback = this.marketDataCallbacks.get( message.tickPrice.requestId );
-				if( callback )
-					callback.price( message.tickPrice.tickType, message.tickPrice.price, message.tickPrice.attributes );
-				else
-					console.error( `no callbacks for tickPrice reqId='${message.tickPrice.requestId}'` );//todo stop request.
-			}
-			else if( message.tickGeneric )
-			{
-				const callback = this.marketDataCallbacks.get( message.tickGeneric.requestId );
-				if( callback )
+				if( message.tickPrice )
 				{
-					callback.generic( message.tickGeneric.tickType, message.tickGeneric.value );
-				}
-				else
-					console.error( `no callbacks for tickGeneric reqId='${message.tickGeneric.requestId}'` );//todo stop request.
-			}
-			else if( message.tickSize )
-			{
-				const callback = this.marketDataCallbacks.get( message.tickSize.requestId );
-				if( callback )
-					callback.size( message.tickSize.tickType, message.tickSize.size );
-				else
-				{
-					console.error( `no callbacks for tickSize reqId='${message.tickSize.requestId}'` );
-					this.cancelMarketData( [message.tickSize.requestId] );
-				}
-			}
-			else if( message.tickString )
-			{
-				const callback = this.marketDataCallbacks.get( message.tickString.requestId );
-				if( callback )
-					callback.string( message.tickString.tickType, message.tickString.value );
-				else
-					console.log( `no callbacks for tickString reqId='${message.tickString.requestId}'` );//todo stop request.
-			}
-			else if( message.optionCalculation )
-			{
-				const x = message.optionCalculation;
-				const callback = this.marketDataCallbacks.get( x.requestId );
-				if( callback )
-					callback.optionCalculation( x.tickType, x.priceBased, x.impliedVolatility, x.delta, x.optionPrice, x.pvDividend, x.gamma, x.vega, x.theta, x.underlyingPrice )
-				else
-					this.cancelMarketData( [x.requestId], `(${x.requestId})no callbacks for optionCalculation` );
-			}
-			else if( message.orderStatus || message.openOrder )
-			{
-				const isOrderStatus:boolean = message.orderStatus!=null;
-				const orderId = isOrderStatus ? message.orderStatus.id : message.openOrder.order.id;
-				const webId = isOrderStatus ? orderId : message.openOrder.webId;
-				const original = this.orders.get( webId );
-				if( original )
-				{
-					if( original.callback )
-					{
-						if( message.orderStatus )
-							original.callback.status( message.orderStatus );
-						else if( message.openOrder )
-							original.callback.open( message.openOrder );
-					}
-					if( message.orderStatus )
-					{
-						const display = original.setStatus( message.orderStatus );
-						if( display )
-							console.info( display );
-					}
-				}
-				if( this.openOrders.length )
-				{
-					for( const callback of this.openOrders )
-					{
-						if( message.orderStatus )
-							callback.status( message.orderStatus );
-						else if( message.openOrder )
-							callback.open( message.openOrder );
-					}
-				}
-				else if( !original )
-				{ debugger;	console.error( `(${webId}) No callbacks for ${isOrderStatus ? 'order status' : 'open order'}.` ); }
-			}
-			else if( message.stringMap )
-			{
-				var result = message.stringMap.result;
-				console.log( `${Results.EResults[result]} = ${Object.keys(message.stringMap.values).length} records` )
-				let promises = this.stringMapPromises.get( message.stringMap.result );
-				if( promises )
-				{
-					for( let promise of promises )
-						promise[0]( message.stringMap.values );
-				}
-				else
-					console.log( `no listener for stringmap ${Results[message.stringMap.result]}` );
-			}
-			else if( message.accountUpdateMulti )
-			{
-				const reqId = message.accountUpdateMulti.requestId;
-				const callback = this.accountUpdateMultiCallbacks.get( reqId );
-				if( callback )
-					callback[0]( message.accountUpdateMulti );
-				else
-					console.error( `no callbacks for accountUpdate accountNumber='${message.accountUpdateMulti.account}', reqId='${reqId}'` );//todo stop request.
-			}
-			else if( message.accountUpdate )
-			{
-				const accountNumber = message.accountUpdate.account;
-				if( this.accountUpdateCallbacks.has(accountNumber) )
-				{
-					for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
-						callback[0].next( message.accountUpdate );
-				}
-				else
-					console.error( `no callbacks for accountUpdate accountNumber='${accountNumber}'` );//todo stop request.
-			}
-			else if( message.portfolioUpdate )
-			{
-				const accountNumber = message.portfolioUpdate.accountNumber;
-				if( this.accountUpdateCallbacks.has(accountNumber) )
-				{
-					for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
-						callback[1].next( message.portfolioUpdate );
-				}
-				else
-					console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
-			}
-			else if( message.commissionReport )
-				this.executionCallbacks.forEach( (callback)=>callback.commissionReport(message.commissionReport) );
-			else if( message.contractDetails )
-			{
-				const id = message.contractDetails.requestId;
-				const callback = this.contractCallbacks.get( id );
-				if( callback )
-					callback.next( message.contractDetails.details );
-				else if( this.testCallbacks.has(id) )
-				{
-					this.testCallbacks.get( id ).resolve( message.contractDetails.details );
-					this.testCallbacks.delete( id );
-				}
-			}
-			else if( message.options )
-				this.optionSummaryCallbacks.get( message.options.id )[0]( message.options );
-			else if( message.daySummary )
-				this.previousDayCallbacks.get( message.daySummary.requestId ).next( message.daySummary );
-			else if( message.fundamentals )
-				this.handleFundamentals( message.fundamentals );
-			else if( message.execution )
-				this.executionCallbacks.get( message.execution.id )?.execution( message.execution );
-			else if( message.error )
-				this.handleError( message.error );
-			else if( message.message )
-			{
-				const typeId = message.message.type;
-				if( typeId==Results.EResults.Accept )
-					this.sessionId = message.message.intValue;
-				else if( typeId==Results.EResults.ExecutionDataEnd )
-				{
-					var callback = this.executionCallbacks.get( message.message.intValue );
+					const callback = this.marketDataCallbacks.get( message.tickPrice.requestId );
 					if( callback )
-						callback.complete();
+						callback.price( message.tickPrice.tickType, message.tickPrice.price, message.tickPrice.attributes );
 					else
-						console.log( `no execution callback for '{message.message.intValue}'` );
-					this.executionCallbacks.delete( message.message.intValue );
+						console.error( `no callbacks for tickPrice reqId='${message.tickPrice.requestId}'` );//todo stop request.
 				}
-				else if( typeId==Results.EResults.PositionMultiEnd )
-					this.handlePositionMultiEnd( message.message.intValue );
-				else if( typeId==Results.EResults.TickSnapshotEnd )
+				else if( message.tickGeneric )
 				{
-					const callback = this.marketDataCallbacks.get( message.message.intValue );
+					const callback = this.marketDataCallbacks.get( message.tickGeneric.requestId );
 					if( callback )
-						callback.complete();
+					{
+						callback.generic( message.tickGeneric.tickType, message.tickGeneric.value );
+					}
 					else
-						console.error( `no callbacks for TickPrice reqId='${message.message.intValue}'` );
+						console.error( `no callbacks for tickGeneric reqId='${message.tickGeneric.requestId}'` );//todo stop request.
 				}
-				else if( typeId==Results.EResults.MultiEnd )
+				else if( message.tickSize )
 				{
-					if( !this.complete(this.contractCallbacks, message.message.intValue) )
-						this.complete( this.previousDayCallbacks, message.message.intValue );
+					const callback = this.marketDataCallbacks.get( message.tickSize.requestId );
+					if( callback )
+						callback.size( message.tickSize.tickType, message.tickSize.size );
+					else
+					{
+						console.error( `no callbacks for tickSize reqId='${message.tickSize.requestId}'` );
+						this.cancelMarketData( [message.tickSize.requestId] );
+					}
 				}
-				else if( typeId==Results.EResults.AccountDownloadEnd )
+				else if( message.tickString )
 				{
-					const accountNumber = message.message.stringValue;
+					const callback = this.marketDataCallbacks.get( message.tickString.requestId );
+					if( callback )
+						callback.string( message.tickString.tickType, message.tickString.value );
+					else
+						console.log( `no callbacks for tickString reqId='${message.tickString.requestId}'` );//todo stop request.
+				}
+				else if( message.optionCalculation )
+				{
+					const x = message.optionCalculation;
+					const callback = this.marketDataCallbacks.get( x.requestId );
+					if( callback )
+						callback.optionCalculation( x.tickType, x.priceBased, x.impliedVolatility, x.delta, x.optionPrice, x.pvDividend, x.gamma, x.vega, x.theta, x.underlyingPrice )
+					else
+						this.cancelMarketData( [x.requestId], `(${x.requestId})no callbacks for optionCalculation` );
+				}
+				else if( message.orderStatus || message.openOrder )
+				{
+					const isOrderStatus:boolean = message.orderStatus!=null;
+					const orderId = isOrderStatus ? message.orderStatus.id : message.openOrder.order.id;
+					const webId = isOrderStatus ? orderId : message.openOrder.webId;
+					const original = this.orders.get( webId );
+					if( original )
+					{
+						if( original.callback )
+						{
+							if( message.orderStatus )
+								original.callback.status( message.orderStatus );
+							else if( message.openOrder )
+								original.callback.open( message.openOrder );
+						}
+						if( message.orderStatus )
+						{
+							const display = original.setStatus( message.orderStatus );
+							if( display )
+								console.info( display );
+						}
+					}
+					if( this.openOrders.length )
+					{
+						for( const callback of this.openOrders )
+						{
+							if( message.orderStatus )
+								callback.status( message.orderStatus );
+							else if( message.openOrder )
+								callback.open( message.openOrder );
+						}
+					}
+					else if( !original )
+					{ debugger;	console.error( `(${webId}) No callbacks for ${isOrderStatus ? 'order status' : 'open order'}.` ); }
+				}
+				else if( message.stringMap )
+				{
+					var result = message.stringMap.result;
+					console.log( `${Results.EResults[result]} = ${Object.keys(message.stringMap.values).length} records` )
+					let promises = this.stringMapPromises.get( message.stringMap.result );
+					if( promises )
+					{
+						for( let promise of promises )
+							promise[0]( message.stringMap.values );
+					}
+					else
+						console.log( `no listener for stringmap ${Results[message.stringMap.result]}` );
+				}
+				else if( message.accountUpdateMulti )
+				{
+					const reqId = message.accountUpdateMulti.requestId;
+					const callback = this.accountUpdateMultiCallbacks.get( reqId );
+					if( callback )
+						callback[0]( message.accountUpdateMulti );
+					else
+						console.error( `no callbacks for accountUpdate accountNumber='${message.accountUpdateMulti.account}', reqId='${reqId}'` );//todo stop request.
+				}
+				else if( message.accountUpdate )
+				{
+					const accountNumber = message.accountUpdate.account;
 					if( this.accountUpdateCallbacks.has(accountNumber) )
 					{
 						for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
-							callback[1].next( null );//message.portfolioUpdate
+							callback[0].next( message.accountUpdate );
+					}
+					else
+						console.error( `no callbacks for accountUpdate accountNumber='${accountNumber}'` );//todo stop request.
+				}
+				else if( message.portfolioUpdate )
+				{
+					const accountNumber = message.portfolioUpdate.accountNumber;
+					if( this.accountUpdateCallbacks.has(accountNumber) )
+					{
+						for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
+							callback[1].next( message.portfolioUpdate );
 					}
 					else
 						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
 				}
-				else if( message.message.intValue && this.testCallbacks.has(message.message.intValue) )
+				else if( message.commissionReport )
+					this.executionCallbacks.forEach( (callback)=>callback.commissionReport(message.commissionReport) );
+				else if( message.contractDetails )
 				{
-					this.testCallbacks.get( message.message.intValue ).resolve( true );
-					this.testCallbacks.delete( message.message.intValue );
-				}
-				else if( typeId==Results.EResults.Authentication )
-				{
-					console.log( "Debug authenticated." );
-					/*if( this.testCallbacks.has)
-					const accountNumber = message.message.stringValue;
-					if( this.accountUpdateCallbacks.has(accountNumber) )
+					const id = message.contractDetails.requestId;
+					const callback = this.contractCallbacks.get( id );
+					if( callback )
+						callback.next( message.contractDetails.details );
+					else if( this.callbacks.has(id) )
 					{
-						for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
-							callback[1].next( null );//message.portfolioUpdate
+						this.callbacks.get( id ).resolve( message.contractDetails.details );
+						this.callbacks.delete( id );
+					}
+				}
+				else if( message.options )
+					this.optionSummaryCallbacks.get( message.options.id )[0]( message.options );
+				else if( message.daySummary )
+					{ let x = this.previousDayCallbacks.get( message.daySummary.requestId ); if( x ) x.next( message.daySummary ); else console.error( `(${message.daySummary.requestId})Could not find previousDayCallbacks.` ); }
+				else if( message.fundamentals )
+					this.handleFundamentals( message.fundamentals );
+				else if( message.execution )
+					this.executionCallbacks.get( message.execution.id )?.execution( message.execution );
+				else if( message.error )
+					this.handleError( message.error );
+				else if( message.message )
+				{
+					const typeId = message.message.type;
+					if( typeId==Results.EResults.Accept )
+						this.sessionId = message.message.intValue;
+					else if( typeId==Results.EResults.ExecutionDataEnd )
+					{
+						var callback = this.executionCallbacks.get( message.message.intValue );
+						if( callback )
+							callback.complete();
+						else
+							console.log( `no execution callback for '{message.message.intValue}'` );
+						this.executionCallbacks.delete( message.message.intValue );
+					}
+					else if( typeId==Results.EResults.PositionMultiEnd )
+						this.handlePositionMultiEnd( message.message.intValue );
+					else if( typeId==Results.EResults.TickSnapshotEnd )
+					{
+						const callback = this.marketDataCallbacks.get( message.message.intValue );
+						if( callback )
+							callback.complete();
+						else
+							console.error( `no callbacks for TickPrice reqId='${message.message.intValue}'` );
+					}
+					else if( typeId==Results.EResults.MultiEnd )
+					{
+						console.log( `(${message.message.intValue})no callbacks for TickPrice` );
+						if( !this.complete(this.contractCallbacks, message.message.intValue) )
+							this.complete( this.previousDayCallbacks, message.message.intValue );
+					}
+					else if( typeId==Results.EResults.AccountDownloadEnd )
+					{
+						const accountNumber = message.message.stringValue;
+						if( this.accountUpdateCallbacks.has(accountNumber) )
+						{
+							for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
+								callback[1].next( null );//message.portfolioUpdate
+						}
+						else
+							console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.
+					}
+					else if( message.message.intValue && this.callbacks.has(message.message.intValue) )
+					{
+						this.callbacks.get( message.message.intValue ).resolve( true );
+						this.callbacks.delete( message.message.intValue );
+					}
+					else if( typeId==Results.EResults.Authentication )
+					{
+						console.log( "Debug authenticated." );
+						/*if( this.callbacks.has)
+						const accountNumber = message.message.stringValue;
+						if( this.accountUpdateCallbacks.has(accountNumber) )
+						{
+							for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
+								callback[1].next( null );//message.portfolioUpdate
+						}
+						else
+							console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.*/
 					}
 					else
-						console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.*/
-				}
-				else
-				{
-					debugger;
-					console.error( "unknown message:  "+(<Results.MessageUnion>message).toJSON() );
-				}
-			}
-			else if( message.positionMulti )
-				this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
-			else if( message.flex )
-				this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
-			else if( message.stringResult )
-			{
-				var id = message.stringResult.id;
-				if( this.testCallbacks.has(id) )
-				{
-					let x =  this.testCallbacks.get( id );
-					x.resolve( x.transformInput(message.stringResult) );
-					this.testCallbacks.delete( id );
-				}
-				else
-					console.error( "message.stringResult not implemented" );
-			}
-			else if( message.type )
-			{
-				if( message.type==Results.EResults.OpenOrderEnd )
-				{
-					for( const callback of this.openOrders )
-						callback.complete();
-				}
-			}
-			else
-			{
-				let found = false;
-				for( let [id,requestPromise] of this.testCallbacks )
-				{
-					let messageValue = requestPromise.result ? requestPromise.result( message ) : null;
-					found = messageValue && messageValue["requestId"]==id;
-					if( !found )
-						continue;
-
-					requestPromise.resolve( requestPromise.transformInput ? requestPromise.transformInput(messageValue) : messageValue );
-					//complete?
-					this.testCallbacks.delete( id );
-					break;
-				}
-				if( !found )
-				{
-					for( let [id,observer] of this.observers )
 					{
-						const messageValue = observer.result( message );
+						debugger;
+						console.error( "unknown message:  "+(<Results.MessageUnion>message).toJSON() );
+					}
+				}
+				else if( message.positionMulti )
+					this.positionCallbacks.get( message.positionMulti.id )?.next( message.positionMulti );
+				else if( message.flex )
+					this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
+				else if( message.stringResult )
+				{
+					var id = message.stringResult.id;
+					if( this.callbacks.has(id) )
+					{
+						let x =  this.callbacks.get( id );
+						x.resolve( x.transformInput(message.stringResult) );
+						this.callbacks.delete( id );
+					}
+					else
+						console.error( "message.stringResult not implemented" );
+				}
+				else if( message.type )
+				{
+					if( message.type==Results.EResults.OpenOrderEnd )
+					{
+						for( const callback of this.openOrders )
+							callback.complete();
+					}
+				}
+				else
+				{
+					let found = false;
+					for( let [id,requestPromise] of this.callbacks )
+					{
+						let messageValue = requestPromise.result ? requestPromise.result( message ) : null;
 						found = messageValue && messageValue["requestId"]==id;
 						if( !found )
 							continue;
 
-						observer.next( observer.transformInput ? observer.transformInput(messageValue) : messageValue );
-						if( observer.complete(messageValue) )
-							this.observers.delete( id );
+						requestPromise.resolve( requestPromise.transformInput ? requestPromise.transformInput(messageValue) : messageValue );
+						//complete?
+						this.callbacks.delete( id );
 						break;
 					}
+					if( !found )
+					{
+						for( let [id,observer] of this.observers )
+						{
+							const messageValue = observer.result( message );
+							found = messageValue && messageValue["requestId"]==id;
+							if( !found )
+								continue;
+
+							observer.next( observer.transformInput ? observer.transformInput(messageValue) : messageValue );
+							if( observer.complete(messageValue) )
+								this.observers.delete( id );
+							break;
+						}
+					}
+					if( !found )
+						console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
 				}
-				if( !found )
-					console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
+			}
+			catch( e )
+			{
+				console.error( e );
 			}
 		}
 		return bytearray;
@@ -391,8 +399,9 @@ class Connection
 	{
 		for( const [_, callback] of this.flexCallbacks.entries() )
 			callback.error( "Connection to Tws Websocket failed." );
-
 		this.flexCallbacks.clear();
+		for( const [requestId, callback] of this.callbacks.entries() )
+			callback.reject( {requestId: requestId, code:-1, message:"Connection to Tws Websocket failed."} );
 	}
 
 	checkRequestType( typeRequests:Map<number, RequestPromise>, id:number, error:Results.IError ):boolean
@@ -441,7 +450,7 @@ class Connection
 			}
 			else
 			{
-				var requestsTypes:Map<number, RequestPromise>[] = [ this.testCallbacks, this.optionParamCallbacks ];
+				var requestsTypes:Map<number, RequestPromise>[] = [ this.callbacks, this.optionParamCallbacks ];
 				let handled = false;
 				for( let i=0; i<requestsTypes.length && !handled; ++i )
 					handled = this.checkRequestType( requestsTypes[i], id, error );
@@ -509,7 +518,7 @@ class Connection
 			this.stringMapPromises.set( result, promises = new Array<[(x:StringMap)=>void,(x:Results.IError)=>void]>() );
 
 		this.send( new Requests.RequestUnion({"genericRequests": {"type": request}}) );
-		return new Promise<StringMap>( (resolve,reject)=>{ promises.push( [resolve,reject] ); });
+		return this.sessionId!==null ? new Promise<StringMap>( (resolve,reject)=>{ promises.push( [resolve,reject] ); }) : Promise.reject( "no longer connected" );
 	}
 
 	reqManagedAccts(): Promise<StringMap>{  return this.stringMapPromise(Requests.ERequests.ManagedAccounts, Results.EResults.ManagedAccounts); }
@@ -568,6 +577,7 @@ class Connection
 	{
 		const id = this.getRequestId();
 		this.send( new Requests.RequestUnion({"genericRequests": {"id": id,"type": Requests.ERequests.RequestFundamentalData, "ids":[contractId]}}) );
+		console.log( `(${id})reqFundamentals( '${contractId}' )` );
 		return new Promise<{ [k: string]: number }>( (resolve,reject)=>
 		{
 			this.fundamentalCallbacks.set( id, [resolve,reject] );
@@ -609,7 +619,7 @@ class Connection
 	}
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetail[]>
 	{
-		if( !this.socket )
+		if( !this.socket || this.sessionId===null )
 			return throwError( 'Not connected to Tws' );
 		const callback = new Subject<Results.IContractDetail[]>();
 		const id = this.getRequestId();
@@ -619,7 +629,7 @@ class Connection
 
 		const msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
 		this.contractCallbacks.set( id, callback );
-		console.log( `reqContractDetailsMulti( count=${contractIds.length} )` );
+		console.log( `(${id})reqContractDetailsMulti( ${contractIds.join()} )` );
 		this.send( msg );
 		return callback;
 	}
@@ -732,7 +742,7 @@ class Connection
 		const callback = new Subject<Results.ITweets>();
 		var observable = new RequestObservable( (m)=>m.tweets, (t)=>callback.next(t), (t:Results.ITweets)=>t.earliestTime!=0, (e)=>callback.error(e) );
 		this.observers.set( id, observable );
-		const promise = new Promise<Results.ITweetAuthors>( (resolve,reject)=>{this.testCallbacks.set( id, new RequestPromise((m)=>m.tweetAuthors, resolve, reject));} );
+		const promise = new Promise<Results.ITweetAuthors>( (resolve,reject)=>{this.callbacks.set( id, new RequestPromise((m)=>m.tweetAuthors, resolve, reject));} );
 		return [callback,promise];
 	}
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number, blockId:string ):OrderObservable
@@ -764,14 +774,13 @@ class Connection
 
 	reqOptionParams( underlyingId:number ):Promise<Results.IExchangeContracts>
 	{
-		console.log( `reqOptionParams( ${underlyingId} )` );
-		return this.sendGenericPromise<Results.IExchangeContracts>( Requests.ERequests.RequestOptionParams, [underlyingId], (msg)=>msg.optionExchanges, (optionExchanges)=>optionExchanges.exchanges.length ? optionExchanges.exchanges[0] : null );
+		return this.sendGenericPromise<Results.IExchangeContracts>( Requests.ERequests.RequestOptionParams, underlyingId, (msg)=>msg.optionExchanges, (optionExchanges)=>optionExchanges.exchanges.length ? optionExchanges.exchanges[0] : null );
 	}
 
 	reqPreviousDay( ids:number[] ):Observable<Results.IDaySummary>
 	{
-		console.log( `reqPreviousDay( ${ids.join()} )` );
 		const requestId = this.getRequestId();
+		console.log( `(${requestId})reqPreviousDay( ${ids.join()} )` );
 		this.send( new Requests.RequestUnion({"genericRequests": {"id": requestId, "type": Requests.ERequests.RequsetPrevOptionValues, "ids": ids}}) );
 		const callback = new Subject<Results.IDaySummary>();
 		this.previousDayCallbacks.set( requestId, callback );
@@ -783,7 +792,7 @@ class Connection
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
 		return new Promise<TResult>( (resolve,reject)=>
 		{
-			this.testCallbacks.set( value["id"], new RequestPromise(result, resolve, reject, transformInput) );
+			this.callbacks.set( value["id"], new RequestPromise(result, resolve, reject, transformInput) );
 		});
 	}
 
@@ -792,21 +801,29 @@ class Connection
 		return this.sendPromise2<Requests.ICustom,Uint8Array>( "blockly", {"id": this.getRequestId(), "message": bytes}, (result:Results.IMessageUnion)=>{return result.custom;}, (x:Results.Custom)=>{return x.message;} );
 	}
 
-	sendGenericPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult, transform:TransformInput ):Promise<TResult>
+	sendGenericPromise<TResult>( type:Requests.ERequests, itemId:number, result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
-		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"id": this.getRequestId(), "type": type, "ids": ids}, result, transform );
+		const id = this.getRequestId();
+		console.log( `(${id})${Requests.ERequests[type]}( ${itemId} )` );
+		return this.sendPromise2<Requests.IGenericRequest,TResult>( "genericRequest", {"id": id, "type": type, "itemId": itemId}, result, transform );
+	}
+	sendGenericArrayPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult, transform:TransformInput ):Promise<TResult>
+	{
+		const id = this.getRequestId();
+		console.log( `(${id})${type}(${ids.join()})` );
+		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"id": id, "type": type, "ids": ids}, result, transform );
 	}
 	sendStringPromise2<TResult>( name:string, type:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
 	{
 		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, transform );
 	}
 	static transformStringList( result:Results.IStringList ){ return result.values; }
-	watchs():Promise<string[]>{ return this.sendGenericPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
-	portfolios():Promise<string[]>{ return this.sendGenericPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
+	watchs():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
+	portfolios():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
 	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise2<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}, (wl:Results.IWatchList)=>{return wl.file;} ); };
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
 	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise2<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
-	googleLogin( token:string ):Promise<void>{ console.log( `googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
+	googleLogin( token:string ):Promise<void>{ console.log( `(${this.requestId+1})googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
 	query( ql: string ):Promise<any>
 	{
 		console.log( `query( ${ql} )` );
@@ -821,11 +838,11 @@ class Connection
 	}
 	investors( id:ContractPK ):Promise<Edgar.IInvestors>
 	{
-		return this.sendGenericPromise<Edgar.IInvestors>( Requests.ERequests.Investors, [id], (result)=>{return result.investors}, (x:Edgar.IInvestors)=>x );
+		return this.sendGenericArrayPromise<Edgar.IInvestors>( Requests.ERequests.Investors, [id], (result)=>{return result.investors}, (x:Edgar.IInvestors)=>x );
 	}
 	filings( cik:Cik ):Promise<Edgar.Filing[]>
 	{
-		return this.sendGenericPromise<Edgar.Filing[]>( Requests.ERequests.Filings, [cik], (result)=>{return result.filings}, (x:Edgar.IFilings)=>x.values );
+		return this.sendGenericArrayPromise<Edgar.Filing[]>( Requests.ERequests.Filings, [cik], (result)=>{return result.filings}, (x:Edgar.IFilings)=>x.values );
 	}
 
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
@@ -844,7 +861,7 @@ class Connection
 	private optionSummaryCallbacks = new Map<number, [(x:Results.IOptionValues)=>void, (x:Results.IError)=>void]>();
 
 	private flexCallbacks = new Map<number,Subject<Results.Flex>>();
-	private testCallbacks = new Map<number, RequestPromise>();
+	private callbacks = new Map<number, RequestPromise>();
 	private observers = new Map<number,RequestObservable>();
 	private optionParamCallbacks = new Map<number, RequestPromise>();
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();

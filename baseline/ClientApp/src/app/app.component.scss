@@ -1,44 +1,35 @@
-app-root
-{
-	display: flex;
-	flex-direction: column;
-	position: absolute;
-	top: 56px;
-	bottom: 0;
-	left: 0;
-	right: 0;
-	background-color: rgb(33, 33, 33);
- }
+@use '../../projects/jde-material/src/styles/constants';
 
- app-navbar
- {
-	position: fixed;
-	top: 0;
-	left: 0;
-	right: 0;
-	z-index: 2;
- }
+app-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
 
- app-root > app-component-sidenav
- {
-	flex: 1;
- }
+app-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2;
+}
 
- app-root > app-homepage,
- app-root > app-guides,
- app-root > guide-viewer
- {
-	overflow-y: auto;
- }
+app-root > app-component-sidenav {
+  flex: 1;
+}
 
- @media (max-width: 720px)
- {
-	app-root{ top: 92px; }
+app-root > router-outlet + .main-content,
+app-root > router-outlet + app-component-sidenav {
+  margin-top: 56px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
 
-	app-root > app-homepage,
-	app-root > app-guides,
-	app-root > guide-viewer
-	{
-	  overflow-y: visible;
-	}
- }
+@media (max-width: constants.$extra-small-breakpoint-width) {
+	app-root > router-outlet + .main-content,
+	app-root > router-outlet + app-component-sidenav {
+    margin-top: 92px;
+    overflow-y: visible;
+  }
+}
+

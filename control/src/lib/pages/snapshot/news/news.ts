@@ -66,7 +66,8 @@ class GoogleArticle extends Article
 	get header(){ return this.goog.title; }
 	get imgSrc():string
 	{
-		let url = `${this.goog.sourceUrl}/favicon.ico`;
+		//let url = `${this.goog.sourceUrl}/favicon.ico`;
+		let url = `http://www.google.com/s2/favicons?domain=${this.goog.sourceUrl}`;
 		if( this.goog.sourceUrl=="https://seekingalpha.com" )
 			url = `${this.goog.sourceUrl}/samw/favicon.ico`;
 		else if( this.goog.sourceUrl=="https://www.bloomberg.com" )

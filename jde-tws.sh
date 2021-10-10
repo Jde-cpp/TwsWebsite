@@ -7,7 +7,12 @@ if [ ! -d node_modules/blockly ]; then npm install blockly --save; fi;
 #npm install google-closure-library --save
 if [ ! -d node_modules/highcharts ]; then npm install highcharts --save; fi;
 if [ ! -d node_modules/highcharts-angular ]; then npm install highcharts-angular --save; fi;
-cd src/app;
+cd src;
+addHard styles.scss $scriptDir/baseline/ClientApp/src;
+cd assets/img;
+addHard twitter_social_icons_circle_blue.svg ../../../projects/jde-tws/src/assets/img
+addHard outline_emoji_people_black_24dp.png ../../../projects/jde-tws/src/assets/img
+cd app;
 addHard app.module.ts $scriptDir;
 addHard app.component.scss $scriptDir/baseline/ClientApp/src/app;
 addHard app.component.html $scriptDir/baseline/ClientApp/src/app;

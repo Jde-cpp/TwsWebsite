@@ -12,6 +12,7 @@ import * as IbResults from 'jde-cpp/results';  import Results = IbResults.Jde.Ma
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as myBlockly2 from 'jde-cpp/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
+import { MatSelectChange } from '@angular/material/select';
 
 export class OptionEntryData
 {
@@ -99,10 +100,10 @@ export class OptionEntryDialog implements OnDestroy
 	{
 	  this.dialogRef.close( null );
 	}
-	onExpirationChange( expiration:number )
+	onExpirationChange( i:number )
 	{
-		this.setStrikes( expiration, this.strike, this.isCall );
-		this.updateTicker( expiration, this.strike );
+		this.setStrikes( i, this.strike, this.isCall );
+		this.updateTicker( i, this.strike );
 	}
 	onStrikeChange( strike:number )
 	{

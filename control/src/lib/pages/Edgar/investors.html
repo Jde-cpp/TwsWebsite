@@ -1,6 +1,7 @@
 <ng-container *ngIf="viewPromise | async">
 	<div style="align-content: center; margin: auto;  text-align: center">
-		<mat-table #mainTable matSort [dataSource]="investors" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
+		<mat-table #mainTable matSort [dataSource]="investors" class="mat-elevation-z8" (matSortChange)="sortData($event)">
+			<!-- [matSortActive]="sort.active" [matSortDirection]="sort.direction" -->
 			<ng-container matColumnDef="name">
 				<mat-header-cell mat-sort-header class="idCell" *matHeaderCellDef> Name </mat-header-cell>
 				<mat-cell class="nameCell" *matCellDef="let element"> {{element.name}} </mat-cell>

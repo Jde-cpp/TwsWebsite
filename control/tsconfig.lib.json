@@ -18,7 +18,8 @@
   },
   "angularCompilerOptions":
   {
-    "strictTemplates": false
+    "strictTemplates": false,
+    "strictDomEventTypes": false
   },
   "exclude": [
     "src/test.ts",

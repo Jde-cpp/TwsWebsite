@@ -96,7 +96,7 @@
 				<ng-template matMenuContent let-element="element" let-holding="holding" let-position="position">
 					<button mat-menu-item (click)="close(holding, $event)">Close</button>
 					<button mat-menu-item (click)="trade(holding, $event)">{{position>0 ? "Buy" : "Sell"}}</button>
-					<button mat-menu-item *ngIf="holding.contract.secType=='OPT'" (click)="roll(holding, $event)">Roll</button>
+					<button mat-menu-item *ngIf="holding.contract.secType=='OPT'" (click)="roll()">Roll</button>
 				</ng-template>
 			</mat-menu>
 			<mat-cell *matCellDef="let element"><button mat-icon-button [matMenuTriggerData]="{holding: element}" [matMenuTriggerFor]="appMenu"><mat-icon>menu</mat-icon> </button></mat-cell>

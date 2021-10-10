@@ -17,6 +17,8 @@ import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+import { DateRangeModule, LinkSelectModule } from 'jde-framework';
+
 import {InvestorsComponent} from './pages/Edgar/investors';
 import {OrderComponent} from './pages/orders/orders';
 import { PortfolioComponent } from './pages/portfolio/portfolio';
@@ -52,8 +54,8 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent,
 		OptionTableComponent, WatchTableComponent, WatchRowComponent],
 	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
-		MatButtonModule, MatAutocompleteModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatTableModule,MatTabsModule,MatToolbarModule,
-		BrowserAnimationsModule],
+		MatButtonModule, MatAutocompleteModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
+		DateRangeModule, LinkSelectModule],
 	entryComponents: [],
 	exports: [OrderComponent, PortfolioComponent, TradeComponent, WatchComponent,
 		SnapshotComponent//,SnapshotContentComponent

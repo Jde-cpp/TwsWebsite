@@ -3,12 +3,12 @@
 	<div style="display: flex;align-items: center; justify-content: center;">
 		<span>{{underlyingSymbol}}</span>
 		<mat-form-field style="flex:0;flex-basis: 120px;width:120px; margin-left:10px">
-			<mat-select style="width: 120px;" [value]="expiration" (selectionChange)="onExpirationChange($event)">
+			<mat-select style="width: 120px;" [value]="expiration" (selectionChange)="onExpirationChange($event.value)">
 				<mat-option style="width: 120px;" *ngFor="let expiration of expirations | keyvalue" [value]="expiration.key">{{expiration.value}}</mat-option>
 			</mat-select>
 		</mat-form-field>
 		<mat-form-field style="flex:0;flex-basis: 120px;width: 120px; margin-left:10px">
-			<mat-select [disabled]="strikes.size<2" (selectionChange)="onStrikeChange($event)" [value]="strike" style="width: 120px;">
+			<mat-select [disabled]="strikes.size<2" (selectionChange)="onStrikeChange($event.value)" [value]="strike" style="width: 120px;">
 				<mat-option style="width: 120px;" *ngFor="let strike2 of strikes  | keyvalue" [value]="strike2.key">{{strike2.key}}</mat-option>
 			</mat-select>
 		</mat-form-field>

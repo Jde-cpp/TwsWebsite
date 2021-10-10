@@ -3,7 +3,7 @@
 		<div style="align-content: center; margin: auto;">
 			<div style="display: inline-block;vertical-align: top;">
 				<div style="display: inline-block">
-					<date-range [settings]="dateRange"></date-range>
+					<!-- <date-range [settings]="dateRange"></date-range> -->
 					<button mat-icon-button primary><mat-icon class="iconButton" (click)="load()">cloud_download</mat-icon></button>
 				</div>
 				<div>
@@ -17,7 +17,8 @@
 		</div> -->
 	</mat-toolbar>
 	<div style="align-content: center; margin: auto;  text-align: center; background-color: black">
-		<mat-table style="display: inline-block;width:1200px" #mainTable matSort [dataSource]="data" class="mat-elevation-z8" (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction">
+		<mat-table style="display: inline-block;width:1200px" #mainTable matSort [dataSource]="data" class="mat-elevation-z8">
+			<!-- (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction" -->
 			<ng-container matColumnDef="symbol">
 				<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
 				<mat-cell class="symbolField" *matCellDef="let element"> {{element.symbol}} </mat-cell>

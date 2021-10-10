@@ -20,7 +20,8 @@
 			<!-- <mat-checkbox [(ngModel)]="isPortfolio">Portfolio</mat-checkbox> -->
 		</span>
 	</mat-toolbar>
-	<watch-table [file]="file" [changeTable]="changeTable" [isPortfolio]="isPortfolio" (selectedChanged)=onSelectedChanged($event)></watch-table>
+	<watch-table [file]="file" [changeTable]="changeTable" [isPortfolio]="isPortfolio"></watch-table>
+	<!-- (selectedChanged)=onSelectedChanged($event) -->
 		<!-- style="display: flex; flex-direction: row;" -->
 		<!-- <watch-row style="display: flex; flex-direction: row; flex-wrap:wrap;justify-content: flex-start; align-items: flex-start;" *ngFor="let contract of details" [details]="contract" ></watch-row> -->
 	</ng-container>

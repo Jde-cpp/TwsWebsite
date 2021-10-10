@@ -22,7 +22,7 @@
 					<!-- <div class="cell-wrapper"> -->
 						<quantity style="display: flex;width: 100%;" *ngIf="isEditing( element, 'shares' )"
 							placeholder="{{element.quantityDisplay}}"
-							step=100
+							[step]=100
 							[value]="element.quantityNew || element.quantityDisplay"
 							(valueChange)="element.quantityNew=$event" (focusChange)="focusChange($event, element, 'shares')" ></quantity>
 					  <!-- <quantity *ngIf="rowEditable(row)"></quantity> -->
@@ -45,7 +45,7 @@
 				<mat-cell class="numberBCell" *matCellDef="let element">
 					<!-- <div> -->
 						<quantity style="display: flex;width: 100%;" *ngIf="isEditing( element, 'limit' )" placeholder="{{element.limit}}"
-						step=.01
+						[step]=.01
 						[value]="element.limitNew || element.limit"
 						(valueChange)="element.limitNew=$event" (focusChange)="focusChange($event, element, 'limit')" ></quantity>
 					<!-- <quantity *ngIf="rowEditable(row)"></quantity> -->

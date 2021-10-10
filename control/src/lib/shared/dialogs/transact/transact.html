@@ -36,18 +36,18 @@
 	</div>
 	<div style="display: flex;align-items: center; justify-content: center;">
 		<span>
-			<quantity step="100" [value]="quantity2" (valueChange)="quantity2=$event"></quantity>
+			<quantity [step]="100" [value]="quantity2" (valueChange)="quantity2=$event"></quantity>
 		</span>
 		<span>
-			<quantity step=".01" placeholder="limit" [value]="limit" (valueChange)="limit=$event"></quantity>
+			<quantity [step]=".01" placeholder="limit" [value]="limit" (valueChange)="limit=$event"></quantity>
 		</span>
 	</div>
 	<div *ngIf="showStop" style="display: flex;align-items: center; justify-content: center;">
 		<span>
-			<quantity step=".01" placeholder="Stop" [value]="limit" (valueChange)="stop=$event"></quantity>
+			<quantity [step]=".01" placeholder="Stop" [value]="limit" (valueChange)="stop=$event"></quantity>
 		</span>
 		<span>
-			<quantity step=".01" placeholder="Stop-Limit" [value]="limit" (valueChange)="stopLimit=$event"></quantity>
+			<quantity [step]=".01" placeholder="Stop-Limit" [value]="limit" (valueChange)="stopLimit=$event"></quantity>
 		</span>
 	</div>
 	<div>

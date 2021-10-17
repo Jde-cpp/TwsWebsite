@@ -12,7 +12,10 @@ export class Tick implements ITickObserver
 {
 	constructor( public isMarketOpen:boolean )
 	{
+		this.object_id=Tick._id++;
+		this.errorValue = { requestId:0, code: 0, message:null };
 	}
+	error( e:any ){ this.errorValue.code=e.code; this.errorValue.requestId=e.requestId; this.errorValue.message=e.message; }
 	generic( type:Results.ETickType, value:number ):void
 	{
 		if( type==Results.ETickType.Halted )
@@ -131,6 +134,7 @@ export class Tick implements ITickObserver
 	        price = this.last>=this.bid && this.last<=this.ask ? this.last : (this.ask+this.bid)/2;
         return price;
 	}
+	errorValue:Results.IError;
 	halted:boolean;
 	high:number;
 	lastTime: Date;
@@ -159,6 +163,7 @@ export class Tick implements ITickObserver
 			this._volume = value>0 ? value : null;
 	} _volume:number|null;
 	volumeAverage:number;
+	object_id; static _id=0;
 }
 /*Tick + Contract Info*/
 export class TickEx extends Tick

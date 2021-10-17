@@ -26,11 +26,11 @@ export class SymbolSettings implements IAssignable<SymbolSettings>
 {
 	assign( value:SymbolSettings )
 	{
-		this.shortInterest = value.shortInterest;
-		this.shortInterestDate=value.shortInterestDate;
+	//	this.shortInterest = value.shortInterest;
+	//	this.shortInterestDate=value.shortInterestDate;
 		this.tabIndex = value.tabIndex;
 	}
-	shortInterest:number;shortInterestDate:Date;
+	//shortInterest:number;shortInterestDate:Date;
 	tabIndex:number;
 }
 
@@ -43,7 +43,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	ngOnInit()
 	{
 		console.log( `(${this.detail && this.detail.contract ? this.detail.contract.symbol : 'null'})SnapshotContentComponent::ngOnInit` );
-		this.settingsSymbolContainer = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
+		this.settings = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
 	}
 	ngAfterViewInit():void
 	{
@@ -52,13 +52,13 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::run initialized=${initialized}` );
 		if( !initialized )
 			return;
-		this.settingsSymbolContainer.loadedPromise.then( ()=>{this.settingsLoaded();} );
+		this.settings.loadedPromise.then( ()=>{this.settingsLoaded();} );
 	}
 	ngOnDestroy()
 	{
 		if( this.subscription )
 			this.tws.cancelMktDataSingle( this.subscription );
-		this.settingsSymbolContainer.save();
+		this.settings.save();
 	}
 
 	setSymbol( symbol:string )
@@ -74,12 +74,12 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	}
 	onConfigurationClick()
 	{
-		var data:ConfigurationData = { symbolSettings: this.settingsSymbolContainer, pageSettings: this.pageSettings }
+		var data:ConfigurationData = { symbolSettings: this.settings, pageSettings: this.pageSettings }
 		this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
 	}
 	settingsLoaded():void
 	{
-		this.selectedTab.setValue( this.settingsSymbolContainer.value.tabIndex );
+		this.selectedTab.setValue( this.settings.value.tabIndex );
 		let tick = this.tick = new TickDetails( this.detail );
 		this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} ).catch( (e)=>
 		{
@@ -119,7 +119,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 				if( !tick.close )
 					console.log( `No previous day close for '${this.detail.contract.symbol}'` );
 				this.showChart();
-				this.tabEvents.next( this.tabs.selectedIndex ?? this.settingsSymbolContainer.value.tabIndex ?? 0 );
+				this.tabEvents.next( this.tabs.selectedIndex ?? this.settings.value.tabIndex ?? 0 );
 			},
 			error: e=>
 			{
@@ -143,7 +143,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	setShortInterest( value, date )
 	{
 		console.log( `setShortInterest = ${value}` );
-		this.settingsSymbolContainer.save();
+		this.settings.save();
 	}
 
 	showChart()
@@ -278,7 +278,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	onTabChange( e:MatTabChangeEvent )
 	{
 		console.log( "SnapshotContentComponent::onTabChange" );
-		this.selectedTab.setValue( this.settingsSymbolContainer.value.tabIndex = e.index );
+		this.selectedTab.setValue( this.settings.value.tabIndex = e.index );
+		this.settings.save();
 	}
 
 	get contract():IB.IContract{ return this.detail ? this.detail.contract : null; }
@@ -292,7 +293,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	get primaryName():string{ return this.detail ? `${this.detail.longName}` : ''; }
 
 	selectedTab = new FormControl(0);
-	settingsSymbolContainer:Settings<SymbolSettings>;
+	settings:Settings<SymbolSettings>;
 	subscription:TickObservable;
 	@Output() symbolEvent = new EventEmitter<Results.IContractDetail>();
 	get symbol():string{ return this.tick.contract.symbol; }

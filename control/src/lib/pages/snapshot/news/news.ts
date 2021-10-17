@@ -136,7 +136,7 @@ class TwsArticle extends Article
 	get link():string{ return ""; }
 }
 
-@Component({ selector: 'news', styleUrls: ['news.css'], templateUrl: './news.html' })
+@Component({ selector: 'news', styleUrls: ['news.scss'], templateUrl: './news.html' })
 export class NewsComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private tws:TwsService, @Inject('IProfile') private profileService: IProfile )

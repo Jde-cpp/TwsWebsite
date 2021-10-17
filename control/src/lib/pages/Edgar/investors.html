@@ -8,19 +8,19 @@
 			</ng-container>
 			<ng-container matColumnDef="shares">
 				<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Shares </mat-header-cell>
-				<mat-cell class="numberCell" *matCellDef="let element"> {{element.shares}} </mat-cell>
+				<mat-cell class="numberCell" *matCellDef="let element"> {{element.shares | number:'1.0-0'}} </mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="marketValue">
 				<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Market </mat-header-cell>
-				<mat-cell class="numberCell" *matCellDef="let element"> {{element.marketValue}} </mat-cell>
+				<mat-cell class="numberCell" *matCellDef="let element"> {{element.marketValue | number:'1.0-0' }} </mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="change">
 				<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Change </mat-header-cell>
-				<mat-cell class="numberCell" *matCellDef="let element"> {{element.shareChange}} </mat-cell>
+				<mat-cell class="numberCell" *matCellDef="let element"> {{element.shareChange | number:'1.0-0'}} </mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="pctOfPortfolio">
 				<mat-header-cell mat-sort-header class="typeCell" *matHeaderCellDef> Portfolio% </mat-header-cell>
-				<mat-cell class="numberCell" *matCellDef="let element"> {{element.pctOfPortfolio}} </mat-cell>
+				<mat-cell class="numberCell" *matCellDef="let element"> {{element.pctOfPortfolio | number:'1.2-2' }} </mat-cell>
 			</ng-container>
 			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
 			<mat-row mat-row *matRowDef="let row; columns: displayedColumns;" (click)="cellClick(row)" [class.highlight]="selection?.cik==row.cik"></mat-row>

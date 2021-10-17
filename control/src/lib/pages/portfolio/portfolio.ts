@@ -2,7 +2,7 @@ import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ChangeDetectorR
 import { MatTable } from '@angular/material/table';
 import {MatDialog} from '@angular/material/dialog';
 import { Observable } from 'rxjs';//,of
-import { IProfile } from 'jde-framework';
+import { IErrorService, IProfile } from 'jde-framework';
 import { TwsService } from '../../services/tws.service';
 import {TickObservable} from '../../services/ITickObserver';
 import { TickDetails } from '../../services/Tick';
@@ -24,15 +24,14 @@ class Settings
 	selectedAccounts:string[]=[];
 }
 
-@Component({selector: 'portfolio',styleUrls: ['portfolio.scss'],templateUrl: './portfolio.html'})
+@Component({selector: 'portfolio.main-content.mat-drawer-container',styleUrls: ['portfolio.scss'],templateUrl: './portfolio.html'})
 export class PortfolioComponent implements AfterViewInit, OnDestroy
 {
-	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth, private cdr: ChangeDetectorRef )
+	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth, private cdr: ChangeDetectorRef, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 
 	ngAfterViewInit():void
 	{
-		console.log( `PortfolioComponent::ngAfterViewInit` );
 		this.profileService.get<Settings>( PortfolioComponent.profileKey ).then( (value)=>
 		{
 			this.settings = value;
@@ -40,11 +39,11 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				this.tws.googleLogin( "" ).then( ()=>this.onSettingsLoaded() ).catch( (e)=>{debugger; console.error(e.message);} );
 			else if( !this.authorizationService.loggedIn )
 			{
-				console.log( "authorizationService.subscribe" );
+				console.log( "Portfolio.authorizationService.subscribe" );
 				this.authorizationSubscription = this.authorizationService.subscribe();
 				this.authorizationSubscription.subscribe({
 					next: ()=>this.onSettingsLoaded(),
-					error: (e)=>{debugger;console.log( `could not login ${e}` );}
+					error: (e)=>{debugger;this.cnsl.error( e.message, e );}
 				});
 			}
 			else
@@ -141,7 +140,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	onPortfolioUpdate = ( value: Results.IPortfolioUpdate ):void =>
 	{
 		const contract = value.contract;
-		//console.log( `onPortfolioUpdate[${value.accountNumber}]${contract.symbol}x${value.position}=${value.marketValue}` );
+		// if( contract.localSymbol!="BGGSQ.ESC" )
+		// 	return;
 		const contractId = contract.id;
 		if( !this.holdings.some( (holding) =>
 		{
@@ -177,7 +177,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 					this.loadPreviousDay( contract, isMarketOpen, holding, MarketUtilities.previous(contract) );
 			}
 		}
-	};
+	}
 	initialLoad()
 	{
 		this.tws.reqPreviousDay( this.holdings.map(x=>x.contract.id) ).subscribe(

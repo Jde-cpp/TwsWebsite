@@ -14,8 +14,11 @@
 *  Upload msi.
     *  Broadcast
 *  Refresh Libraries
-    *  Clang - 12
+    *  Clang - 13
         ```
+		mv llvm-project llvm-projectx
+		git clone https://github.com/llvm/llvm-project.git
+		cd llvm-project;git checkout release/13.x
 		mkdir build;cd build;
 		cmake -G "Unix Makefiles" -DLLVM_ENABLE_PROJECTS="clang;libcxx;libcxxabi" -DCMAKE_BUILD_TYPE=Release ../llvm
         cmake --build . -j8
@@ -23,10 +26,10 @@
 		cd ..;mkdir build-compiler-rt;cd build-compiler-rt
 		cmake ../compiler-rt  `pwd`/../build/bin/llvm-config
 		make -j;
-		sudo make install
-		cd lib/linux
+		sudo make install;
+		cd lib/linux;
 		source=`pwd`
-		cd /usr/local/lib/clang/12.0.1
+		cd /usr/local/lib/clang/13.0.0
 		sudo mkdir lib;cd lib;
 		sudo mkdir linux;cd linux
 		sudo ln -s $REPO_DIR/llvm-project/build-compiler-rt/lib/linux/libclang_rt.asan_cxx-x86_64.a .

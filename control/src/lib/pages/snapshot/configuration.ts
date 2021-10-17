@@ -16,16 +16,16 @@ export class ConfigurationDialog
 	constructor( public dialogRef:MatDialogRef<ConfigurationDialog>, @Inject(MAT_DIALOG_DATA) public data:ConfigurationData )
 	{
 		this.delay = new FormControl( data.pageSettings.value.delay );
-		this.shortInterest = new FormControl( data.symbolSettings.value.shortInterest );
-		this.shortInterest = new FormControl( data.symbolSettings.value.shortInterestDate );
+		// this.shortInterest = new FormControl( data.symbolSettings.value.shortInterest );
+		// this.shortInterest = new FormControl( data.symbolSettings.value.shortInterestDate );
 	}
 	submit()
 	{
 		this.data.pageSettings.value.delay = this.delay.value;
 		this.data.pageSettings.save();
 
-		this.data.symbolSettings.value.shortInterest = this.shortInterest.value;
-		this.data.symbolSettings.value.shortInterestDate = this.shortInterest.value;
+		//this.data.symbolSettings.value.shortInterest = this.shortInterest.value;
+		//this.data.symbolSettings.value.shortInterestDate = this.shortInterest.value;
 		this.data.symbolSettings.save();
 		this.dialogRef.close( null );
 	}
@@ -34,7 +34,7 @@ export class ConfigurationDialog
 		this.dialogRef.close( null );
 	}
 	delay:FormControl;
-	shortInterest:FormControl;
-	date:FormControl;
+	//shortInterest:FormControl;
+	//date:FormControl;
 	submitting=false;
 }

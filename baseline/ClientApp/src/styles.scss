@@ -1,15 +1,18 @@
-@import './app-theme';
-@import 'dist/jde-material-site/src/styles/api';
-@import 'dist/jde-material-site/src/styles/markdown';
-@import 'dist/jde-material-site/src/styles/tables';
-@import 'dist/jde-material-site/src/styles/general';
+@use '~@angular/material' as mat;
+@use '../projects/jde-material/src/app-theme';
 
-// Include material core styles.
-@include mat-core();
+$_primary: mat.define-palette(mat.$indigo-palette);
+$_accent: mat.define-palette(mat.$pink-palette, A200, A100, A400);
+$_theme: mat.define-light-theme($_primary, $_accent);
 
-@include angular-material-theme($theme);
-@include material-docs-app-theme($theme);
+@include mat.core();
+@include mat.all-component-themes($_theme);
+@include app-theme.theme($_theme);
 
+.my-content
+{
+	width: 100%;
+}
 .negativeValue
 {
 	background: rgba(255, 0, 0, 0.5);
@@ -57,6 +60,11 @@
 	@extend .dateTime;
 	justify-content: flex-end;
 }
+.strikeout
+{
+	text-decoration: line-through;
+}
+
 .symbolField
 {
 	flex: 0 0 160px;
@@ -64,8 +72,6 @@
 
 .highlight
 {
-	/* background-color: aqua;
-	color: black; */
 	border-color: orange;
 	border-width: 1px;
 	border-style: solid;
@@ -74,6 +80,11 @@
 td.numberCell
 {
 	text-align: right;
+}
+
+td.range
+{
+	text-align: center;
 }
 
 thead>tr>td

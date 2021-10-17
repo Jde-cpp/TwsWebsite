@@ -9,6 +9,7 @@ export interface ITickObserver extends CompletionObserver<number>
 	size:( type:Results.ETickType, size:number )=>void;
 	string:( type:Results.ETickType, value:string )=>void;
 	optionCalculation( type:Results.ETickType, priceBased:boolean, impliedVolatility:number, delta:number, optionPrice:number, pvDividend:number, gamma:number, vega:number, theta:number, underlyingPrice:number );
+	error:( err: any )=>void;
 }
 
 export class TickObservable extends Observable<number>

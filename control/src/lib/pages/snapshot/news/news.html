@@ -1,7 +1,7 @@
 <ng-container *ngIf="viewPromise | async">
 	<mat-expansion-panel (opened)="openGroup(entry.id)" *ngFor="let entry of collection" [disabled]=entry.disabled >
 		<mat-expansion-panel-header>
-			<mat-panel-title *ngIf=entry.disabled [ngClass]="entry.disabled ? 'noExpand' : 'expand'"><img class="articleIcon" [src]=entry.imgSrc [ngClass]=entry.class/><a class="mat-expansion-panel-header-description" target="_blank" [href]=entry.link>{{entry.display}}</a></mat-panel-title>
+			<mat-panel-title *ngIf=entry.disabled [ngClass]="entry.disabled ? 'noExpand' : 'expand'"><img class="articleIcon" [src]=entry.imgSrc [ngClass]=entry.class/><a class="mat-expansion-panel-header-description article" target="_blank" [href]=entry.link>{{entry.display}}</a></mat-panel-title>
 			<mat-panel-title *ngIf=!entry.disabled [ngClass]="entry.disabled ? 'noExpand' : 'expand'"><img class="articleIcon" [src]=entry.imgSrc [ngClass]=entry.class/>{{entry.display}}</mat-panel-title>
 		</mat-expansion-panel-header>
 		<ng-template matExpansionPanelContent>

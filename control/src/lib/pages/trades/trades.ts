@@ -14,7 +14,7 @@ import { ITradeCommon } from '../../services/ExecutionObserver';
 import { TwsService } from '../../services/tws.service';
 import { MarketUtilities } from 	'../../utilities/marketUtilities';
 
-@Component( {selector: 'trades', styleUrls: ['trades.css'], templateUrl: './trades.html'} )
+@Component( {selector: 'trades.main-content.mat-drawer-container', styleUrls: ['trades.css'], templateUrl: './trades.html'} )
 export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 {
 	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )

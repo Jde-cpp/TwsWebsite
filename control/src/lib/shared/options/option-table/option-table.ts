@@ -287,9 +287,9 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	get detail(){return this.tick.detail;}
 	get displayedColumns() : string[]
 	{
-		var calls = [ 'call-oi', 'call-oiChange', 'call-volume', 'call-last', 'call-bid_size', 'call-bid', 'call-ask', 'call-ask_size'];
+		var calls = [ /*'call-oi', 'call-oiChange',*/ 'call-volume', 'call-last', 'call-bid_size', 'call-bid', 'call-ask', 'call-ask_size'];
 		var all = ['strike'];
-		var puts = ['put-oi', 'put-oiChange', 'put-volume', 'put-last', 'put-bid_size', 'put-bid', 'put-ask', 'put-ask_size' ];
+		var puts = [ /*'put-oi', 'put-oiChange',*/ 'put-volume', 'put-last', 'put-bid_size', 'put-bid', 'put-ask', 'put-ask_size' ];
 		var columns = this.optionType!=(IB.SecurityRight.Call | IB.SecurityRight.Put) ? all : [];
 		if( (this.optionType & IB.SecurityRight.Call)!=0 ) columns.push( ...calls );
 		if( <number>this.optionType==3 ) columns.push( ...all );

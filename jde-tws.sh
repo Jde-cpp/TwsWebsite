@@ -12,7 +12,8 @@ addHard styles.scss $scriptDir/baseline/ClientApp/src;
 cd assets/img;
 addHard twitter_social_icons_circle_blue.svg ../../../projects/jde-tws/src/assets/img
 addHard outline_emoji_people_black_24dp.png ../../../projects/jde-tws/src/assets/img
-cd app;
+cd ../../app;
+echo `pwd`;
 addHard app.module.ts $scriptDir;
 addHard app.component.scss $scriptDir/baseline/ClientApp/src/app;
 addHard app.component.html $scriptDir/baseline/ClientApp/src/app;

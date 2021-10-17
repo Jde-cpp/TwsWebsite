@@ -4,6 +4,7 @@ import { BrowserModule } from '@angular/platform-browser';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import {MatDialogModule} from '@angular/material/dialog';
 import {MatExpansionModule} from '@angular/material/expansion';
 import {MatFormFieldModule} from '@angular/material/form-field';
@@ -54,7 +55,7 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent,
 		OptionTableComponent, WatchTableComponent, WatchRowComponent],
 	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
-		MatButtonModule, MatAutocompleteModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
+		MatButtonModule, MatAutocompleteModule,MatCheckboxModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
 		DateRangeModule, LinkSelectModule],
 	entryComponents: [],
 	exports: [OrderComponent, PortfolioComponent, TradeComponent, WatchComponent,

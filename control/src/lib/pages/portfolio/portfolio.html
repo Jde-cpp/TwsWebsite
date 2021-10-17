@@ -37,7 +37,7 @@
 		</ng-container>
 		<ng-container matColumnDef="symbol">
 			<mat-header-cell class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
-			<mat-cell class="symbolField" *matCellDef="let element">{{element.display}}</mat-cell>
+			<mat-cell class="symbolField" [class.strikeout]="element.errorValue.code" *matCellDef="let element">{{element.display}}</mat-cell>
 			<mat-footer-cell class="symbolField" *matFooterCellDef>Cash</mat-footer-cell>
 		</ng-container>
 		<ng-container matColumnDef="position">

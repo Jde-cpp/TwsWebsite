@@ -448,6 +448,12 @@ class Connection
 				this.observers.get( id ).reject( error );
 				this.observers.delete( id );
 			}
+			else if( this.marketDataCallbacks.has(id) )
+			{
+				const callback = this.marketDataCallbacks.get( id );
+				callback.error( error );
+				this.marketDataCallbacks.delete( id );
+			}
 			else
 			{
 				var requestsTypes:Map<number, RequestPromise>[] = [ this.callbacks, this.optionParamCallbacks ];
@@ -512,7 +518,7 @@ class Connection
 	}
 	private stringMapPromise( request:Requests.ERequests, result:Results.EResults):Promise<StringMap>
 	{
-		console.log( Requests.ERequests[request] );
+		console.log( `${Requests.ERequests[request]}()` );
 		let promises = this.stringMapPromises.get( result );
 		if( !promises )
 			this.stringMapPromises.set( result, promises = new Array<[(x:StringMap)=>void,(x:Results.IError)=>void]>() );
@@ -824,17 +830,10 @@ class Connection
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
 	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise2<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
 	googleLogin( token:string ):Promise<void>{ console.log( `(${this.requestId+1})googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
-	query( ql: string ):Promise<any>
+	query<T>( ql: string ):Promise<T>
 	{
-		console.log( `query( ${ql} )` );
-		return this.sendStringPromise2<any>(ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>
-		{
-			return result.stringResult;
-		}, (rslt:Results.IStringResult)=>
-		{
-			//debugger;
-			return rslt.value.length ? JSON.parse(rslt.value).data : null;
-		} );
+		console.log( `${ql}` );
+		return this.sendStringPromise2<T>( ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>result.stringResult, (rslt:Results.IStringResult)=>rslt.value.length ? JSON.parse(rslt.value).data : null );
 	}
 	investors( id:ContractPK ):Promise<Edgar.IInvestors>
 	{

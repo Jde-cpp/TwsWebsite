@@ -24,9 +24,18 @@ export class InvestorsComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		this.profile.save();
 	}
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		this.profile.load().then( ()=>{this.load();} );
+		await this.profile.load();
+		try
+		{
+			await this.load();
+		}
+		catch( e )
+		{
+			this.cnsle.error( "Could not load investors", e );
+		}
+		this.viewPromise = Promise.resolve( true );
 	}
 	cellClick( row:Edgar.IInvestor )
 	{
@@ -50,17 +59,14 @@ export class InvestorsComponent implements AfterViewInit, OnInit, OnDestroy
 		if( this._table )
 			this._table.renderRows();
 	}
-	load()
+	async load()
 	{
 		//this.tws.investors( this.cik ).then( (investors)=>{ this.investors.push( new Investor(...investors.values, investors.companies) );} );
 		//var f = /*this.cik ? ()=>this.tws.investors( this.cik ) : ()=>;
-		this.tws.investors( this.detail.contract.id ).then( (investors)=>
-		{
-			console.log( `investors.values=${investors.values.length}` );
-			investors.values.forEach( (i)=>this.investors.push(new Investor(i, investors.companies)) );
-			this.sortData( this.settings.sort );
-			this.viewPromise = Promise.resolve( true );
-		} );
+		const investors = await this.tws.investors( this.detail.contract.id );
+		console.log( `investors.values=${investors.values.length}` );
+		investors.values.forEach( (i)=>this.investors.push(new Investor(i, investors.companies)) );
+		this.sortData( this.settings.sort );
 	}
 
 	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetail;

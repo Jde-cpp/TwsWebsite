@@ -14,6 +14,7 @@ import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import * as Edgar2 from 'jde-cpp/edgar'; import Edgar = Edgar2.Jde.Markets.Edgar.Proto;
+import { IAuth } from 'jde-material';
 
 type ResolveGeneric = (any) => void;
 type ClientId = number;
@@ -66,9 +67,7 @@ class Connection
 {
 	constructor()
 	{
-		//this.socket = webSocket<protobuf.Buffer>( {url: 'wss://PL1USPMU0029WS:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
-		//this.socket.binary(true);
 		this.socket.subscribe(
 			( msg ) => this.addMessage( msg ),
 			( err ) => this.error( err ),
@@ -454,6 +453,12 @@ class Connection
 				callback.error( error );
 				this.marketDataCallbacks.delete( id );
 			}
+			else if( this.flexCallbacks.get(id) )
+			{
+				const callback = this.flexCallbacks.get( id );
+				callback.error( error );
+				this.flexCallbacks.delete( id );
+			}
 			else
 			{
 				var requestsTypes:Map<number, RequestPromise>[] = [ this.callbacks, this.optionParamCallbacks ];
@@ -730,7 +735,7 @@ class Connection
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>
 	{
 		const id = this.getRequestId();
-		console.log( `flexExecutions( '${account}', '${DateUtilities.display(start)}', '${DateUtilities.display(end)}' )` );
+		console.log( `(${id})flexExecutions( '${account}', '${DateUtilities.display(start)}', '${DateUtilities.display(end)}' )` );
 		const msg = new Requests.RequestUnion( {"flexExecutions": {"id":id, "accountNumber": account, "start": start.getTime() / 1000, "end": end.getTime() / 1000}} );
 		this.send( msg );
 
@@ -816,7 +821,7 @@ class Connection
 	sendGenericArrayPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
 		const id = this.getRequestId();
-		console.log( `(${id})${type}(${ids.join()})` );
+		console.log( `(${id})${Requests.ERequests[type]}(${ids.join()})` );
 		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"id": id, "type": type, "ids": ids}, result, transform );
 	}
 	sendStringPromise2<TResult>( name:string, type:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
@@ -871,10 +876,25 @@ class Connection
 @Injectable( {providedIn: 'root'} )
 export class TwsService implements IGraphQL
 {
-	constructor()
+	constructor( @Inject('IAuth') public authorizationService:IAuth )
 	{}
 
-	reqManagedAccts():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.accounts ) resolve( TwsService.accounts ); else this.connection.reqManagedAccts().then( (x)=>{TwsService.accounts=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
+	async reqManagedAccts():Promise<StringMap>
+	{ 
+		if( !TwsService.accounts ) 
+		{
+			if( !this.authorizationService.loggedIn )
+			{
+				if( !this.authorizationService.enabled() )
+					await this.googleLogin( "" );
+				else
+					await this.authorizationService.subscribe().toPromise();
+			}
+			const accounts = await this.connection.reqManagedAccts();
+			TwsService.accounts=accounts;
+		}
+		return TwsService.accounts; 
+	}
 	reqNewsProviders():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.newsProviders ) resolve( TwsService.newsProviders ); else this.connection.reqNewsProviders().then( (x)=>{TwsService.newsProviders=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
 	news( contractId, providerCodes:string[], totalResults:number, start:Date=null, end:Date=null ):Promise<Results.NewsCollection>{ return this.connection.news(contractId, providerCodes, totalResults, start, end); }
 	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>{ return this.connection.reqNewsArticle(providerCode, articleId); }

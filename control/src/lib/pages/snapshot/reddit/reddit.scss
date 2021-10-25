@@ -6,28 +6,18 @@
 .expansion-headers-align .mat-expansion-panel-header-description {
   justify-content: space-between;
   align-items: center;
-//   background-color: grey;
 }
 
 .expansion-headers-align .mat-form-field + .mat-form-field {
   margin-left: 8px;
 }
-.mat-expansion-panel-content
 
-div table tbody tr td a
+// .mat-expansion-panel-content div table tbody tr td a
+// {
+// 	color: lightblue;
+// }
+
+.mat-expansion-panel-body a
 {
 	color: lightblue;
-}
-// td a:link {color: lightblue; font-size: 50px;}
-// td a:visited {color: firebrick;font-size: 50px;}
-// td a:hover {color: #FCFC0C;font-size: 50px;}
-// td a:active {color: #C0F0FC;font-size: 50px;}
-
-.td
-{
-	color: white;
-	background-color: purple;
-	font-size: 50px;
-	color: white;
-
 }

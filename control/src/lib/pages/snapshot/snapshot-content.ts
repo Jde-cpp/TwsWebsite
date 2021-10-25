@@ -45,14 +45,15 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		console.log( `(${this.detail && this.detail.contract ? this.detail.contract.symbol : 'null'})SnapshotContentComponent::ngOnInit` );
 		this.settings = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
 	}
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
 		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::ngAfterViewInit` );
 		const initialized = this.indexSelectedSymbol==this.index;
 		console.log( `(${this.detail.contract.symbol})SnapshotContentComponent::run initialized=${initialized}` );
 		if( !initialized )
 			return;
-		this.settings.loadedPromise.then( ()=>{this.settingsLoaded();} );
+		await this.settings.loadedPromise;
+		await this.settingsLoaded();
 	}
 	ngOnDestroy()
 	{
@@ -77,15 +78,19 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		var data:ConfigurationData = { symbolSettings: this.settings, pageSettings: this.pageSettings }
 		this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
 	}
-	settingsLoaded():void
+	async settingsLoaded()
 	{
 		this.selectedTab.setValue( this.settings.value.tabIndex );
 		let tick = this.tick = new TickDetails( this.detail );
-		this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} ).catch( (e)=>
+		try
 		{
-			this.cnsle.warn( "Loading fundamental data failed." );
-			console.error( e );
-		} );
+			await this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} );
+		}
+		catch( e )
+		{
+			this.cnsle.error( "Loading fundamental data failed.", e );
+			return;
+		}
 		this.loadedPromise = Promise.resolve( true );
 		const now = new Date();
 		var previousDay = MarketUtilities.previousTradingDate( now, MarketUtilities.contractHours(this.detail.tradingHours) );

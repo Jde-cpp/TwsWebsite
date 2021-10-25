@@ -20,32 +20,26 @@ export class TransactDialogData
 	settingsContainer:Settings<DialogSettings>;
 }
 
-export function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : TwsService, detail:Results.IContractDetail, tick:TickEx, isBuy:boolean, quantity: number=null, showStop:boolean=true )
+export async function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : TwsService, detail:Results.IContractDetail, tick:TickEx, isBuy:boolean, quantity: number=null, showStop:boolean=true )
 {
-	let settingsContainer = new Settings<DialogSettings>( DialogSettings, "TransactDialog", profile );
-	settingsContainer.load().then( ()=>
+	const settingsContainer = new Settings<DialogSettings>( DialogSettings, "TransactDialog", profile );
+	await settingsContainer.load();
+	const numbers = await tws.reqManagedAccts();
+	let allAccounts = new Map<string,string>();
+	for( const account in numbers )
+		allAccounts.set( account, numbers[account] );
+	const dialogRef = dialog.open(TransactDialog, {
+		width: '600px', autoFocus: false,
+		data: { detail: detail, tick: tick, isBuy: isBuy, quantity: quantity, showStop: showStop, allAccounts: allAccounts, settingsContainer: settingsContainer }
+	});
+	dialogRef.afterClosed().subscribe(result =>
 	{
-		tws.reqManagedAccts().then( (numbers)=>
-		{
-			let allAccounts = new Map<string,string>();
-			for( let account in numbers )
-				allAccounts.set( account, numbers[account] );
-			const dialogRef = dialog.open(TransactDialog, {
-				width: '600px', autoFocus: false,
-				data: { detail: detail, tick: tick, isBuy: isBuy, quantity: quantity, showStop: showStop, allAccounts: allAccounts, settingsContainer: settingsContainer }
-			});
-			dialogRef.afterClosed().subscribe(result =>
-			{
-				// if( result && this.settings.limit!=result.limit )
-				// {
-				// 	this.settings.limit = result.limit;
-				// 	this.subscribe( this.applicationId, this.level );
-				// }
-			});
-
-		});
-	} );
-
+		// if( result && this.settings.limit!=result.limit )
+		// {
+		// 	this.settings.limit = result.limit;
+		// 	this.subscribe( this.applicationId, this.level );
+		// }
+	});
 }
 
 @Component( {templateUrl: 'transact.html', styleUrls:["transact.css"]} )

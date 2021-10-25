@@ -21,15 +21,6 @@ class Entry
 
 	get display(){ return this.server.title; }
 	get content(){ return this.server.content; }
-
-	/*get authorId():Long{ return <Long>this.server.authorId; }
-	author:Results.ITweetAuthor;
-	get likesPerMinute():number{ return this.server.like/(new Date().getTime()-this.server.createdAt); }
-
-	get id():string{ return this.server.id.toString(); }
-	get imgSrc(){ return this.author?.profileUrl; }
-	get likes(){ return this.server.like; }
-	get url(){ return "https://reddit.com/anyuser/status/"+this.id; }*/
 }
 
 @Component({ selector: 'reddit', styleUrls: ['reddit.scss'], templateUrl: './reddit.html',encapsulation: ViewEncapsulation.None })

@@ -17,7 +17,7 @@ import { MarketUtilities } from 	'../../../utilities/marketUtilities';
 import { Day, DateUtilities } from 'jde-framework';
 import { Sort } from '@angular/material/sort';
 
-export class PageSettings //implements IPageEvent
+export class PageSettings
 {
 	assign( value:any )
 	{
@@ -112,7 +112,6 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 
 	onTransactClick( buy:boolean )
 	{
-
 		const dialogRef = this.dialog.open(OptionEntryDialog, {
 			width: '600px',
 			data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: this.tick.detail }
@@ -138,18 +137,14 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickDetails;
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 
-	get optionType(){return this.settings.type;} set optionType(x){ if( x!=this.settings.type ){ this.settings.type=x; this.settingsContainer.save();} }; set optionTypeString(x){ this.optionType=+x; } get optionTypeString(){ return this.optionType.toString(); }
+	get optionType(){return this.settings.type;} set optionType(x){ if( x!=this.settings.type ){ this.settings.type=x; this.settingsContainer.save();} }; 
+	set optionTypeString(x){ this.optionType=+x; } get optionTypeString(){ return this.optionType.toString(); }
 	lengthChange: Subject<number> = new Subject<number>();
 	startIndexChange: Subject<number> = new Subject<number>();
 	pageEvents = new Subject<PageEvent>();
 	get contract(){ return this.detail?.contract; }
 	get detail(){ return this.tick?.detail; }
-	get expiration():Day
-	{
-		const value = this.expirations && this.expirationSelectedIndex<this.expirations.length ? this.expirations[this.expirationSelectedIndex] : 0;
-		console.log( `expiration=${value}` );
-		return  value;
-	}
+	get expiration():Day{ return this.expirations && this.expirationSelectedIndex<this.expirations.length ? this.expirations[this.expirationSelectedIndex] : 0; }
 	expirationDisplays : string[];
 	expirations : Day[];
 	get expirationSelectedIndex(){ return this.settings.expiration && this.expirations ? Math.max(0, this.expirations.indexOf(this.settings.expiration)) : 0; }

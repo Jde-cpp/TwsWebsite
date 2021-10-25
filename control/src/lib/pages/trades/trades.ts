@@ -65,7 +65,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 			this.tws.flexExecutions( "act", DateUtilities.fromDays(this.start), DateUtilities.fromDays(this.end) ).subscribe(
 			{
 				next:	flex =>{ flexResult = flex },
-				error:  e=>{ debugger;console.error(e); this.cnsle.error(e,null); },
+				error:  e=>{ debugger;console.log(e); this.cnsle.error("Could not load executions.",e); },
 				complete: ()=>{  --requests; if( !requests ) setDataSource();  },
 			});
 		}

@@ -36,7 +36,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		{
 			this.settings = value;
 			if( !this.authorizationService.enabled() )
-				this.tws.googleLogin( "" ).then( ()=>this.onSettingsLoaded() ).catch( (e)=>{debugger; console.error(e.message);} );
+				this.tws.googleLogin( "" ).then( ()=>this.onSettingsLoaded() ).catch( (e)=>{debugger; this.cnsl.error(e.message);} );
 			else if( !this.authorizationService.loggedIn )
 			{
 				console.log( "Portfolio.authorizationService.subscribe" );

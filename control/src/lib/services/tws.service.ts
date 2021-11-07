@@ -279,16 +279,8 @@ class Connection
 					}
 					else if( typeId==Results.EResults.Authentication )
 					{
-						console.log( "Debug authenticated." );
-						/*if( this.callbacks.has)
-						const accountNumber = message.message.stringValue;
-						if( this.accountUpdateCallbacks.has(accountNumber) )
-						{
-							for( const callback of this.accountUpdateCallbacks.get(accountNumber) )
-								callback[1].next( null );//message.portfolioUpdate
-						}
-						else
-							console.error( `no callbacks for portfolioUpdate accountNumber='${accountNumber}'` );//todo stop request.*/
+						this.callbacks.get( +message.message.stringValue ).reject( {requestId: +message.message.stringValue, code: -1, message: "Could not authenticate"} );
+						this.callbacks.delete( +message.message.stringValue );
 					}
 					else
 					{

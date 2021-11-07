@@ -7,9 +7,6 @@ img.articleIcon
 	width: 20px;
 	height: 20px;
 }
-/*a.article
-{
-}*/
 .expand
 {
 	opacity: 0.7;
@@ -21,5 +18,25 @@ mat-panel-title
 .noExpand
 {
 	opacity: 1.0;
-
 }
+.mat-expansion-panel-header[aria-disabled='true'] .mat-expansion-panel-header-title, .mat-expansion-panel-header-description 
+{
+	color: rgba( 255, 255, 255, .93 );
+}
+
+
+@mixin color($config-or-theme) 
+{
+	$config: theming.get-color-config($config-or-theme);
+	$background: map.get($config, background);
+	$foreground: map.get($config, foreground);
+  
+	.mat-expansion-panel-header[aria-disabled='true'] 
+	{
+		color: theming.get-color-from-palette( $foreground, disabled-button );
+  	  	.mat-expansion-panel-header-title, .mat-expansion-panel-header-description 
+		{
+			color: rgba( 255, 255, 255, .91 );
+	  	}
+	}
+  }

@@ -65,7 +65,7 @@ export class Tick implements ITickObserver
 	}
 	size( type:Results.ETickType, size:number ):void
 	{
-		if( type==Results.ETickType.SHORTABLE_SHARES )
+		if( type==Results.ETickType.ShortableShares )
 			this.shortableAvailable = size;
 		else if( type==Results.ETickType.BidSize )
 			this.bidSize = size;
@@ -222,7 +222,7 @@ export class TickEx extends Tick
 
 	get contract():IB.IContract{ return this._contract; }
 	get contractId(){ return this.contract.id; }
-	get currentPrice():number{ return this.isOption ? super.currentPrice : this.last>=this.bid && this.last<=this.ask ? this.last : this.last<this.bid ? this.bid : this.ask; }
+	override get currentPrice():number{ return this.isOption ? super.currentPrice : this.last>=this.bid && this.last<=this.ask ? this.last : this.last<this.bid ? this.bid : this.ask; }
 
 	static descriptionDetail( detail:Results.IContractDetail ){ return  this.descriptionOption(detail.contract.symbol, detail.contract.expiration, detail.contract.strike, detail.contract.right==IB.SecurityRight.Call); }
 	static descriptionOption( symbol, expiration, strike, isCall ){ return `${symbol} ${MarketUtilities.optionDayDisplay(expiration)} ${strike} ${isCall ? "Call" : "Put"}` }
@@ -249,5 +249,5 @@ export class TickDetails extends TickEx
 		if( !detail.contract.multiplier )
 			detail.contract.multiplier = 1;
 	}
-	get contract():IB.IContract{ return this.detail.contract; }
+	override get contract():IB.IContract{ return this.detail.contract; }
 }

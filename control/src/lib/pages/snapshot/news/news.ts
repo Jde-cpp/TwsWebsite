@@ -43,32 +43,22 @@ class GoogleArticle extends Article
 
 	get id(){ return this.goog.link; }
 	get article():string{ return this.goog.description; }
-	get class(){ return ""; }
+	override get class(){ return ""; }
 	get date(){ return new Date( this.goog.publicationDate*1000 ); }
 	disabled:boolean=true;
 	get display():string
 	{
 		var dateDisplay = DateUtilities.display( this.date );
 		let header = this.header.endsWith( ` - ${this.goog.source}` ) ? this.header.substr( 0, this.header.length-this.goog.source.length-3 ) : this.header;
-		//let template = document.createElement('template');
-		//template.innerHTML = this.goog.description.trim();
-		//let anchor = template.content.firstChild  as HTMLAnchorElement;
-		//let span = <any>document.createElement('span');// as HTMLSpanElement;
-		//let span = `<span onclick="window.open('${anchor.href}', '_blank')">${anchor.innerText}</span>`
-		//span.innerText = anchor.innerText;
-		//span["onclick"] = `window.open('${anchor.href} ', '_blank');`
-		//anchor.setAttribute( "style", "text-decoration: none;" );
-		//anchor["class"] = "directLink";
-		//anchor["className"] = "directLink";
 		let s = `${dateDisplay} - ${header}`;
 		return s;
 	}
 	get header(){ return this.goog.title; }
-	get imgSrc():string
+	override get imgSrc():string
 	{
 		//let url = `${this.goog.sourceUrl}/favicon.ico`;
 		let url = `http://www.google.com/s2/favicons?domain=${this.goog.sourceUrl}`;
-		if( this.goog.sourceUrl=="https://seekingalpha.com" )
+/*		if( this.goog.sourceUrl=="https://seekingalpha.com" )
 			url = `${this.goog.sourceUrl}/samw/favicon.ico`;
 		else if( this.goog.sourceUrl=="https://www.bloomberg.com" )
 			url = "https://assets.bwbx.io/s3/javelin/public/hub/images/favicon-black-63fe5249d3.png";
@@ -81,7 +71,7 @@ class GoogleArticle extends Article
 		else if( this.goog.sourceUrl=="https://www.investors.com" )
 			url = "https://www.google.com/s2/favicons?domain=newhome.investors.com";
 		else if( this.goog.sourceUrl=="https://www.fxstreet.com" )
-			url = "https://staticcontent.fxstreet.com/website/static-html/favicon.ico";
+			url = "https://staticcontent.fxstreet.com/website/static-html/favicon.ico";*/
 		return url;
 	}
 	get link():string{ return this.goog.link; }
@@ -90,7 +80,7 @@ class TwsArticle extends Article
 {
 	constructor( private ib:Results.IHistoricalNews ){ super(); }
 	article:string;
-	get class(){ return this.ib.providerCode; }
+	override get class(){ return this.ib.providerCode; }
 	get date(){ return new Date(this.ib.time*1000); }
 	readonly disabled:boolean=false;
 	get display():string
@@ -124,7 +114,7 @@ class TwsArticle extends Article
 		}
 		return this.viewPromise;
 	}
-	content:string;
+	override content:string;
 	get id(){ return this.ib.articleId; }
 	get header()
 	{

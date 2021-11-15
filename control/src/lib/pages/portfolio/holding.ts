@@ -65,22 +65,22 @@ export class Holding extends TickDetails
 		this.realizedPN = update.realizedPnl;
 		this.accountNumber = update.accountNumber;
 	}
-	setPreviousDay( bar:Results.IDaySummary ){ this.previousDay = new Price( bar ); }
+	override setPreviousDay( bar:Results.IDaySummary ){ this.previousDay = new Price( bar ); }
 	accountNumber:string;
 	averageCost:number;
 	get basis():number{ return this.averageCost*this.position; }
-	get last()
+	override get last()
 	{
 		let v = super.last || this.previousDay?.last;
 		return v==-1 ? (this.bid+this.ask)/2 : v;
-	} set last(value){ super.last = value; }
+	} override set last(value){ super.last = value; }
 	//current:Price = new Price();
 	previousDay:Price;// = new Price()
 	//contract:IB.IContract;
 	get marketValue():number
 	{
-		const primary = this.isOption ? this._marketValue : this.currentPrice*this.position; 
-		const secondary = this.isOption ? this.currentPrice*this.position*this.contract.multiplier : this._marketValue; 
+		const primary = this.isOption ? this._marketValue : this.currentPrice*this.position;
+		const secondary = this.isOption ? this.currentPrice*this.position*this.contract.multiplier : this._marketValue;
 		return primary || secondary;
 	} set marketValue( value )
 	{
@@ -100,9 +100,9 @@ export class Holding extends TickDetails
 	//volume:number=0;
 	//get last():number{ return this.current.last || this.previousDay.last; }
 	get isLong():boolean{ return this.position>0; }
-	get isOption():boolean{ return this.contract.securityType==IB.SecurityType.Option; }
+	override get isOption():boolean{ return this.contract.securityType==IB.SecurityType.Option; }
 	get pnl():number{ return this.change*this.position*this.contract.multiplier; }
-	get change():number
+	override get change():number
 	{
 		if( this.contract.symbol=="AAPL" )
 			this.contract.multiplier = 1.0;

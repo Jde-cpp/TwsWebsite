@@ -55,7 +55,7 @@ export class OrderSubject extends Subject<number> implements IOrderObserver
 	}
 	status( value:Results.IOrderStatus ):void{ this._observers.forEach(observer=>{observer.status(value);}); }
 	open( value:Results.IOpenOrder ):void{ this._observers.forEach(observer=>{observer.open(value);}); }
-	complete():void{ this._observers.forEach( observer=>{observer.complete();} ); }
-	error(e:any):void{ this._observers.forEach( observer=>{observer.error(e);} ); }
+	override complete():void{ this._observers.forEach( observer=>{observer.complete();} ); }
+	override error(e:any):void{ this._observers.forEach( observer=>{observer.error(e);} ); }
 	private _observers:IOrderObserver[]=[];
 }

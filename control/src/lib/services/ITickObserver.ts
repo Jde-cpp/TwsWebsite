@@ -40,6 +40,6 @@ export class TickSubject extends Subject<number> implements ITickObserver
 	size( type:Results.ETickType, size:number ){ this._observers.forEach(observer=>{observer.size(type, size);}) };
 	string( type:Results.ETickType, value:string ){ this._observers.forEach(observer=>{observer.string(type, value);}) };
 	optionCalculation( type:Results.ETickType, priceBased:boolean, impliedVolatility:number, delta:number, optionPrice:number, pvDividend:number, gamma:number, vega:number, theta:number, underlyingPrice:number ){ this._observers.forEach(observer=>{observer.optionCalculation(type, priceBased, impliedVolatility, delta, optionPrice, pvDividend, gamma, vega, theta, underlyingPrice);}) };
-	complete(){ this._observers.forEach( observer=>{observer.complete();} ) };
+	override complete(){ this._observers.forEach( observer=>{observer.complete();} ) };
 	private _observers:ITickObserver[]=[];
 }

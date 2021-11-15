@@ -11,6 +11,10 @@ img.articleIcon
 {
 	opacity: 0.7;
 }
+.article
+{
+	margin-left: 10px;
+}
 mat-panel-title
 {
 	grid-template-columns: repeat(4,10px);
@@ -19,22 +23,22 @@ mat-panel-title
 {
 	opacity: 1.0;
 }
-.mat-expansion-panel-header[aria-disabled='true'] .mat-expansion-panel-header-title, .mat-expansion-panel-header-description 
+.mat-expansion-panel-header[aria-disabled='true'] .mat-expansion-panel-header-title, .mat-expansion-panel-header-description
 {
 	color: rgba( 255, 255, 255, .93 );
 }
 
 
-@mixin color($config-or-theme) 
+@mixin color($config-or-theme)
 {
 	$config: theming.get-color-config($config-or-theme);
 	$background: map.get($config, background);
 	$foreground: map.get($config, foreground);
-  
-	.mat-expansion-panel-header[aria-disabled='true'] 
+
+	.mat-expansion-panel-header[aria-disabled='true']
 	{
 		color: theming.get-color-from-palette( $foreground, disabled-button );
-  	  	.mat-expansion-panel-header-title, .mat-expansion-panel-header-description 
+  	  	.mat-expansion-panel-header-title, .mat-expansion-panel-header-description
 		{
 			color: rgba( 255, 255, 255, .91 );
 	  	}

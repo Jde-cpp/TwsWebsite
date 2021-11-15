@@ -47,6 +47,6 @@ export class ExecutionSubject extends Subject<Results.IExecution> implements IEx
 	}
 	execution( type:Results.IExecution ){ this._observers.forEach(observer=>{observer.execution(type);}) };
 	commissionReport( type:Results.ICommissionReport ){ this._observers.forEach(observer=>{observer.commissionReport(type);}) };
-	complete(){ this._observers.forEach( observer=>{observer.complete();} ) };
+	override complete(){ this._observers.forEach( observer=>{observer.complete();} ) };
 	private _observers:IExecutionObserver[]=[];
 }

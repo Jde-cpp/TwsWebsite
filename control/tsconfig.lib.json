@@ -10,6 +10,7 @@
     "strictNullChecks": false,
     "strictPropertyInitialization": false,
     "noStrictGenericChecks": true,
+	 "noPropertyAccessFromIndexSignature": false,
     "types": [],
     "lib": [
       "dom",

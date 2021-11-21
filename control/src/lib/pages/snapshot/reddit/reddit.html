@@ -1,8 +1,8 @@
 <ng-container *ngIf="viewPromise | async">		<!---->
-	<mat-expansion-panel class="expansion-headers-align" *ngFor="let entry of collection">
+	<mat-expansion-panel class="expansion-headers-align" *ngFor="let entry of values">
 		<mat-expansion-panel-header>
 			<mat-panel-title>
-				<mat-panel-description>{{entry.display}}<mat-icon>highlight_off</mat-icon></mat-panel-description>
+				<mat-panel-description>{{entry.display}}<mat-icon (click)=block(entry)>highlight_off</mat-icon></mat-panel-description>
 			</mat-panel-title>
 		</mat-expansion-panel-header>
 		<ng-template matExpansionPanelContent>

@@ -151,29 +151,35 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		this.settings.save();
 	}
 
-	showChart()
+	async showChart()
 	{
+		console.log( "showChart" );
 		let tws = this.tws, cnsle = this.cnsle, contract = this.contract;
 		let endTime = DateUtilities.endOfDay( DateUtilities.fromDays(MarketUtilities.currentTradingDay( new Date(), MarketUtilities.contractHours(this.detail.tradingHours))) );
-		tws.reqHistoricalData( contract, DateUtilities.endOfDay(DateUtilities.fromDays(MarketUtilities.previousTradingDay())), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false ).then( (dayBars)=>
+		try
 		{
+			const dayBars = await tws.reqHistoricalData( contract, DateUtilities.endOfDay(DateUtilities.fromDays(MarketUtilities.previousTradingDay())), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false );
+			console.log( `dayBars.size=${dayBars.length}` );
 			let returns = dayBars.map( (bar)=>{ return (bar.close-bar.open)/bar.open;} );
-			var beginningOfDay = DateUtilities.beginningOfDay(endTime);
-			var openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset()*60000;
-			tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false ).then( (bars)=>
-			{
-				if( !bars.length )
-					return;
-				const openBar = bars.find( bar=>bar.time.getTime()>=openTime );
-				if( openBar )
-					this.tick.open = openBar.open;
-				const first = bars[0];
-				let minuteReturns = [ [first.time.getTime()-3*60, first.open] ];
-				for( let bar of bars )
-					minuteReturns.push( [bar.time.getTime(), bar.close] );
-				this.showChart2( minuteReturns, MathUtilities.Statistics(returns, true) );
-			}).catch( (e)=>{ console.error(e); cnsle.error("Could not connect to Tws.", e); });
-		}).catch( (e)=>{ console.error(e); cnsle.error("Could not connect to Tws.", e); });
+			const beginningOfDay = DateUtilities.beginningOfDay(endTime);
+			const openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset()*60000;
+			const bars = await tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false );
+			console.log( `bars.size=${dayBars.length}` );
+			if( !bars.length )
+				return;
+			const openBar = bars.find( bar=>bar.time.getTime()>=openTime );
+			if( openBar )
+				this.tick.open = openBar.open;
+			const first = bars[0];
+			let minuteReturns = [ [first.time.getTime()-3*60, first.open] ];
+			for( let bar of bars )
+				minuteReturns.push( [bar.time.getTime(), bar.close] );
+			setTimeout( () =>this.showChart2(minuteReturns, MathUtilities.Statistics(returns, true)), 500 );
+		}
+		catch( e )
+		{
+			console.error(e); cnsle.error("Could not connect to Tws.", e);
+		}
 	}
 	showChart2( bars, statResult:StatResult )
 	{
@@ -272,7 +278,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			rangeSelector: { selected: 0, inputEnabled: false, buttonTheme: {visibility: 'hidden'}, labelStyle: {visibility: 'hidden'} }
 		};
 		window.Highcharts = Highcharts;
-		Highcharts.stockChart( showLarge ? 'chart2' : 'chart', options );
+		this._charts.push( Highcharts.stockChart(showLarge ? 'chart2' : 'chart', options) );
+		console.log( `showChart2 finished` );
 	}
 	onError = ( error: Results.IError ):void =>
 	{
@@ -286,7 +293,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		this.selectedTab.setValue( this.settings.value.tabIndex = e.index );
 		this.settings.save();
 	}
-
+	_charts=[];
 	get contract():IB.IContract{ return this.detail ? this.detail.contract : null; }
 	fundamentals:Fundamentals;
 	@Input() index:number;

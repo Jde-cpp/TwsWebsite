@@ -16,8 +16,7 @@ class RedditSettings
 }
 class Entry
 {
-	constructor( private server:Results.IReddit )
-	{}
+	constructor( private server:Results.IReddit ){}
 
 	get display(){ return this.server.title; }
 	get content(){ return this.server.content; }
@@ -44,23 +43,25 @@ export class RedditComponent implements OnInit, AfterViewInit, OnDestroy
 		let entries = await this.tws.reddit( this.symbol, "hot" );
 
 		for( const e of entries.values )
-			this.collection.push( new Entry(e) );
+			this.values.push( new Entry(e) );
 		this.viewPromise = Promise.resolve( true );
 	}
 	ngOnDestroy()
 	{
 		RedditComponent.settings.save();
 	}
-	block( articleId )
+	block( article:Entry )
 	{
-		console.log( 'block' );
+		let txt = '<a href="https://www.reddit.com/user/';
+		let suffix = article.content.substr( article.content.indexOf(txt)+txt.length );
+		this.tws.redditBlock( suffix.substr(0, suffix.indexOf('"')) );
 	}
 
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 	@Input() index:number;
 	@Input() tick:TickDetails;
-	get symbol(){return this.tick.contract.symbol;}
-	collection = new Array<Entry>();
+	get symbol(){ return this.tick.contract.symbol; }
+	values = new Array<Entry>();
 	isActive:boolean;
 	static settings:Settings<RedditSettings>;
 	viewPromise:Promise<boolean>;

@@ -1,7 +1,7 @@
 <ng-container *ngIf="viewPromise | async">
-	<mat-toolbar>
+	<mat-toolbar style="height:80px; overflow: hidden;">
 		<span>
-			<span style="height:74px; overflow: hidden;">
+			<span style="height:64px; overflow: hidden;">
 				<mat-form-field appearance="fill">
 					<mat-label>Name</mat-label>
 					<input matInput onclick="this.select();" [ngModel]="name" (keyup.enter)="name = $event.target.value" (blur)="name = $event.target.value">

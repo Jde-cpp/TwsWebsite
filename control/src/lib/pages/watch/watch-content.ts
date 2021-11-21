@@ -56,10 +56,7 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 			this.file.name=x;
 			if( save )
 			{
-				this.save().catch( (e)=>
-				{
-					this.file.name = oldName;
-				});
+				this.save().catch( (e)=>{this.file.name = oldName;} );
 			}
 		}
 	} get name():string{ return this.file?.name || this._name; } _name:string;

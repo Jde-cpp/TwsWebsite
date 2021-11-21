@@ -321,8 +321,8 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	stdDev( x:OptionStrike )
 	{
 		const days = x.expiration-MarketUtilities.currentTradingDay( null, this.tick.detail.tradingHours[0] )+1;
-		const price = this.tick.last;
-		const underlyingStdDev = this.volatilityHistorical/Math.pow(252/days, .5)*this.tick.last;
+		const price = this.tick.currentPrice;
+		const underlyingStdDev = this.volatilityHistorical/Math.pow(252/days, .5)*this.tick.currentPrice;
 		const diff = Math.abs( price-x.strike );
 		return diff/( underlyingStdDev/2 );
 	}
@@ -331,7 +331,6 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		const stdDev = Math.ceil( this.stdDev(x) );
 		return stdDev>3 ? "inherit" : `rgba( 0, 0, 139, ${stdDev==1 ? 1 : stdDev==2 ? .67 : .33} )`;
 	}
-
 
 	@Output() lengthChange = new EventEmitter<number>();
 	@Output() selectionChange = new EventEmitter<Option>();
@@ -344,7 +343,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	init:boolean;
 	options: OptionStrike[];
 	pageContent: OptionStrike[]=[];
-	get price(){ return this.tick.last; }
+	get price(){ return this.tick.currentPrice; }
 	selectedOption:Option|null=null;
 	get startIndex(){ return this._startIndex; } set startIndex(x){ if( this._startIndex!=x ){ this._startIndex=x; this.startIndexChange.emit( [this._startIndex,this.midPrice] );} } private _startIndex:number;
 	setPrices = false;

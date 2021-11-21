@@ -500,7 +500,7 @@ class Connection
 	{
 	//	debugger;
 		this.sessionId = null;
-		console.error( "No longer connected to TWS.", err );
+		console.log( "No longer connected to TWS.", err );
 		this.handleConnectionError( err );
 	}
 	socketComplete():void
@@ -597,28 +597,28 @@ class Connection
 				myBars.push( { time:new Date(bar.time*1000), high:ProtoUtilities.toNumber(bar.high), low:ProtoUtilities.toNumber(bar.low), open:ProtoUtilities.toNumber(bar.open), close:ProtoUtilities.toNumber(bar.close), wap:ProtoUtilities.toNumber(bar.wap), volume:ProtoUtilities.toNumber(bar.volume), count:ProtoUtilities.toNumber(bar.count)} );
 			return myBars;
 		}
-		return this.sendPromise2<Requests.IRequestHistoricalData,IBar[]>( "historicalData", {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000}, (result)=>{return result.historicalData}, toBars );
+		return this.sendPromise<Requests.IRequestHistoricalData,IBar[]>( "historicalData", {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000}, (result)=>{return result.historicalData}, toBars );
 	}
 	news( contractId, providerCodes:string[], totalResults:number, start:Date, end:Date ):Promise<Results.NewsCollection>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})news( ${contractId}, [${providerCodes.join()}] )` );
 		const variable = { id:id, contractId:contractId, providerCodes:providerCodes, totalResults: totalResults, start: start ? start.getTime() : 0, end: end ? end.getTime() : 0 };
-		return this.sendPromise2<Requests.IHistoricalNewsRequest,Results.NewsCollection>( "historicalNewsRequest", variable, (x)=>{return x.news;}, null );
+		return this.sendPromise<Requests.IHistoricalNewsRequest,Results.NewsCollection>( "historicalNewsRequest", variable, (x)=>{return x.news;}, null );
 	}
 	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})reqNewsArticle( ${providerCode}, ${articleId} )` );
 		const variable = { id:id, providerCode:providerCode, articleId: articleId };
-		return this.sendPromise2<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle;}, null );
+		return this.sendPromise<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle;}, null );
 	}
 	reqContractDetails( contract:IB.IContract ):Promise<Results.IContractDetail[]>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}` );
 		const variable = { id: id, contracts: [contract] };
-		return this.sendPromise2<Requests.IRequestContractDetails,Results.IContractDetail[]>( "contractDetails", variable, (x)=>{return x.contractDetails!=null;}, null );
+		return this.sendPromise<Requests.IRequestContractDetails,Results.IContractDetail[]>( "contractDetails", variable, (x)=>{return x.contractDetails!=null;}, null );
 	}
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetail[]>
 	{
@@ -758,7 +758,11 @@ class Connection
 		this.orders.set( id, new Order(contract, order, callback) );
 		return callback;
 	}
-	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.sendPromise2( "reddit", {id:this.getRequestId(), symbol:symbol, sort:sort}, (m)=>m.reddit ); }
+	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.sendPromise( "reddit", {id:this.getRequestId(), symbol:symbol, sort:sort}, (m)=>m.reddit ); }
+	redditBlock( user ):Promise<void>
+	{
+		return this.sendStringPromise( user, Requests.ERequests.RedditBlock );
+	}
 	reqOpenOrders():OrderObservable
 	{
 		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestOpenOrders}}) );
@@ -790,7 +794,7 @@ class Connection
 		return callback;
 	}
 
-	sendPromise2<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput?:TransformInput ):Promise<TResult>
+	sendPromise<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput?:TransformInput ):Promise<TResult>
 	{
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
 		return new Promise<TResult>( (resolve,reject)=>
@@ -801,36 +805,36 @@ class Connection
 
 	blockly( bytes:Uint8Array ):Promise<Uint8Array>
 	{
-		return this.sendPromise2<Requests.ICustom,Uint8Array>( "blockly", {"id": this.getRequestId(), "message": bytes}, (result:Results.IMessageUnion)=>{return result.custom;}, (x:Results.Custom)=>{return x.message;} );
+		return this.sendPromise<Requests.ICustom,Uint8Array>( "blockly", {"id": this.getRequestId(), "message": bytes}, (result:Results.IMessageUnion)=>{return result.custom;}, (x:Results.Custom)=>{return x.message;} );
 	}
 
 	sendGenericPromise<TResult>( type:Requests.ERequests, itemId:number, result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})${Requests.ERequests[type]}( ${itemId} )` );
-		return this.sendPromise2<Requests.IGenericRequest,TResult>( "genericRequest", {"id": id, "type": type, "itemId": itemId}, result, transform );
+		return this.sendPromise<Requests.IGenericRequest,TResult>( "genericRequest", {"id": id, "type": type, "itemId": itemId}, result, transform );
 	}
 	sendGenericArrayPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})${Requests.ERequests[type]}(${ids.join()})` );
-		return this.sendPromise2<Requests.IGenericRequests,TResult>( "genericRequests", {"id": id, "type": type, "ids": ids}, result, transform );
+		return this.sendPromise<Requests.IGenericRequests,TResult>( "genericRequests", {"id": id, "type": type, "ids": ids}, result, transform );
 	}
-	sendStringPromise2<TResult>( name:string, type:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
+	sendStringPromise<TResult>( name:string, type:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
 	{
-		return this.sendPromise2<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, transform );
+		return this.sendPromise<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, transform );
 	}
 	static transformStringList( result:Results.IStringList ){ return result.values; }
 	watchs():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
 	portfolios():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
-	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise2<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}, (wl:Results.IWatchList)=>{return wl.file;} ); };
-	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise2<void>( name, Requests.ERequests.DeleteWatchList ); };
-	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise2<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
-	googleLogin( token:string ):Promise<void>{ console.log( `(${this.requestId+1})googleLogin( ${token.length} )` ); return this.sendStringPromise2<void>( token, Requests.ERequests.GoogleLogin); };
+	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}, (wl:Results.IWatchList)=>{return wl.file;} ); };
+	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise<void>( name, Requests.ERequests.DeleteWatchList ); };
+	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
+	googleLogin( token:string ):Promise<void>{ console.log( `(${this.requestId+1})googleLogin( ${token.length} )` ); return this.sendStringPromise<void>( token, Requests.ERequests.GoogleLogin); };
 	query<T>( ql: string ):Promise<T>
 	{
 		console.log( `${ql}` );
-		return this.sendStringPromise2<T>( ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>result.stringResult, (rslt:Results.IStringResult)=>rslt.value.length ? JSON.parse(rslt.value).data : null );
+		return this.sendStringPromise<T>( ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>result.stringResult, (rslt:Results.IStringResult)=>rslt.value.length ? JSON.parse(rslt.value).data : null );
 	}
 	investors( id:ContractPK ):Promise<Edgar.IInvestors>
 	{
@@ -872,8 +876,8 @@ export class TwsService implements IGraphQL
 	{}
 
 	async reqManagedAccts():Promise<StringMap>
-	{ 
-		if( !TwsService.accounts ) 
+	{
+		if( !TwsService.accounts )
 		{
 			if( !this.authorizationService.loggedIn )
 			{
@@ -885,7 +889,7 @@ export class TwsService implements IGraphQL
 			const accounts = await this.connection.reqManagedAccts();
 			TwsService.accounts=accounts;
 		}
-		return TwsService.accounts; 
+		return TwsService.accounts;
 	}
 	reqNewsProviders():Promise<StringMap>{ return new Promise<StringMap>( (resolve, reject)=>{ if( TwsService.newsProviders ) resolve( TwsService.newsProviders ); else this.connection.reqNewsProviders().then( (x)=>{TwsService.newsProviders=x; resolve(x);} ).catch( (e)=>{reject(e);}); });}
 	news( contractId, providerCodes:string[], totalResults:number, start:Date=null, end:Date=null ):Promise<Results.NewsCollection>{ return this.connection.news(contractId, providerCodes, totalResults, start, end); }
@@ -939,6 +943,7 @@ export class TwsService implements IGraphQL
 	flexExecutions( account:string, start:Date, end:Date ):Observable<Results.Flex>{ return this.connection.flexExecutions(account, start, end); }
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number, blockId?:string ):OrderObservable{ return this.connection.placeOrder(contract, order, stop, stopLimit, blockId); }
 	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.connection.reddit( symbol, sort ); }
+	redditBlock( user ):Promise<void>{ return this.connection.redditBlock( user ); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
 	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }

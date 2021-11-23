@@ -25,7 +25,7 @@ export class Fundamentals
 
 	//dividends
 	get yield():number|null{ return this.get("YIELD"); }
-	get exDividendDate():Date|null{ return this.values?.DIV_NEXT_DAY ? DateUtilities.fromDays(this.values?.DIV_NEXT_DAY) : null; }
+	get exDividendDate():Date|null{ return this.values && this.values["DIV_NEXT_DAY"] ? DateUtilities.fromDays(this.values["DIV_NEXT_DAY"]) : null; }
 	get dividendPayableDate():Date|null{ return null; }
 	get dividendNextYear():number|null{ return this.get("DIV_NEXT_YEAR"); }
 	get dividendNext():number|null{ return this.get("DIV_NEXT"); }

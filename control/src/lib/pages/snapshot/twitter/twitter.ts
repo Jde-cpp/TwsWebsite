@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
-import { IProfile } from 'jde-framework';
+import { IErrorService, IProfile } from 'jde-framework';
 import { TwsService } from '../../../services/tws.service';
 import { TickDetails } from '../../../services/Tick';
 import {Settings} from 'jde-framework'
@@ -32,7 +32,7 @@ class Tweet
 @Component({ selector: 'twitter', styleUrls: ['twitter.css'], templateUrl: './twitter.html' })
 export class TwitterComponent implements OnInit, AfterViewInit, OnDestroy
 {
-	constructor( private tws:TwsService, @Inject('IProfile') private profileService:IProfile )
+	constructor( private tws:TwsService, @Inject('IProfile') private profileService:IProfile, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 	ngOnInit()
 	{
@@ -57,10 +57,9 @@ export class TwitterComponent implements OnInit, AfterViewInit, OnDestroy
 					this.collection.push( new Tweet(t) );
 				this.viewPromise = Promise.resolve( true );
 			},
-			complete: ()=>
-			{
-				this.collection.sort( (a, b)=>a.likesPerMinute-b.likesPerMinute );
-			}
+			complete: ()=>this.collection.sort( (a, b)=>a.likesPerMinute-b.likesPerMinute ),
+			error: (e)=>this.cnsl.error( e.message )
+
 		} );
 		let authors = await authorPromise;
 

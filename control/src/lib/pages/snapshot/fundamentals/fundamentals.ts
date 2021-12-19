@@ -191,7 +191,7 @@ export class FundamentalsComponent implements OnInit, AfterViewInit, OnDestroy
 
 	get open(){return this.tick.open;}
 	get previousClose(){return this.tick.close;}
-	get averageVolume(){ return this.tick.volumeAverage;}
+	get averageVolume(){ return MarketUtilities.numberDisplay(this.tick.volumeAverage, this.decimalPipe) ;}
 	get marketCapDisplay(){ return MarketUtilities.numberDisplay(this.value.marketCap, this.decimalPipe); }
 	get sharesDisplay(){ return MarketUtilities.numberDisplay(this.value.sharesOutstanding, this.decimalPipe); }
 	get priceEarnings(){ return this.tick.currentPrice/this.value.eps;}

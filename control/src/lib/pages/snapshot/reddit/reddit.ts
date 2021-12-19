@@ -53,8 +53,8 @@ export class RedditComponent implements OnInit, AfterViewInit, OnDestroy
 	block( article:Entry )
 	{
 		let txt = '<a href="https://www.reddit.com/user/';
-		let suffix = article.content.substr( article.content.indexOf(txt)+txt.length );
-		this.tws.redditBlock( suffix.substr(0, suffix.indexOf('"')) );
+		let suffix = article.content.substring( article.content.indexOf(txt)+txt.length );
+		this.tws.redditBlock( suffix.substring(0, suffix.indexOf('"')) );
 	}
 
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;

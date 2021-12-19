@@ -1,7 +1,7 @@
 <h2 mat-dialog-title>Configuration</h2>
 <mat-dialog-content>
 	<mat-form-field floatLabel="always">
-		<input matInput type=number placeholder="Delay (seconds)" [(ngModel)]="delay">
+		<input matInput type=number placeholder="Delay (seconds)" [formControl]="delay">
 	</mat-form-field>
 	<!-- <fieldset>
 		<legend>Short Interest</legend>

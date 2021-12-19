@@ -75,8 +75,6 @@ export class Tick implements ITickObserver
 			this.lastSize = size;
 		else if( type==Results.ETickType.Volume )
 			this.volume = size;
-		else if( type==Results.ETickType.AverageVolume )
-			this.volumeAverage = size;
 		else if( type!=Results.ETickType.LastTimestamp )
 			console.log( `onSizeTick( '${Results.ETickType[type]}', '${size}')` );
 	}

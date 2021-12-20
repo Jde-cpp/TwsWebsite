@@ -15,7 +15,6 @@ export class WatchComponent implements AfterViewInit, OnInit, OnDestroy
 	ngOnInit()
 	{
 		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Watch" : "Watch";
-		this.watchPromise = new Promise<boolean>( (resolve) => {this.resolve = resolve;} );
 	};
 
 	ngOnDestroy()
@@ -23,23 +22,23 @@ export class WatchComponent implements AfterViewInit, OnInit, OnDestroy
 		this.profile.save();
 	}
 
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		this.profile.loadedPromise.then( (value)=>
+		try
 		{
-			this.tws.watchs().then( (names)=>
-			{
-				names.push( "" );
-				this.names = names;
-				this.resolve( true );
-			} ).catch( (e)=>{this.cnsle.error(e.message, e); });
-		});
+			await this.profile.loadedPromise;
+			this.names = await this.tws.watchs();
+			this.names.push( "" );
+			this.viewPromise = Promise.resolve( true );
+		}
+		catch( e )
+		{
+			this.cnsle.error( e["message"], e );
+		}
 	}
 	names:string[];
-	names2:string[];
 	profile = new Settings<PageSettings>( PageSettings, "WatchComponent", this.profileService );
-	private resolve: Function|null = null;
-	watchPromise:Promise<boolean>;
+	viewPromise:Promise<boolean>;
 }
 
 class PageSettings

@@ -27,17 +27,20 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 	ngOnDestroy()
 	{}
 
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		let onFile = ( file )=>
-		{
-			this.file = file;
-			this.viewPromise = Promise.resolve(true);
-		};
-		if( this.name )
-			this.tws.watch( this.name ).then( (file)=>{ onFile( file ); }).catch( (e)=>{this.cnsle.error( e.message, e ); });
+		if( !this.name )
+			this.file = new Watch.File();
 		else
-			onFile( new Watch.File() );
+		{
+			try
+			{
+				this.file = await this.tws.watch( this.name );
+			}
+			catch( e ){ this.cnsle.error( e["message"], e );  }
+		}
+		console.log( `${this.file.name} - ${this.file.securities.length}` );
+		this.viewPromise = Promise.resolve(true);
 	}
 	onSelectedChanged( details:Results.IContractDetailsResult|null|undefined ){ this.selection = details; }
 	save():Promise<void>{ return this.tws.editWatch( this.file ); }

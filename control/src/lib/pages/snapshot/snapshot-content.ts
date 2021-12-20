@@ -279,7 +279,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		};
 		window.Highcharts = Highcharts;
 		this._charts.push( Highcharts.stockChart(showLarge ? 'chart2' : 'chart', options) );
-		console.log( `showChart2 finished` );
+		//console.log( `showChart2 finished` );
 	}
 	onError = ( error: Results.IError ):void =>
 	{

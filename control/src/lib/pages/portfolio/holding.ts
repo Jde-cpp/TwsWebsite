@@ -102,12 +102,13 @@ export class Holding extends TickDetails
 	get isLong():boolean{ return this.position>0; }
 	override get isOption():boolean{ return this.contract.securityType==IB.SecurityType.Option; }
 	get pnl():number{ return this.change*this.position*this.contract.multiplier; }
-	override get change():number
+	override get change():number//should be price change
 	{
-		if( this.contract.symbol=="AAPL" )
+		if( this.contract.symbol=="XOM" )
 			this.contract.multiplier = 1.0;
 
-		return this.marketValue/(this.position*this.contract.multiplier)-this.last;
+		//return this.marketValue/(this.position*this.contract.multiplier)-this.last;
+		return this.last-this.previousDay?.last;
 	}
 	get pricePrevious(){ return this.previousDay?.last; }
 	get marketValuePrevious(){ return this.pricePrevious*this.position*this.contract.multiplier; }

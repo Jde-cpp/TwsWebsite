@@ -1,4 +1,4 @@
-<mat-tab-group *ngIf="watchPromise | async">
+<mat-tab-group *ngIf="viewPromise | async">
 	<!--  [selectedIndex]="selected.value" (selectedIndexChange)="selected.setValue($event)" -->
 	<mat-tab *ngFor="let name of names; let i = index">
 		<ng-template mat-tab-label>{{name ? name : "WatchList1"}}</ng-template>

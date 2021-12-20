@@ -771,12 +771,9 @@ class Connection
 		return callback;
 	}
 
-	reqAllOpenOrders():OrderObservable
+	reqAllOpenOrders():Promise<Results.Orders>
 	{
-		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestAllOpenOrders}}) );
-		const callback = new OrderSubject();
-		this.openOrders.push( callback );
-		return callback;
+		return this.sendGenericPromise<Results.Orders>( Requests.ERequests.RequestAllOpenOrders, null, (m)=>m.orders, null );
 	}
 
 	reqOptionParams( underlyingId:number ):Promise<Results.IExchangeContracts>
@@ -945,7 +942,7 @@ export class TwsService implements IGraphQL
 	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.connection.reddit( symbol, sort ); }
 	redditBlock( user ):Promise<void>{ return this.connection.redditBlock( user ); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
-	reqAllOpenOrders():OrderObservable{ return this.connection.reqAllOpenOrders(); }
+	reqAllOpenOrders():Promise<Results.Orders>{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }

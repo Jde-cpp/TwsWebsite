@@ -40,15 +40,59 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 		this.profile.save();
 	}
 
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		this.profile.load().then( (value)=>{this.load();} );
+		await this.profile.load();
+		let data:Order[] = [];
+		let orders:Results.IOrders = await this.tws.reqAllOpenOrders();
+		for( let o of orders.orders )
+			data.push( new Order(o) );
+
+		this.data = new MyDataSource( this.settings.sort, data );
+		this.viewPromise = Promise.resolve( true );
+		for( let o of data )
+		{
+			const c = await this.tws.reqContractSingle( o.contract );
+			const isMarketOpen = MarketUtilities.isMarketOpen( c );
+			var previousDay = MarketUtilities.previousTradingDate( new Date(), MarketUtilities.contractHours(c.tradingHours) );
+			this.tws.reqPreviousDay( [c.contract.id] ).subscribe(
+			{
+				next: ( bar:Results.IDaySummary ) =>
+				{
+					if( isMarketOpen && bar.day>previousDay )
+					{
+						o.high = bar.high;
+						o.low = bar.low;
+						o.open = bar.open;
+					}
+					else if( isMarketOpen || bar.day==previousDay )
+						o.close = bar.close;
+					else if( bar.day>previousDay )
+					{
+						o.high = bar.high;//!isMarketOpen && day>previousDay
+						o.low = bar.low;
+
+						o.bid = bar.bid;
+						o.ask = bar.ask;
+						o.volume = ProtoUtilities.toNumber( bar.volume );
+						o.last = ProtoUtilities.toNumber( bar.close );
+					}
+				},
+				error: e=>{ console.error(e); }
+			});
+			if( isMarketOpen )
+			{
+				let s = this.tws.reqMktData( c.contract.id, [Requests.ETickList.CreditmanMarkPrice, Requests.ETickList.RTVolume], false );
+				s.subscribe2( o );
+				this.mktDataSubscriptions.set( c.contract.id, s );
+			}
+		}
 	}
-	load()
+	async load()
 	{
 		//this.data = null;
-		let orders:Order[] = [];
-		this.subscription = this.tws.reqAllOpenOrders();
+
+/*		this.subscription = this.tws.reqAllOpenOrders();
 		this.subscription.subscribe2(
 		{
 			status: (value:Results.IOrderStatus)=>
@@ -118,6 +162,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 			},
 			error:e=>{this.subscription=null;console.error(e); this.cnsle.error(e,null); }
 		});
+		*/
 	}
 	lastEquals;
 	isEditing( element, column )
@@ -183,6 +228,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 	displayedColumns:string[] = ["symbol","shares", "status", "Limit", "bidSize", "bid", "ask", "askSize", "last", "buttons"];
 	subscription:OrderObservable;
 	mktDataSubscriptions = new Map<number,TickObservable>();
+	viewPromise:Promise<boolean>;
 }
 
 class PageSettings

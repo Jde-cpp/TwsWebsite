@@ -7,10 +7,10 @@ export class PageSettings implements IAssignable<PageSettings>
 		this.previousContractIds.length=0;
 		for( const i of value.previousContractIds )
 			this.previousContractIds.push( i );
-		this.selectedIndex = value.selectedIndex;
+		this.selectedContractId = value.selectedContractId;
 		this.delay = value.delay;
 	}
 	previousContractIds:number[]=[756733];
-	selectedIndex:number=0;
+	selectedContractId:number=0;
 	delay:number=0;
 }

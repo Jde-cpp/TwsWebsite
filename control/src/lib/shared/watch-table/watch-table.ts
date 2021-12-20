@@ -14,11 +14,12 @@ import { Subject } from 'rxjs';
 import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { IProfile } from 'jde-framework';
 
-@Component({selector: 'watch-table.main-content.mat-drawer-container', templateUrl: './watch-table.html', styleUrls:['./watch-table.scss']})
+@Component({selector: 'watch-table', templateUrl: './watch-table.html', styleUrls:['./watch-table.scss']})
 export class WatchTableComponent implements OnInit, AfterViewInit
 {
 	constructor( private tws : TwsService, @Inject('IErrorService') private cnsle: IErrorService, private componentFactoryResolver:ComponentFactoryResolver, @Inject('IProfile') private profileService: IProfile )
-	{}
+	{
+	}
 	ngOnInit()
 	{
 		this.changeTable.subscribe( this.onChangeTable );
@@ -128,36 +129,37 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			this.subscriptions.set( detail.contract.id, subscription );
 		}).catch( (e)=>{ console.log(e); } );
 	}
-	load()
+	async load()
 	{
-		const finally_ = ()=>{ this.addRow(); this.viewPromise = Promise.resolve(true); };
 		const ids = this.file.securities.filter( (x)=>x.contractId ).map( (x)=>x.contractId );
+		let contracts:Array<Results.IContractDetail[]>=null;
 		if( ids.length )
 		{
-			const process = ( contracts:Array<Results.IContractDetail[]> )=>
+			try
 			{
-				for( const entry of this.file.securities )
-				{
-					const row = this.addRow();
-					row.shares = entry.shares;
-					const details = contracts.find( (x)=>x.length && x[0].contract.id==entry.contractId );
-					if( details && details.length==1 )
-						this.setRowDetail( row, details[0] );
-					else
-						console.log( `reqIds returned contract with ${!details ? 0 : details.length} records` );
-				}
+				contracts = await this.tws.reqIds( ids );
 			}
-			this.tws.reqIds( ids ).then( ( contracts:Array<Results.IContractDetail[]> )=>
+			catch( e )
 			{
-				process( contracts );
-			}).catch( (obj)=>
-			{
-				console.error( obj.error.message );
-				process( obj.results );
-			}).finally( ()=>finally_() );
+				console.error( e["error"].message );
+				contracts = e["results"];
+			}
 		}
-		else
-			finally_();
+		if( contracts && contracts.length )
+		{
+			for( const entry of this.file.securities )
+			{
+				const row = this.addRow();
+				row.shares = entry.shares;
+				const details = contracts.find( (x)=>x.length && x[0].contract.id==entry.contractId );
+				if( details && details.length==1 )
+					this.setRowDetail( row, details[0] );
+				else
+					console.log( `reqIds returned contract with ${!details ? 0 : details.length} records` );
+			}
+		}
+		this.addRow();
+		this.viewPromise = Promise.resolve( true );
 	}
 	viewable( columnId:string ):boolean
 	{

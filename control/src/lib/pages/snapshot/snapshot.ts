@@ -20,39 +20,47 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 
 	ngOnInit():void
 	{}
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
-		this.profile2.loadedPromise.then( ()=>
+		await this.profile.loadedPromise;
+		//console.log( `selectedContractId=${JSON.stringify(this.profile.value.selectedContractId)}` );
+		this.selected.valueChanges.subscribe( index=>
 		{
-			this.tws.reqIds( this.previousContractIds ).then( (results)=>
+			var id = this.previousContractIds[index];//13977=xom, 51529211=GLD, 76792991=tsla, 756733=spy, 5794=clx
+			if( this.settings.selectedContractId != id )
 			{
-				this.details = [];
-				for( var details of results )
-				{
-					if( details.length==1 )
-						this.details.push( details[0] );
-					else if( details.length>1 )
-						console.error( `{details.detail[0].contract.symbol} has {details.detail.length} contracts` );
-					else
-						console.error( `contract returned zero contracts.` );
-				}
-				this.selected.setValue( this.settings.selectedIndex );
-				this.viewPromise = Promise.resolve( true );
-			}).catch( e=>this.cnsle.error("Could not connect", e) );
-		});
-		this.selected.valueChanges.subscribe( value=>
-		{
-			if( this.settings.selectedIndex != value )
-			{
-			    this.settings.selectedIndex = value;
-			    this.profile2.save();
+				console.log( `SaveProfile - index=${index}, contractId=${id}, previous=${this.settings.selectedContractId}` );
+				this.settings.selectedContractId = id;
+				this.profile.save();
 			}
 		});
+		try
+		{
+			const results = await this.tws.reqIds( this.previousContractIds );
+			this.details = [];
+			for( const id of this.previousContractIds )
+			{
+				const details = results.find( (x)=>x.length>0 && x[0].contract.id==id );
+				if( details.length==1 )
+					this.details.push( details[0] );
+				else if( details.length!=1 )
+					console.error( `{details.detail[0].contract.symbol} has {details.detail.length} contracts` );
+			}
+			const index = this.settings.selectedContractId ? this.previousContractIds.indexOf(this.settings.selectedContractId) : 0;
+			console.log( `selected - index=${index}, contractId='${this.settings.selectedContractId}' ids=${this.previousContractIds}` );
+			this.selected.setValue( index );
+			this.viewPromise = Promise.resolve( true );
+		}
+		catch( e )
+		{
+			this.cnsle.error( "Could not connect", e );
+		}
 	}
 	ngOnDestroy()
 	{
-		this.settings.selectedIndex = this.selected.value;
-		this.profile2.save();
+		console.log( `selected=${this.previousContractIds[this.selected.value()]} settings=${this.settings.selectedContractId}` );
+		console.log( `save profile - contract=${this.settings.selectedContractId}` );
+		this.profile.save();
 	}
 	onSymbol( detail:Results.IContractDetail )
 	{
@@ -62,7 +70,8 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 			this.details.unshift( detail );
 			this.previousContractIds.unshift( detail.contract.id );
 			this.selected.setValue( 0 );
-			this.profile2.save();
+			console.log( `save profile - contract=${this.settings.selectedContractId}` );
+			this.profile.save();
 			setTimeout( ()=> this.symbolTabs.selectedIndex = 0, 0 );
 		}
 		//this.tabEvents.next( index );
@@ -100,8 +109,9 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	details:Results.IContractDetail[];
 	selected = new FormControl(0);
 	get selectedIndex(){ return this.selected.value; }
-	profile2:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
-	get settings():PageSettings{ return this.profile2 ? this.profile2.value : null; }
+	//profile2:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
+	get profile(){return this.#profile || (this.#profile=new Settings<PageSettings>(PageSettings, "SnapshotComponent", this.profileService));} #profile:Settings<PageSettings>;
+	get settings():PageSettings{ return this.profile.value; }
 
 
 	@ViewChild( 'symbolTabs', {static: false} ) symbolTabs;

@@ -29,7 +29,7 @@ class Tweet
 	get url(){ return "https://twitter.com/anyuser/status/"+this.id; }
 }
 
-@Component({ selector: 'twitter', styleUrls: ['twitter.css'], templateUrl: './twitter.html' })
+@Component({ selector: 'twitter', styleUrls: ['twitter.scss'], templateUrl: './twitter.html' })
 export class TwitterComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private tws:TwsService, @Inject('IProfile') private profileService:IProfile )

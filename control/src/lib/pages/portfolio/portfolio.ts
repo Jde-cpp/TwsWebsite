@@ -64,12 +64,9 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	onSettingsLoaded()
 	{
 		console.log( "PortfolioComponent::onSettingsLoaded" );
-		//console.log( "this.viewPromise2=true" );
-		//this.viewPromise = Promise.resolve( true );
 
 		this.tws.reqManagedAccts().then( (numbers)=>
 		{
-			//this.cdr.detectChanges();
 			this.allAccounts.clear();
 			for( let account in numbers )
 				this.allAccounts.set( account, numbers[account] );
@@ -184,18 +181,17 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		{
 			next: ( bar:Results.IDaySummary ) =>
 			{
-				var holding = this.holdings.find( x=>x.contractId==bar.contractId );
-				holding.setDaySummary( bar,  MarketUtilities.previousByType(holding.contract.exchange, IB.SecurityType.Stock) );
+				var h = this.holdings.find( x=>x.contractId==bar.contractId );
+				//if( h.contract.symbol=="XOM" )
+				//	debugger;
+				h.setDaySummary( bar,  MarketUtilities.previousByType(h.contract.exchange, IB.SecurityType.Stock) );
 			},
 		});
 		console.log( "this.viewPromise=true" );
 		this.viewPromise = true;//Promise.resolve( true );
-		//this.cdr.detectChanges();
 	}
 	loadPreviousDay( contract:IB.IContract, isMarketOpen:boolean, holding:Holding, day:number )
 	{
-//		if( contract.symbol=="AXE" )
-//			console.log( `AXE day=${day}` );
 		holding.reqPrevious( this.tws, day ).catch( (e)=>
 		{
 			if( e.code==322 )

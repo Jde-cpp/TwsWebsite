@@ -30,14 +30,16 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth, private cdr: ChangeDetectorRef, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
 		this.profileService.get<Settings>( PortfolioComponent.profileKey ).then( (value)=>
 		{
 			this.settings = value;
-			if( !this.authorizationService.enabled() )
-				this.tws.googleLogin( "" ).then( ()=>this.onSettingsLoaded() ).catch( (e)=>{debugger; this.cnsl.error(e.message);} );
-			else if( !this.authorizationService.loggedIn )
+/*			if( ! )
+			{
+				//this.tws.googleLogin( "" ).then( ()=>this.onSettingsLoaded() ).catch( (e)=>{debugger; this.cnsl.error(e.message);} );
+			}
+			else*/ if( this.authorizationService.enabled() && !this.authorizationService.loggedIn )
 			{
 				console.log( "Portfolio.authorizationService.subscribe" );
 				this.authorizationSubscription = this.authorizationService.subscribe();
@@ -61,22 +63,20 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 
 	}
 
-	onSettingsLoaded()
+	async onSettingsLoaded()
 	{
 		console.log( "PortfolioComponent::onSettingsLoaded" );
 
-		this.tws.reqManagedAccts().then( (numbers)=>
-		{
-			this.allAccounts.clear();
-			for( let account in numbers )
-				this.allAccounts.set( account, numbers[account] );
-			this.selectedAccounts = this.settings.selectedAccounts.filter( accountId=>this.allAccounts.has(accountId) );
-			if( !this.selectedAccounts.length )
-				this.selectedAccounts = [ ...this.allAccounts.keys() ];
-			console.log( `selectedAccounts=[${this.selectedAccounts.join()}]` );
-			for( var accountId of this.selectedAccounts )
-				this.subscribe( accountId );
-		});
+		const numbers = await this.tws.reqManagedAccts();
+		this.allAccounts.clear();
+		for( let account in numbers )
+			this.allAccounts.set( account, numbers[account] );
+		this.selectedAccounts = this.settings.selectedAccounts.filter( accountId=>this.allAccounts.has(accountId) );
+		if( !this.selectedAccounts.length )
+			this.selectedAccounts = [ ...this.allAccounts.keys() ];
+		console.log( `selectedAccounts=[${this.selectedAccounts.join()}]` );
+		for( var accountId of this.selectedAccounts )
+			this.subscribe( accountId );
 	}
 	subscribe( accountId:string )
 	{

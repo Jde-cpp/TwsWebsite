@@ -18,15 +18,16 @@ export class ObservableUtilities
 	}
 	static toPromiseSingle<T>( fnctn:()=>Observable<T>, expectNull:boolean=true ):Promise<T>
 	{
-		return new Promise<T>( (resolve,reject)=>
+		return new Promise<T>( async (resolve,reject)=>
 		{
-			this.toPromise( fnctn, expectNull ).then( (results)=>
+			try
 			{
-				if( results.length==1 )
-					resolve( results[0] );
-				else
-					reject( {results: results, error:null} );
-			}).catch( (e)=>reject(e) );
+				const results = await this.toPromise( fnctn, expectNull );
+				if( results.length>1 )
+					throw `not expecting multiple results... results.length=${results.length}`;
+				resolve( results[0] );
+			}
+			catch( e ){reject(e);}
 		});
 	}
 }

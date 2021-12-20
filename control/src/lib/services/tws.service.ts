@@ -4,7 +4,7 @@ import { Subject,Observable, of, throwError } from 'rxjs';
 import{ TickSubject, TickObservable } from './ITickObserver'
 import {Order,OrderSubject,OrderObservable} from './IOrderObserver'
 import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'
-import { ProtoUtilities } from 'jde-framework';
+import { IErrorService, ProtoUtilities } from 'jde-framework';
 import {ObservableUtilities} from '../utilities/ObservableUtilities';
 import { Table, IGraphQL, Mutation, DateUtilities } from 'jde-framework';
 import { ContractPK, MarketUtilities } from '../utilities/marketUtilities';
@@ -45,11 +45,21 @@ type Resolve = (x:any)=>void;
 type IsComplete=(x:any)=>boolean;
 type Reject = (x:Results.IError)=>void;
 type TransformInput = (x:any)=>any;
+
 export class RequestPromise
 {
 	constructor( public result:GetResult, public resolve:Resolve, public reject:Reject, public transformInput:TransformInput=null )
 	{}
-};
+}
+
+/*export class NoExceptPromise extends RequestPromise
+{
+	constructor( result:GetResult, resolve:Resolve, transformInput:TransformInput=null )
+	{
+		super( result, resolve, null, transformInput );
+	}
+}
+*/
 
 export class RequestObservable
 {
@@ -65,7 +75,7 @@ type AccountUpdateMultiCallback = (accountUpdate: Results.IAccountUpdateMulti)=>
 type AccountUpdateType = [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>];
 class Connection
 {
-	constructor()
+	constructor( private cnsl: IErrorService )
 	{
 		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		this.socket.subscribe(
@@ -78,7 +88,7 @@ class Connection
 	{
 		const bytearray = new Uint8Array( event.data );
 		const transmission = Results.Transmission.decode( bytearray );
-		for( const message of transmission.messages )
+		for( const message of <Results.MessageUnion[]>transmission.messages )
 		{
 			try
 			{
@@ -285,7 +295,7 @@ class Connection
 					else
 					{
 						debugger;
-						console.error( "unknown message:  "+(<Results.MessageUnion>message).toJSON() );
+						console.error( "unknown message:  "+message.toJSON() );
 					}
 				}
 				else if( message.positionMulti )
@@ -343,7 +353,7 @@ class Connection
 						}
 					}
 					if( !found )
-						console.error( `unknown message type:  '${(<Results.MessageUnion>message).Value}'` );
+						console.error( `unknown message:  ${JSON.stringify( message[message.Value] )}` );
 				}
 			}
 			catch( e )
@@ -395,12 +405,18 @@ class Connection
 			callback.reject( {requestId: requestId, code:-1, message:"Connection to Tws Websocket failed."} );
 	}
 
-	checkRequestType( typeRequests:Map<number, RequestPromise>, id:number, error:Results.IError ):boolean
+	checkRequestType( typeRequests:Map<number, RequestPromise>, id:number, e:Results.IError ):boolean
 	{
 		const handled = typeRequests.has( id );
 		if( handled )
 		{
-			typeRequests.get( id ).reject( error );
+			if( typeRequests.get( id ).reject )
+				typeRequests.get( id ).reject( e );
+			else
+			{
+				console.log( `(${id})${e.message}` )
+				this.cnsl.error( e.message );
+			}
 			typeRequests.delete( id );
 		}
 		return handled;
@@ -410,56 +426,55 @@ class Connection
 	{
 		//debugger;
 		const id = error.requestId;
-		if( !Connection.errorIfPresent(id, this.contractCallbacks, error) )
+		if( Connection.errorIfPresent(id, this.contractCallbacks, error) )
+			()=>{};//noop
+		else if( this.orders.has(id) )
 		{
-			if( this.orders.has(id) )
-			{
-				if( this.orders.get(id).callback )
-					this.orders.get(id).callback.error( error );
-				else
-					console.error( error.message, error );
-			}
-			else if( this.previousDayCallbacks.has(id) )
-			{
-				this.previousDayCallbacks.get( id )?.error( error );
-				this.previousDayCallbacks.delete( id );
-			}
-			else if( this.generalCallbacks.has(id) )
-			{
-				this.generalCallbacks.get( id )[1]( error );
-				this.generalCallbacks.delete( id );
-			}
-			else if( this.fundamentalCallbacks.has(id) )
-			{
-				this.fundamentalCallbacks.get( id )[1]( error );
-				this.fundamentalCallbacks.delete( id );
-			}
-			else if( this.observers.has(id) )
-			{
-				this.observers.get( id ).reject( error );
-				this.observers.delete( id );
-			}
-			else if( this.marketDataCallbacks.has(id) )
-			{
-				const callback = this.marketDataCallbacks.get( id );
-				callback.error( error );
-				this.marketDataCallbacks.delete( id );
-			}
-			else if( this.flexCallbacks.get(id) )
-			{
-				const callback = this.flexCallbacks.get( id );
-				callback.error( error );
-				this.flexCallbacks.delete( id );
-			}
+			if( this.orders.get(id).callback )
+				this.orders.get(id).callback.error( error );
 			else
-			{
-				var requestsTypes:Map<number, RequestPromise>[] = [ this.callbacks, this.optionParamCallbacks ];
-				let handled = false;
-				for( let i=0; i<requestsTypes.length && !handled; ++i )
-					handled = this.checkRequestType( requestsTypes[i], id, error );
-				if( !handled )
-					console.error( `error code='${error.code}' message='${error.message}'` );//todo stop request.
-			}
+				console.error( error.message, error );
+		}
+		else if( this.previousDayCallbacks.has(id) )
+		{
+			this.previousDayCallbacks.get( id )?.error( error );
+			this.previousDayCallbacks.delete( id );
+		}
+		else if( this.generalCallbacks.has(id) )
+		{
+			this.generalCallbacks.get( id )[1]( error );
+			this.generalCallbacks.delete( id );
+		}
+		else if( this.fundamentalCallbacks.has(id) )
+		{
+			this.fundamentalCallbacks.get( id )[1]( error );
+			this.fundamentalCallbacks.delete( id );
+		}
+		else if( this.observers.has(id) )
+		{
+			this.observers.get( id ).reject( error );
+			this.observers.delete( id );
+		}
+		else if( this.marketDataCallbacks.has(id) )
+		{
+			const callback = this.marketDataCallbacks.get( id );
+			callback.error( error );
+			this.marketDataCallbacks.delete( id );
+		}
+		else if( this.flexCallbacks.get(id) )
+		{
+			const callback = this.flexCallbacks.get( id );
+			callback.error( error );
+			this.flexCallbacks.delete( id );
+		}
+		else
+		{
+			var requestsTypes:Map<number, RequestPromise>[] = [ this.callbacks, this.optionParamCallbacks ];
+			let handled = false;
+			for( let i=0; i<requestsTypes.length && !handled; ++i )
+				handled = this.checkRequestType( requestsTypes[i], id, error );
+			if( !handled )
+				console.error( `error code='${error.code}' message='${error.message}'` );//todo stop request.
 		}
 	}
 
@@ -554,6 +569,18 @@ class Connection
 		}
 		if( ids.length )
 			this.cancelMarketData( ids );
+	}
+	averageVolume( contractIds:number[] ):Observable<number>
+	{
+		const id = this.getRequestId();
+		console.log( `(${id})averageVolume( ${contractIds.join(",")} )` );
+		const msg = new Requests.RequestUnion( {genericRequests:{id: id, type: Requests.ERequests.AverageVolume, ids: contractIds}} );
+		const callback = new Subject<number>();
+		let complete = contractIds.length==1 ? ()=>true : (v)=>!v.contractId;
+		var observable = new RequestObservable( (m)=>m.contractValue, (v:Results.ContractValue)=>callback.next(v.value), (v)=>{let c=complete(v); if(c)callback.complete(); return c;}, (e)=>callback.error(e) );
+		this.observers.set( id, observable );
+		this.send( msg );
+		return callback;
 	}
 	private cancelMarketData( ids:number[], error:string=null )
 	{
@@ -794,9 +821,9 @@ class Connection
 	sendPromise<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput?:TransformInput ):Promise<TResult>
 	{
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
-		return new Promise<TResult>( (resolve,reject)=>
+		return new Promise<TResult>( (resolve/*,reject*/)=>
 		{
-			this.callbacks.set( value["id"], new RequestPromise(result, resolve, reject, transformInput) );
+			this.callbacks.set( value["id"], new RequestPromise(result, resolve, null, transformInput) );//todo also do a proper rejection
 		});
 	}
 
@@ -869,7 +896,7 @@ class Connection
 @Injectable( {providedIn: 'root'} )
 export class TwsService implements IGraphQL
 {
-	constructor( @Inject('IAuth') public authorizationService:IAuth )
+	constructor( @Inject('IAuth') public authorizationService:IAuth, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 
 	async reqManagedAccts():Promise<StringMap>
@@ -894,13 +921,7 @@ export class TwsService implements IGraphQL
 
 	reqContract( contract:IB.IContract ):Promise<Results.IContractDetail[]>{ return this.connection.reqContractDetails(contract); }
 	reqContractSingle( contract:IB.IContract ):Promise<Results.IContractDetail>{ return new Promise<Results.IContractDetail>( (resolve,reject)=>this.reqContract(contract).then( (results)=>{if( results.length==1 )resolve( results[0] ); else reject( {results: results, error:null} ); }).catch( (e)=>reject(e) )); } //TODO make new call to return single or error.
-	reqIds( contractIds:number[] ):Promise<Results.IContractDetail[][]>
-	{
-		return ObservableUtilities.toPromise<Results.IContractDetail[]>( ()=>
-		{
-			return this.connection.reqContractDetailsMulti(contractIds);
-		}, false);
-	}
+	reqIds( contractIds:number[] ):Promise<Results.IContractDetail[][]>{ return ObservableUtilities.toPromise<Results.IContractDetail[]>( ()=>this.connection.reqContractDetailsMulti(contractIds), false ); }
 	reqSymbol( symbol:string ):Promise<Results.IContractDetail[]>{ return this.reqContract({symbol: symbol}); }
 	reqSymbolSingle( symbol:string ):Promise<Results.IContractDetail>
 	{
@@ -925,6 +946,7 @@ export class TwsService implements IGraphQL
 	cancelPositions( subscription: Observable<Results.IPositionMulti> ):void{ return this.connection.cancelPositions( subscription ); }
 	accountUpdatesUnsubscribe( requests:Map<string,AccountUpdateType> ){ this.connection.accountUpdatesUnsubscribe(requests); };
 	accountUpdateUnsubscribe( accountId:string, request:AccountUpdateType ){ this.connection.accountUpdateUnsubscribe(accountId,request); };
+	averageVolume( contractIds:number[] ):Observable<number>{ return this.connection.averageVolume(contractIds); };
 	blockly( bytes:Uint8Array ):Promise<Uint8Array>{ return this.connection.blockly(bytes); }
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
@@ -1003,5 +1025,5 @@ export class TwsService implements IGraphQL
 	private static mutations:Array<Mutation>;
 	private static accounts:StringMap;
 	private static newsProviders:StringMap;
-	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( /*this.cnsl*/); return this._connection;} private _connection:Connection;
+	private get connection():Connection{if( this._connection==null ) this._connection = new Connection( this.cnsl ); return this._connection;} private _connection:Connection;
 }

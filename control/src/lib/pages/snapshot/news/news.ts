@@ -26,6 +26,7 @@ abstract class Article
 	abstract readonly disabled:boolean;
 	abstract readonly display:string;
 	abstract readonly header:string;
+	abstract readonly source:string;
 	get imgSrc():string{return "";}
 	abstract readonly link:string;
 	abstract articleLoad( tws:TwsService ):Promise<string>;
@@ -45,6 +46,13 @@ class GoogleArticle extends Article
 	get article():string{ return this.goog.description; }
 	override get class(){ return ""; }
 	get date(){ return new Date( this.goog.publicationDate*1000 ); }
+	get source()
+	{
+		const base = this.goog.sourceUrl.substring( this.goog.sourceUrl.indexOf("//")+2 );
+		const parts = base.split( '.' );
+		return parts.length>2 ? parts[1] : parts[0];
+
+	}
 	disabled:boolean=true;
 	get display():string
 	{
@@ -56,22 +64,7 @@ class GoogleArticle extends Article
 	get header(){ return this.goog.title; }
 	override get imgSrc():string
 	{
-		//let url = `${this.goog.sourceUrl}/favicon.ico`;
 		let url = `http://www.google.com/s2/favicons?domain=${this.goog.sourceUrl}`;
-/*		if( this.goog.sourceUrl=="https://seekingalpha.com" )
-			url = `${this.goog.sourceUrl}/samw/favicon.ico`;
-		else if( this.goog.sourceUrl=="https://www.bloomberg.com" )
-			url = "https://assets.bwbx.io/s3/javelin/public/hub/images/favicon-black-63fe5249d3.png";
-		else if( this.goog.sourceUrl=="https://www.investmentnews.com" )
-			url = "https://s32566.pcdn.co/wp-content/themes/pbc/src/images/favicons/favicon-32x32.png";
-		else if( this.goog.sourceUrl=="https://www.etfstream.com" )
-			url = "https://www.etfstream.com/images/cropped-ETFStream-02-32x32.png";
-		else if( this.goog.sourceUrl=="https://www.financialexpress.com" )
-			url = "https://images.financialexpress.com/2021/02/FE-favicon-32x32.png";
-		else if( this.goog.sourceUrl=="https://www.investors.com" )
-			url = "https://www.google.com/s2/favicons?domain=newhome.investors.com";
-		else if( this.goog.sourceUrl=="https://www.fxstreet.com" )
-			url = "https://staticcontent.fxstreet.com/website/static-html/favicon.ico";*/
 		return url;
 	}
 	get link():string{ return this.goog.link; }
@@ -124,6 +117,7 @@ class TwsArticle extends Article
 		return this.ib.headline.substr( start );
 	}
 	get link():string{ return ""; }
+	get source(){ return this.ib.providerCode; }
 }
 
 @Component({ selector: 'news', styleUrls: ['news.scss'], templateUrl: './news.html' })

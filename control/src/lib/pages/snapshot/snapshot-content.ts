@@ -1,4 +1,5 @@
 import { AfterViewInit, ElementRef, EventEmitter, Inject, Input, Component, OnInit, OnDestroy, Output,  ViewChild, ChangeDetectorRef } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import {MatDialog} from '@angular/material/dialog';
 import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
@@ -17,10 +18,12 @@ import { TwsService } from '../../services/tws.service';
 import { TickObservable } from '../../services/ITickObserver';
 import { TickDetails } from '../../services/Tick';
 import { MarketUtilities } from 	'../../utilities/marketUtilities';
+import {ObservableUtilities} from '../../utilities/ObservableUtilities';
 
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests';  import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+//import { Str } from 'projects/jde-framework/src/lib/utilities/StringUtils';
 
 export class SymbolSettings implements IAssignable<SymbolSettings>
 {
@@ -37,7 +40,7 @@ export class SymbolSettings implements IAssignable<SymbolSettings>
 @Component( {selector: 'snapshot-content', styleUrls: ['snapshot.css'], templateUrl: './snapshot-content.html'} )
 export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestroy
 {
-	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService, private decimalPipe: DecimalPipe )
 	{}
 
 	ngOnInit()
@@ -140,6 +143,8 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 
 		this.subscription = this.tws.reqMktData( this.contract.id, ticks, false );
 		this.subscription.subscribe2( this.tick );
+		tick.volumeAverage = await ObservableUtilities.toPromiseSingle<number>( ()=>this.tws.averageVolume([this.contract.id]), false );
+		console.log( `volume = ${tick.volume*100}, volumeAverage = ${tick.volumeAverage} ${Math.round(tick.volume*100/tick.volumeAverage*10)/10}` );
 	}
 	onTransactClick( buy:boolean )
 	{
@@ -313,30 +318,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;
 	tick: TickDetails;
-	get volumeDisplay()
-	{
-		var display = null;
-		if( this.tick )
-		{
-			var volume = this.tick.volume*100;
-			let divisor = 1;  let fixedPlaces = 0; let suffix = "";
-			let calc = ( amount:number, sffx:string ):boolean=>
-			{
-				if( volume>amount )
-					divisor = amount;
-				if( divisor!=1 )
-				{
-					fixedPlaces =  volume>amount*10 ? volume>amount*100 ? 0 : 1 : 2;
-					suffix = sffx;
-				}
-				return divisor!=1;
-			};
-
-			calc( 1_000_000, "M" ) || calc( 1_000, "K" );
-			volume/=divisor;
-			display = (fixedPlaces==0 ? volume.toString() : (volume).toFixed(fixedPlaces))+suffix;
-		}
-		return display;
-	}
+	get volumeDisplay(){ return MarketUtilities.numberDisplay( this.tick.volume, this.decimalPipe ); }
 
 }

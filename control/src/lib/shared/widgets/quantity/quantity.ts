@@ -21,8 +21,8 @@ export class QuantityComponent
 	{
 		if(this._value!=null && this._value!=value)
 		{
-			  this.valueChange.emit(value);
-			  console.log( `value=${value}` );
+			this.valueChange.emit(value);
+			//console.log( `value=${value}` );
 		}
 		if( this.initial==null ) this.initial=value; this._value=value;
 	} get value(){ return this._value;} _value:number|null=null;

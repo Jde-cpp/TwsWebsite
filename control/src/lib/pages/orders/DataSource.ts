@@ -1,16 +1,17 @@
-import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import {CollectionViewer, DataSource} from '@angular/cdk/collections';
-import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import { Observable, Subject } from 'rxjs';
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import {IOrderObserver, Order} from '../../services/IOrderObserver';
 import {IData} from '../../shared/summary/summary'
 import { TickEx } from '../../services/Tick';
 
-export class Order extends TickEx
+export class OrderView extends TickEx //implements IOrderObserver
 {
-	constructor( public openOrder:Results.IOpenOrder )
+	constructor( public openOrder:Order )
 	{
 		super( openOrder.contract, null );
+		//openOrder.callback.subscribe2( this );
 	}
 	get id(){ return this.openOrder.order.id; }
 	get commission(){ return this.openOrder.state.commission; }
@@ -25,31 +26,30 @@ export class Order extends TickEx
 	//get last(){ return this.tick ? this.tick.price : null; }
 	get limit(){ return this.openOrder.order.limit; }
 	set limitNew(value){ this.#limitNew = this.quantityDisplay==value ? null : value; } get limitNew(){return this.#limitNew;} #limitNew:number|null=null;
-	get statusString(){ return this.openOrder.state.status; }
+	get statusString(){ return this.status?.status==Results.EOrderStatus.Cancelled ? "Canceled" : this.openOrder.state?.status; }
 	//get startTime(){ return this.openOrder.order.activeStartTime; }
 	//get stopTime(){ return this.openOrder.order.activeStopTime; }
-
-	status:Results.IOrderStatus;
+	get status():Results.IOrderStatus{ return this.openOrder.lastStatus; }
 }
 
-export class MyDataSource implements IData, DataSource<Order>
+export class MyDataSource implements IData, DataSource<OrderView>
 {
-	constructor( public sortOptions:Sort, public values:Order[] )
+	constructor( public sortOptions:Sort, public values:OrderView[] )
 	{
 	}
 /*	next(  )
 	{
-		this.values.push( new Order(order) );
+		this.values.push( new OrderView(order) );
 	}*/
 	nextStatus( status:Results.IOrderStatus)
 	{
 		//this.values.find( app=>app.id==status.ApplicationId );
 	}
-	connect( table:CollectionViewer ): Observable<readonly Order[]>
+	connect( table:CollectionViewer ): Observable<readonly OrderView[]>
 	{
 		if( !this.observable )
 		{
-			this.observable = new Subject<readonly Order[]>();
+			this.observable = new Subject<readonly OrderView[]>();
 			if( this.values.length )
 				setTimeout( ()=>{this.setPage();}, 1 );
 		}
@@ -96,8 +96,8 @@ export class MyDataSource implements IData, DataSource<Order>
 		});
 		this.setPage();
 	}
-//	private values:Order[]=[];
-	observable:Subject<readonly Order[]>;
+//	private values:OrderView[]=[];
+	observable:Subject<readonly OrderView[]>;
 	get length():number{ return this.values ? this.values.length : 0; }
 	contracts = new Map<number,Results.IContractDetailsResult>();
 	get count():number{return this.values.length;}

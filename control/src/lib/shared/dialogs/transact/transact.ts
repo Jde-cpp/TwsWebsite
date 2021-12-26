@@ -80,6 +80,7 @@ export class TransactDialog implements AfterViewInit
 		subscription.subscribe2(
 		{
 			status: ( value:Results.IOrderStatus )=>{ console.log( `status='${value}'` ); },
+			state: (x:Results.IOrderState )=>{ console.log( `state='${x}'` ); },
 			open: ( value:Results.IOpenOrder )=>
 			{
 				if( !initial && !value.state.equityWithLoanBefore )

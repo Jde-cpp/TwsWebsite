@@ -116,6 +116,7 @@ export class OptionEntryDialog implements OnDestroy
 		subscription.subscribe2(
 		{
 			status: ( value:Results.IOrderStatus )=>{ debugger; console.log( `status='${value}'` ); },
+			state: (x:Results.IOrderState )=>{ debugger; console.log( `status='${x}'` ); },
 			open: ( value:Results.IOpenOrder )=>
 			{
 				if( !initial && !value.state.equityWithLoanBefore )

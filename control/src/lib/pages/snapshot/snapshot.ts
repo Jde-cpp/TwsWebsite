@@ -58,7 +58,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 	}
 	ngOnDestroy()
 	{
-		console.log( `selected=${this.previousContractIds[this.selected.value()]} settings=${this.settings.selectedContractId}` );
+		//console.log( `selected=${this.previousContractIds[this.selected.value]} settings=${this.settings.selectedContractId}` );
 		console.log( `save profile - contract=${this.settings.selectedContractId}` );
 		this.profile.save();
 	}

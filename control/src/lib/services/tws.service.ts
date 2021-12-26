@@ -138,11 +138,22 @@ class Connection
 					else
 						this.cancelMarketData( [x.requestId], `(${x.requestId})no callbacks for optionCalculation` );
 				}
+				else if( message.orderUpdate )
+				{
+					let p = this.orders.get( message.orderUpdate.status.orderId );
+					if( p )
+					{
+						p.setStatus( message.orderUpdate.status );
+						p.state = message.orderUpdate.state;
+					}
+					else
+						this.addOrder( message.orderUpdate );
+				}
 				else if( message.orderStatus || message.openOrder )
 				{
 					const isOrderStatus:boolean = message.orderStatus!=null;
 					const orderId = isOrderStatus ? message.orderStatus.id : message.openOrder.order.id;
-					const webId = isOrderStatus ? orderId : message.openOrder.webId;
+					const webId = isOrderStatus ? orderId : message.openOrder.requestId;
 					const original = this.orders.get( webId );
 					if( original )
 					{
@@ -267,9 +278,13 @@ class Connection
 					}
 					else if( typeId==Results.EResults.MultiEnd )
 					{
-						console.log( `(${message.message.intValue})no callbacks for TickPrice` );
-						if( !this.complete(this.contractCallbacks, message.message.intValue) )
-							this.complete( this.previousDayCallbacks, message.message.intValue );
+						const id = message.message.intValue;
+						if( !this.complete(this.contractCallbacks, id)
+							&& !this.complete(this.previousDayCallbacks, message.message.intValue)
+							&& !this.complete(this.fundamentalCallbacks, message.message.intValue) )
+						{
+							console.log( `(${message.message.intValue})no callbacks for MultiEnd` );
+						}
 					}
 					else if( typeId==Results.EResults.AccountDownloadEnd )
 					{
@@ -331,7 +346,18 @@ class Connection
 						found = messageValue && messageValue["requestId"]==id;
 						if( !found )
 							continue;
-
+						if( message.orders )
+						{
+							for( const o of message.orders.orders )
+							{
+								const original = this.orders.get( o.order.id );
+								if( original )
+									original.state = o.state;
+								else
+									this.orders.set( o.order.id, new Order(o.contract, o.order, o.state) );
+							}
+							messageValue = [...this.orders.values()];
+						}
 						requestPromise.resolve( requestPromise.transformInput ? requestPromise.transformInput(messageValue) : messageValue );
 						//complete?
 						this.callbacks.delete( id );
@@ -376,6 +402,15 @@ class Connection
 			console.error( `no callbacks for '${what}' reqId='${data.id}'` );//todo stop request.
 	}
 
+	async addOrder( u:Results.IOrderUpdate )
+	{
+		let o = await this.reqOrder( u.status.orderId );
+	}
+	async reqOrder( id:number )
+	{
+		const o = await this.sendGenericPromise<Results.IOpenOrder>( Requests.ERequests.Order, id, (m)=>m.openOrder, null );
+		this.orders.set( id, new Order( o.contract, o.order) );
+	}
 	handleFundamentals( data:Results.IFundamentals )
 	{
 		const id = data.requestId;
@@ -383,7 +418,7 @@ class Connection
 		if( callback )
 		{
 			callback[0]( data.values );
-			this.fundamentalCallbacks.delete( id );
+			//this.fundamentalCallbacks.delete( id );
 		}
 		else
 			console.error( `no callbacks for Fundamentals reqId='${id}'` );
@@ -781,9 +816,9 @@ class Connection
 		console.log( `(${id})placeOrder( ${contract.symbol}x${(order.isBuy ? 1 : -1)*order.quantity}@${order.limit} )` );
 		this.send( new Requests.RequestUnion({placeOrder: {"id":id, "contract": contract, "order": order, stop:stop, stopLimit:stopLimit, blockId:blockId}}) );
 
-		const callback = new OrderSubject();
-		this.orders.set( id, new Order(contract, order, callback) );
-		return callback;
+		let o = new Order( contract, order );
+		this.orders.set( id, o );
+		return o.callback;
 	}
 	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.sendPromise( "reddit", {id:this.getRequestId(), symbol:symbol, sort:sort}, (m)=>m.reddit ); }
 	redditBlock( user ):Promise<void>
@@ -798,9 +833,9 @@ class Connection
 		return callback;
 	}
 
-	reqAllOpenOrders():Promise<Results.Orders>
+	reqAllOpenOrders():Promise<Order[]>
 	{
-		return this.sendGenericPromise<Results.Orders>( Requests.ERequests.RequestAllOpenOrders, null, (m)=>m.orders, null );
+		return this.sendGenericPromise<Order[]>( Requests.ERequests.RequestAllOpenOrders, null, (m)=>m.orders, null );//~~~
 	}
 
 	reqOptionParams( underlyingId:number ):Promise<Results.IExchangeContracts>
@@ -964,7 +999,7 @@ export class TwsService implements IGraphQL
 	reddit( symbol, sort ):Promise<Results.IRedditEntries>{ return this.connection.reddit( symbol, sort ); }
 	redditBlock( user ):Promise<void>{ return this.connection.redditBlock( user ); }
 	reqOpenOrders():OrderObservable{ return this.connection.reqOpenOrders(); }
-	reqAllOpenOrders():Promise<Results.Orders>{ return this.connection.reqAllOpenOrders(); }
+	reqAllOpenOrders():Promise<Order[]>{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }

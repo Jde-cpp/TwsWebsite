@@ -8,11 +8,12 @@ import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Mar
 
 export class Order
 {
-	constructor( contract:IB.IContract, order:IB.IOrder, callback:OrderSubject )
+	constructor( contract:IB.IContract, order:IB.IOrder, state?:Results.IOrderState )
 	{
 		this.contract = contract;
 		this.order = order;
-		this.callback = callback;
+		this.#state = state;
+		this.callback = new OrderSubject();
 	}
 	setStatus( status:Results.IOrderStatus ):string
 	{
@@ -26,13 +27,15 @@ export class Order
 	lastStatus:Results.IOrderStatus;
 	contract:IB.IContract;
 	order:IB.IOrder;
+	get state():Results.IOrderState{return this.#state;} set state(x:Results.IOrderState){ this.#state=x; this.callback?.state(x); } #state:Results.IOrderState;
 	callback:OrderSubject;
 }
 
 export interface IOrderObserver extends CompletionObserver<number>
 {
-	status:( value:Results.IOrderStatus )=>void;
-	open:( status:Results.IOpenOrder )=>void;
+	status:( x:Results.IOrderStatus )=>void;
+	open:( x:Results.IOpenOrder )=>void;
+	state:( x:Results.IOrderState )=>void;
 	//error:(msg:string)=>void;
 	//complete:()=>void;
 
@@ -54,6 +57,7 @@ export class OrderSubject extends Subject<number> implements IOrderObserver
 		return this.subscribe( observer );
 	}
 	status( value:Results.IOrderStatus ):void{ this._observers.forEach(observer=>{observer.status(value);}); }
+	state( x:Results.IOrderState ):void{ this._observers.forEach(observer=>{observer.state(x);}); }
 	open( value:Results.IOpenOrder ):void{ this._observers.forEach(observer=>{observer.open(value);}); }
 	override complete():void{ this._observers.forEach( observer=>{observer.complete();} ); }
 	override error(e:any):void{ this._observers.forEach( observer=>{observer.error(e);} ); }

@@ -1,15 +1,15 @@
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject } from '@angular/core';
 import { FormControl } from '@angular/forms';
-import {Sort} from '@angular/material/sort';
-import {IErrorService} from 'jde-framework'
+import { Sort } from '@angular/material/sort';
+import { IErrorService } from 'jde-framework'
 import { IProfile } from 'jde-framework';
 import { TwsService } from '../../services/tws.service';
-import {TickObservable} from '../../services/ITickObserver';
-import {OrderObservable} from '../../services/IOrderObserver';
+import { TickObservable } from '../../services/ITickObserver';
+import { OrderObservable, Order } from '../../services/IOrderObserver';
 import { MarketUtilities } from '../../utilities/marketUtilities';
 import { ProtoUtilities } from 'jde-framework';
 import { Settings } from 'jde-framework'
-import {MyDataSource,Order} from './DataSource'
+import { MyDataSource, OrderView } from './DataSource'
 import { ComponentPageTitle } from 'jde-material';
 
 //import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib'; import IB = ib2.Jde.Markets.Proto;
@@ -20,7 +20,7 @@ import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Mar
 
 class Cell
 {
-	constructor( public order:Order, public control:string ){}
+	constructor( public order:OrderView, public control:string ){}
 	equals( rhs ):boolean{ return rhs!=null && rhs && rhs.order.id===this.order.id && rhs.control==this.control; }
 };
 
@@ -30,23 +30,23 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
-	ngOnInit()
-	{
-		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Orders" : "Orders";
-	};
-
 	ngOnDestroy()
 	{
 		this.profile.save();
 	}
 
+	ngOnInit()
+	{
+		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Orders" : "Orders";
+	};
+
 	async ngAfterViewInit()
 	{
 		await this.profile.load();
-		let data:Order[] = [];
-		let orders:Results.IOrders = await this.tws.reqAllOpenOrders();
-		for( let o of orders.orders )
-			data.push( new Order(o) );
+		let data:OrderView[] = [];
+		let orders:Order[] = await this.tws.reqAllOpenOrders();
+		for( let o of orders )
+			data.push( new OrderView(o) );
 
 		this.data = new MyDataSource( this.settings.sort, data );
 		this.viewPromise = Promise.resolve( true );
@@ -179,13 +179,13 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 			|| ( column=='limit' && cell.order.limitNew!=null );
 	}
 	edit( element, column ){ this.editing = new Cell( element, column ); }
-	hasChanges(order:Order){ return order.limitNew || order.quantityNew; }
+	hasChanges(order:OrderView){ return order.limitNew || order.quantityNew; }
 	sortData( sort:Sort )
 	{
 		this.data.sort( sort );
 		this.sort = sort;
 	}
-	submit( tick:Order )
+	submit( tick:OrderView )
 	{
 		var newOrder:IB.IOrder = JSON.parse( JSON.stringify(tick.openOrder.order) );
 		if( tick.quantityNew )
@@ -195,7 +195,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 		this.tws.placeOrder( tick.contract, newOrder, null, null );
 
 	}
-	undo( order:Order )
+	undo( order:OrderView )
 	{
 		this.editing = order.quantityNew = order.limitNew = null;
 	}
@@ -226,7 +226,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 	profile = new Settings<PageSettings>( PageSettings, "OrderComponent", this.profileService );
 	get sort():Sort{ return this.settings.sort; } set sort(value){this.settings.sort = value;}
 	displayedColumns:string[] = ["symbol","shares", "status", "Limit", "bidSize", "bid", "ask", "askSize", "last", "buttons"];
-	subscription:OrderObservable;
+	//subscription:OrderObservable;
 	mktDataSubscriptions = new Map<number,TickObservable>();
 	viewPromise:Promise<boolean>;
 }

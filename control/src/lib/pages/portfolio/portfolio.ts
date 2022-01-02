@@ -18,6 +18,8 @@ import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Mar
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { IAuth } from 'jde-material';
 import { FormControl } from '@angular/forms';
+import { StringMap } from '@angular/compiler/src/compiler_facade_interface';
+import { ObservableUtilities } from '../../utilities/ObservableUtilities';
 
 class Settings
 {
@@ -66,8 +68,15 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	async onSettingsLoaded()
 	{
 		console.log( "PortfolioComponent::onSettingsLoaded" );
-
-		const numbers = await this.tws.reqManagedAccts();
+		let numbers:StringMap;
+		try
+		{
+			numbers = await this.tws.reqManagedAccts();
+		}
+		catch( e )
+		{
+			return this.cnsl.error( "Could not load accounts", e );
+		}
 		this.allAccounts.clear();
 		for( let account in numbers )
 			this.allAccounts.set( account, numbers[account] );
@@ -171,13 +180,17 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 					subscription.subscribe2( holding );
 				}
 				if( this.viewPromise )
+				{
 					this.loadPreviousDay( contract, isMarketOpen, holding, MarketUtilities.previous(contract) );
+				}
+
 			}
 		}
 	}
 	initialLoad()
 	{
-		this.tws.reqPreviousDay( this.holdings.map(x=>x.contract.id) ).subscribe(
+		const contractIds = this.holdings.map( x=>x.contract.id );
+		this.tws.reqPreviousDay( contractIds ).subscribe(
 		{
 			next: ( bar:Results.IDaySummary ) =>
 			{
@@ -186,6 +199,14 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 				//	debugger;
 				h.setDaySummary( bar,  MarketUtilities.previousByType(h.contract.exchange, IB.SecurityType.Stock) );
 			},
+			complete: ()=>
+			{
+				this.tws.averageVolume( contractIds ).subscribe(
+				{
+					next: (x)=>this.holdings.find( (h)=>h.contractId==x.contractId ).volumeAverage = x.value
+				});
+
+			}
 		});
 		console.log( "this.viewPromise=true" );
 		this.viewPromise = true;//Promise.resolve( true );
@@ -355,7 +376,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	selected:Holding|null=null;
 	get selectedIsOption(){ return this.selected?.contract.securityType==IB.SecurityType.Option; }
 
-	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'bidSize', 'bid', 'ask', 'askSize', 'volume', 'last', 'change' ];
+	displayedColumns : string[] = [ 'profit', 'symbol', 'position', 'marketValue', 'averagePrice', 'bidSize', 'bid', 'ask', 'askSize', 'last', 'change', 'volume' ];
 
 	@ViewChild('mainTable',{static: false}) _table:MatTable<Holding>;
 	@ViewChild('accountButtons',{static: false}) accountButtons;

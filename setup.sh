@@ -12,8 +12,9 @@ fetchDir MaterialSite $shouldFetch;
 if (( $buildPrivate == 1 )); then fetchDir WebBlockly $shouldFetch; fi;
 cd $setupDir;
 
-cmd="../WebFramework/create-workspace.sh my-workspace true MaterialSite WebFramework TwsWebsite";
+cmd="../WebFramework/create-workspace.sh my-workspace MaterialSite WebFramework TwsWebsite";
 if (( buildPrivate == 1 )); then cmd="$cmd WebBlockly"; fi;
+echo $cmd
 $cmd; if [ $? -ne 0 ]; then echo `pwd`; echo $cmd; exit 1; fi;
 echo `pwd`;
 cd my-workspace;

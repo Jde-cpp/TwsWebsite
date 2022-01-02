@@ -153,8 +153,15 @@ class Connection
 				{
 					const isOrderStatus:boolean = message.orderStatus!=null;
 					const orderId = isOrderStatus ? message.orderStatus.id : message.openOrder.order.id;
-					const webId = isOrderStatus ? orderId : message.openOrder.requestId;
-					const original = this.orders.get( webId );
+					let original:Order;
+					if( message.openOrder.requestId )//result from placeOrder.
+					{
+						original = this.orders.get( message.openOrder.requestId );
+						this.orders.set( orderId, original );
+						this.orders.delete( orderId );
+					}
+					else
+						original = this.orders.get( orderId );
 					if( original )
 					{
 						if( original.callback )
@@ -164,7 +171,7 @@ class Connection
 							else if( message.openOrder )
 								original.callback.open( message.openOrder );
 						}
-						if( message.orderStatus )
+						if( isOrderStatus )
 						{
 							const display = original.setStatus( message.orderStatus );
 							if( display )
@@ -182,7 +189,10 @@ class Connection
 						}
 					}
 					else if( !original )
-					{ debugger;	console.error( `(${webId}) No callbacks for ${isOrderStatus ? 'order status' : 'open order'}.` ); }
+					{
+						debugger;//TODO add, could be from another session.
+						console.error( `(${orderId}) No callbacks for ${isOrderStatus ? 'order status' : 'open order'}.` );
+					}
 				}
 				else if( message.stringMap )
 				{
@@ -281,7 +291,7 @@ class Connection
 						const id = message.message.intValue;
 						if( !this.complete(this.contractCallbacks, id)
 							&& !this.complete(this.previousDayCallbacks, message.message.intValue)
-							&& !this.complete(this.fundamentalCallbacks, message.message.intValue) )
+							/*&& !this.complete(this.fundamentalCallbacks, message.message.intValue)*/ )
 						{
 							console.log( `(${message.message.intValue})no callbacks for MultiEnd` );
 						}
@@ -537,7 +547,8 @@ class Connection
 		const haveValue = map.has( reqId );
 		if( haveValue )
 		{
-			map.get(reqId).complete();
+			let x = map.get(reqId);
+			x.complete();
 			map.delete( reqId );
 		}
 		return haveValue;
@@ -605,14 +616,14 @@ class Connection
 		if( ids.length )
 			this.cancelMarketData( ids );
 	}
-	averageVolume( contractIds:number[] ):Observable<number>
+	averageVolume( contractIds:number[] ):Observable<Results.ContractValue>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})averageVolume( ${contractIds.join(",")} )` );
 		const msg = new Requests.RequestUnion( {genericRequests:{id: id, type: Requests.ERequests.AverageVolume, ids: contractIds}} );
-		const callback = new Subject<number>();
+		const callback = new Subject<Results.ContractValue>();
 		let complete = contractIds.length==1 ? ()=>true : (v)=>!v.contractId;
-		var observable = new RequestObservable( (m)=>m.contractValue, (v:Results.ContractValue)=>callback.next(v.value), (v)=>{let c=complete(v); if(c)callback.complete(); return c;}, (e)=>callback.error(e) );
+		var observable = new RequestObservable( (m)=>m.contractValue, (v:Results.ContractValue)=>callback.next(v), (v)=>{let c=complete(v); if(c)callback.complete(); return c;}, (e)=>callback.error(e) );
 		this.observers.set( id, observable );
 		this.send( msg );
 		return callback;
@@ -856,9 +867,9 @@ class Connection
 	sendPromise<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput?:TransformInput ):Promise<TResult>
 	{
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
-		return new Promise<TResult>( (resolve/*,reject*/)=>
+		return new Promise<TResult>( ( resolve, reject )=>
 		{
-			this.callbacks.set( value["id"], new RequestPromise(result, resolve, null, transformInput) );//todo also do a proper rejection
+			this.callbacks.set( value["id"], new RequestPromise(result, resolve, reject, transformInput) );//todo also do a proper rejection
 		});
 	}
 
@@ -981,7 +992,7 @@ export class TwsService implements IGraphQL
 	cancelPositions( subscription: Observable<Results.IPositionMulti> ):void{ return this.connection.cancelPositions( subscription ); }
 	accountUpdatesUnsubscribe( requests:Map<string,AccountUpdateType> ){ this.connection.accountUpdatesUnsubscribe(requests); };
 	accountUpdateUnsubscribe( accountId:string, request:AccountUpdateType ){ this.connection.accountUpdateUnsubscribe(accountId,request); };
-	averageVolume( contractIds:number[] ):Observable<number>{ return this.connection.averageVolume(contractIds); };
+	averageVolume( contractIds:number[] ):Observable<Results.ContractValue>{ return this.connection.averageVolume(contractIds); };
 	blockly( bytes:Uint8Array ):Promise<Uint8Array>{ return this.connection.blockly(bytes); }
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }

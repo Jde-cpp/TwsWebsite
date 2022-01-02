@@ -47,15 +47,25 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 		this.tabSubscription = null;
 	}
 
-	run = ():void =>
+	run = async ():Promise<void> =>
 	{
 		console.log( 'CandlestickComponent::run' );
-
-		var end = this.end || MarketUtilities.currentTradingDay();
+		const today = MarketUtilities.currentTradingDay()
+		let end = Math.min( this.end, today ) || today;
 		var days = this.start ? end-this.start+1 : 1;
 		if( days>5 )
 			days = Math.round( days*5/7 );
-		this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(end)), days, this.settingsContainer.value.candleSticks.selected, Requests.Display.Trades, true, false ).then( this.onHistoricalData ).catch( (e)=>{console.error(e);} );
+		var bars: IBar[];
+		try
+		{
+		 bars = await this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(end)), days, this.settingsContainer.value.candleSticks.selected, Requests.Display.Trades, true, false );
+		 this.onHistoricalData( bars );
+		}
+		catch( e )
+		{
+			debugger;
+			this.cnsl.error( e["message"], e  );
+		}
 	}
 	onHistoricalData = ( bars: IBar[] ):void=>
 	{

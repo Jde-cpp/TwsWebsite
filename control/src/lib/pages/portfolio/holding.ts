@@ -108,7 +108,7 @@ export class Holding extends TickDetails
 			this.contract.multiplier = 1.0;
 
 		//return this.marketValue/(this.position*this.contract.multiplier)-this.last;
-		return this.last-this.previousDay?.last;
+		return this.last-(this.previousDay ? this.previousDay.last : this.close );
 	}
 	get pricePrevious(){ return this.previousDay?.last; }
 	get marketValuePrevious(){ return this.pricePrevious*this.position*this.contract.multiplier; }

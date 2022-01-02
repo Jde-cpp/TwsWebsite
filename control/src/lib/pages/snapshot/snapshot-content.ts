@@ -43,7 +43,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService, private decimalPipe: DecimalPipe )
 	{}
 
-	ngOnInit()
+	async ngOnInit()
 	{
 		console.log( `(${this.detail && this.detail.contract ? this.detail.contract.symbol : 'null'})SnapshotContentComponent::ngOnInit` );
 		this.settings = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
@@ -143,7 +143,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 
 		this.subscription = this.tws.reqMktData( this.contract.id, ticks, false );
 		this.subscription.subscribe2( this.tick );
-		tick.volumeAverage = await ObservableUtilities.toPromiseSingle<number>( ()=>this.tws.averageVolume([this.contract.id]), false );
+		tick.volumeAverage = ( await ObservableUtilities.toPromiseSingle<Results.ContractValue>(()=>this.tws.averageVolume([this.contract.id]), false) ).value;
 		console.log( `volume = ${tick.volume*100}, volumeAverage = ${tick.volumeAverage} ${Math.round(tick.volume*100/tick.volumeAverage*10)/10}` );
 	}
 	onTransactClick( buy:boolean )
@@ -294,7 +294,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	};
 	onTabChange( e:MatTabChangeEvent )
 	{
-		console.log( "SnapshotContentComponent::onTabChange" );
+		//console.log( "SnapshotContentComponent::onTabChange" );
 		this.selectedTab.setValue( this.settings.value.tabIndex = e.index );
 		this.settings.save();
 	}
@@ -303,7 +303,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	fundamentals:Fundamentals;
 	@Input() index:number;
 	@Input() set indexSelectedSymbol(value){ this._indexSelectedSymbol=value; } get indexSelectedSymbol(){ return this._indexSelectedSymbol;} private _indexSelectedSymbol:number;
-	@Input() set pageSettings(value){ this._pageSettings=value; } get pageSettings(){ return this._pageSettings;} private _pageSettings:Settings<PageSettings>;
+	@Input() set pageSettings(value){ this.#pageSettings=value; } get pageSettings(){ return this.#pageSettings;} #pageSettings:Settings<PageSettings>;// = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
 	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetail;
 
 	loadedPromise:Promise<boolean>;

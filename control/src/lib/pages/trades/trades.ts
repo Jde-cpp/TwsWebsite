@@ -1,7 +1,7 @@
 import { Component, AfterViewInit, OnInit, OnDestroy, Inject } from '@angular/core';
 import {Sort} from '@angular/material/sort';
 
-import { IProfile } from 'jde-framework';
+import { IProfile, TimeFrame } from 'jde-framework';
 import {IErrorService} from 'jde-framework'
 import {Settings, IAssignable} from 'jde-framework'
 import { DateUtilities, Day } from 'jde-framework';
@@ -31,12 +31,12 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngOnDestroy()
 	{
-		this.settingsContainer.save();
+		this.settings.save();
 	}
 
 	ngAfterViewInit():void
 	{
-		this.settingsContainer.loadThen( this.load );
+		this.settings.loadThen( this.load );
 	}
 	load = ()=>
 	{
@@ -59,7 +59,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 				complete: ()=>{  --requests; if( !requests ) setDataSource();  },
 			});
 		}
-		if( this.start<currentTradingDay )
+		if( this.start<currentTradingDay || today!=currentTradingDay )
 		{
 			++requests;
 			this.tws.flexExecutions( "act", DateUtilities.fromDays(this.start), DateUtilities.fromDays(this.end) ).subscribe(
@@ -75,21 +75,28 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		this.data.sort( sort );
 		this.sort = sort;
 	}
-	//set start( value:Day ){ this._start = value;} get start():Day|null{ return this.settingsContainer.value.start; }
-	//set end(value:Day){ this.settingsContainer.value.end = value;} get end():Day|null{ return this.settingsContainer.value.end; }
-	dateRange:DateRangeSettings = new DateRangeSettings();
+	dateRangeChange( x:DateRangeSettings )
+	{
+		debugger;
+		this.settings.value.dateRange.assign( x );
+		this.load();
+	}
+	//set start( value:Day ){ this._start = value;} get start():Day|null{ return this.settings.value.start; }
+	//set end(value:Day){ this.settings.value.end = value;} get end():Day|null{ return this.settings.value.end; }
+	get dateRange():DateRangeSettings{ return this.settings.value.dateRange; }
 	get start():Day{return this.dateRange.start; } set start(x){this.dateRange.start=x; }
 	get end():Day{return this.dateRange.end; } set end(x){this.dateRange.end=x; }
 
 	data:DataSource;
-	settingsContainer:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "TradeComponent", this.profileService );
-	get sort():Sort{ return this.settingsContainer.value.sort; } set sort(value){this.settingsContainer.value.sort = value;}
+	settings:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "TradeComponent", this.profileService );
+	get sort():Sort{ return this.settings.value.sort; } set sort(value){this.settings.value.sort = value;}
 	displayedColumns:string[] = ["symbol","shares", "openTime", "closeTime", "return_", "openPrice", "closePrice", "commissions"];//"openLongPrediction", "openShortPrediction", "closeLongPrediction", "closeShortPrediction",
 	viewPromise:Promise<boolean>;
 }
 
 class PageSettings implements IAssignable<PageSettings>
 {
-	assign(other){this.sort=other.sort;}
+	assign(other){ this.sort=other.sort; this.dateRange.assign( other.dateRange ); }
 	sort:Sort={ active: "closeTime", direction: 'desc' };
+	dateRange:DateRangeSettings = new DateRangeSettings();
 }

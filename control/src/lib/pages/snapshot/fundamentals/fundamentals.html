@@ -12,10 +12,22 @@
 			<div class="row"><span class="description">Beta</span><span class="value">{{value.beta | number:'1.1-1'}}</span></div>
 			<div class="row"><span class="description">P/E</span><span class="value">{{priceEarnings | number:'1.1-1' }}</span></div>
 			<div class="row"><span class="description">EPS</span><span class="value">{{value.eps | number:'1.2-2' }}</span></div>
-			<div class="row"><span class="description">Div/Yield</span><span class="value">{{value.dividendNext | number:'1.2-2'}}/{{value.yield  | number:'1.1-1'}}</span></div>
-			<div class="row"><span class="description">Ex-Dividend Date</span><span class="value">{{value.exDividendDate | date:'mediumDate'}}</span></div>
-			<div class="row"><span class="description">Dividend Payable Date</span><span class="value">{{value.dividendPayableDate}}</span></div>
-			<div class="row"><span class="description">Next Earnings Date</span><span class="value">{{value.nextEarningsDate}}</span></div>
+			<div class="row"><span class="description">Div/Yield</span>
+				<span *ngIf=value.dividendNext class=value>{{value.dividendNext | number:'1.2-2'}}/{{value.yield  | number:'1.1-1'}}</span>
+				<span *ngIf=!value.dividendNext class=value >--</span>
+			</div>
+			<div class="row"><span class="description">Ex-Dividend Date</span>
+				<span *ngIf=value.exDividendDate class=value>{{value.exDividendDate | date:'mediumDate'}}</span>
+				<span *ngIf=!value.exDividendDate class=value >--</span>
+			</div>
+			<div class="row"><span class="description">Dividend Payable Date</span>
+				<span *ngIf=value.dividendPayableDate class="value">{{value.dividendPayableDate}}</span>
+				<span *ngIf=!value.dividendPayableDate class=value >--</span>
+			</div>
+			<div class="row"><span class="description">Next Earnings Date</span>
+				<span *ngIf=value.nextEarningsDate class=value>{{value.nextEarningsDate}}</span>
+				<span *ngIf=!value.nextEarningsDate class=value >--</span>
+			</div>
 		</div>
 	</div>
 </ng-container>

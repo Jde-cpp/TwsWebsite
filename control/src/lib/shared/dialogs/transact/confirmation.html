@@ -17,7 +17,8 @@
 			<span *ngIf="this.data.stopLimit">Stop Limit {{this.data.stopLimit | number:'1.2-2' }}</span>
 		</div>
 	</fieldset>
-	<div style="display: flex;">
+	<div *ngIf=error style="display: flex;color: red;">{{errorMessage}}</div>
+	<div *ngIf=!error style="display: flex;">
 		<fieldset style="float: left;width: 25%;">
 			<legend>Amount {{CurrencyName(contract.currency)}}</legend>
 			<table>

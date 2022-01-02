@@ -3,7 +3,7 @@
 		<div style="align-content: center; margin: auto;">
 			<div style="display: inline-block;vertical-align: top;">
 				<div style="display: inline-block">
-					<date-range [settings]="dateRange"></date-range>
+					<date-range [settings]=dateRange (change)=dateRangeChange($event)></date-range>
 					<button mat-icon-button primary><mat-icon class="iconButton" (click)="load()">cloud_download</mat-icon></button>
 				</div>
 				<div>

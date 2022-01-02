@@ -20,20 +20,19 @@ export class ConfirmationDialog
 {
 	constructor( public dialogRef:MatDialogRef<ConfirmationDialog>, @Inject(MAT_DIALOG_DATA) public data:ConfirmationData, private tws : TwsService )
 	{
+		//console.log( JSON.stringify(data) );
+		//this.error = { requestId:12, code:451, message:"The following order \"ID:6978\" value estimate of 106,260.00 USD exceeds the Total Value Limit of 100,000 USD. Restriction is specified in Precautionary Settings of Global Configuration/Presets."};
 		this.tws.reqContractSingle( this.contract ).then( (x)=>this.detail = x ).catch( (e)=>console.log(e.Message) );
-		let subscription = this.tws.reqPositions( this.order.account );
-		subscription.subscribe(
+		let s = this.tws.reqPositions( this.order.account );
+		s.subscribe({ next:value=>
 		{
-			next:value=>
+			if( !value || value.contract.id==this.contract.id )
 			{
-				if( !value || value.contract.id==this.contract.id )
-				{
-					this.position = value ? value.position : 0;
-					this.tws.cancelPositions( subscription );
-					subscription = null;
-				}
+				this.position = value ? value.position : 0;
+				this.tws.cancelPositions( s );
+				s = null;
 			}
-		});
+		} });
 	}
 	ExchangeName( id:IB.Exchanges )
 	{
@@ -50,7 +49,18 @@ export class ConfirmationDialog
 		this.order.whatIf = false;
 		this.order.id = 0;
 		const subscription = this.tws.placeOrder( this.contract, this.order, this.data.stop, this.data.stopLimit, this.data.block?.id );//TODO something with subscription.
-		this.dialogRef.close( null );
+		subscription.subscribe2(
+		{
+			error: e=>this.error=e,
+			status: x=>this.dialogRef.close( null ),
+			open: x=>this.dialogRef.close( null ),
+			state: x=>this.dialogRef.close( null ),
+			complete: ()=>this.dialogRef.close( null )
+/*			status: x:Results.IOrderStatus=>this.dialogRef.close(null),
+			open: x:Results.IOpenOrder=>this.dialogRef.close(null),
+			state:x:Results.IOrderState=>this.dialogRef.close(null),
+			error: err: any=>this.dialogRef.close( null )*/
+		} );
 	}
 	get amount():number{ return this.order.quantity*this.order.limit*Math.max(this.contract.multiplier,1); }
 	get backgroundColor():string
@@ -75,5 +85,7 @@ export class ConfirmationDialog
 	get status(){ return this.data.order; }
 	position:number|null=null;
 	get timeInForce(){ return this.order.timeInForce==IB.ETimeInForce.DayTif ? "Day" : IB.ETimeInForce[this.order.timeInForce]; }
+	get errorMessage(){ return `(${this.error.code}) - ${this.error.message}`; }
 	submitting:boolean;
+	error:Results.IError;
 }

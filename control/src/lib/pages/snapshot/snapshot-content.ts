@@ -43,7 +43,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	constructor( private change: ChangeDetectorRef, private dialog : MatDialog, private element : ElementRef, private tws : TwsService, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService, private decimalPipe: DecimalPipe )
 	{}
 
-	async ngOnInit()
+	ngOnInit()
 	{
 		console.log( `(${this.detail && this.detail.contract ? this.detail.contract.symbol : 'null'})SnapshotContentComponent::ngOnInit` );
 		this.settings = new Settings<SymbolSettings>( SymbolSettings, `SnapshotComponent.${this.detail.contract.symbol}`, this.profileService );
@@ -303,7 +303,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	fundamentals:Fundamentals;
 	@Input() index:number;
 	@Input() set indexSelectedSymbol(value){ this._indexSelectedSymbol=value; } get indexSelectedSymbol(){ return this._indexSelectedSymbol;} private _indexSelectedSymbol:number;
-	@Input() set pageSettings(value){ this.#pageSettings=value; } get pageSettings(){ return this.#pageSettings;} #pageSettings:Settings<PageSettings>;// = new Settings<PageSettings>( PageSettings, "SnapshotComponent", this.profileService );
+	@Input() set pageSettings(value){ this.#pageSettings=value; } get pageSettings(){ return this.#pageSettings;} #pageSettings:Settings<PageSettings>;
 	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetail;
 
 	loadedPromise:Promise<boolean>;
@@ -319,5 +319,17 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	@ViewChild( 'tabs', {static: false} ) tabs;
 	tick: TickDetails;
 	get volumeDisplay(){ return MarketUtilities.numberDisplay( this.tick.volume, this.decimalPipe ); }
-
+	get volumeMultiplier()
+	{
+		if( !this.tick.isMarketOpen )
+			return 1;
+		const extendedTotal = this.detail.tradingHours[0].end - this.detail.tradingHours[0].start;
+		const liquidTotal = this.detail.liquidHours[0].end - this.detail.liquidHours[0].start;
+		const now = new Date().getTime()/1000;
+		const extendedStart = Math.min( this.detail.liquidHours[0].start, now ) - this.detail.tradingHours[0].start;
+		const liquid = Math.min( this.detail.liquidHours[0].end, now ) - Math.min( this.detail.liquidHours[0].start, now );
+		const extendedEnd = Math.min( this.detail.tradingHours[0].end, now ) - Math.min( this.detail.liquidHours[0].end, now );
+		const y = (extendedStart+extendedEnd)/(extendedTotal-liquidTotal)*.02	+liquid/liquidTotal*.98;
+		return Math.round( 1/y/10 )/10;
+	}
 }

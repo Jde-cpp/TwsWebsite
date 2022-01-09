@@ -23,10 +23,6 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	ngOnInit()
 	{
 		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Trades" : "Trades";
-		const today = DateUtilities.toDays( new Date() );
-		const currentTradingDay = MarketUtilities.currentTradingDay();
-		this.start = today>currentTradingDay ? currentTradingDay : MarketUtilities.previousTradingDay( today );
-		this.end = today==currentTradingDay ? currentTradingDay : this.start;
 	};
 
 	ngOnDestroy()
@@ -61,8 +57,10 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		}
 		if( this.start<currentTradingDay || today!=currentTradingDay )
 		{
+			const end = this.end ?? currentTradingDay;
+			const start = this.start ?? end-this.dayCount;
 			++requests;
-			this.tws.flexExecutions( "act", DateUtilities.fromDays(this.start), DateUtilities.fromDays(this.end) ).subscribe(
+			this.tws.flexExecutions( "act", DateUtilities.fromDays(start), DateUtilities.fromDays(end) ).subscribe(
 			{
 				next:	flex =>{ flexResult = flex },
 				error:  e=>{ debugger;console.log(e); this.cnsle.error("Could not load executions.",e); },
@@ -81,11 +79,10 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		this.settings.value.dateRange.assign( x );
 		this.load();
 	}
-	//set start( value:Day ){ this._start = value;} get start():Day|null{ return this.settings.value.start; }
-	//set end(value:Day){ this.settings.value.end = value;} get end():Day|null{ return this.settings.value.end; }
 	get dateRange():DateRangeSettings{ return this.settings.value.dateRange; }
-	get start():Day{return this.dateRange.start; } set start(x){this.dateRange.start=x; }
-	get end():Day{return this.dateRange.end; } set end(x){this.dateRange.end=x; }
+	get start():Day{return this.dateRange.start; } //set start(x){this.dateRange.start=x; }
+	get end():Day{return this.dateRange.end; } //set end(x){this.dateRange.end=x; }
+	get dayCount():Day{ return this.dateRange.dayCount; }
 
 	data:DataSource;
 	settings:Settings<PageSettings> = new Settings<PageSettings>( PageSettings, "TradeComponent", this.profileService );

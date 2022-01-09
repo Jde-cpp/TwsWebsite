@@ -59,9 +59,7 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 		MatButtonModule, MatAutocompleteModule,MatCheckboxModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatRadioModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
 		DateRangeModule, LinkSelectModule, PaginatorModule],
 	entryComponents: [],
-	exports: [OrderComponent, PortfolioComponent, TradeComponent, WatchComponent,
-		SnapshotComponent//,SnapshotContentComponent
-	],
+	exports: [OrderComponent, PortfolioComponent, TradeComponent, WatchComponent, SnapshotComponent ],
 	providers: []
 })
 export class JdeTwsModule { }

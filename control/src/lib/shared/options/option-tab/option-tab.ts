@@ -63,28 +63,32 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	{
 		this.run();
 	}
-	run = ():void =>
+	run = async () =>
 	{
 		var contractId = this.contract ? this.contract.id : 0;
 		if( !this.isActive || !contractId )
 			return;
 		this.settingsContainer.reset( contractId.toString() );
-		JoinSettings( this.pageSettings, this.settingsContainer ).then( ()=>
+		await JoinSettings( this.pageSettings, this.settingsContainer );
+		try
 		{
-			this.tws.reqOptionParams( contractId ).then( ( params:Results.IExchangeContracts ) =>
+			const params = await this.tws.reqOptionParams( contractId );
+			this.strikes = params.strikes;
+			this.expirationDisplays = [];
+			this.expirations = [];
+			const today = DateUtilities.toDays( new Date() );
+			for( let expiration of params.expirations )
 			{
-				this.strikes = params.strikes;
-				this.expirationDisplays = [];
-				this.expirations = [];
-				const today = DateUtilities.toDays( new Date() );
-				for( let expiration of params.expirations )
-				{
-					this.expirations.push( expiration );
-					this.expirationDisplays.push( `${MarketUtilities.optionDayDisplay(expiration)}(${expiration-today} days)` );
-				}
-				this.viewPromise = Promise.resolve(true);
-			}).catch( (e)=>{ console.error(e); this.cnsl.error(`Could not retrieve Options '${e.message}'.`, e); } );
-		} );
+				this.expirations.push( expiration );
+				this.expirationDisplays.push( `${MarketUtilities.optionDayDisplay(expiration)}(${expiration-today} days)` );
+			}
+			this.viewPromise = Promise.resolve(true);
+		}
+		catch( e )
+		{
+			console.error( e );
+			this.cnsl.error( `Could not retrieve Options '${e["message"]}'.`, e );
+		}
 	}
 	changeType = (event:MatRadioChange):void=>
 	{
@@ -137,7 +141,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickDetails;
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 
-	get optionType(){return this.settings.type;} set optionType(x){ if( x!=this.settings.type ){ this.settings.type=x; this.settingsContainer.save();} }; 
+	get optionType(){return this.settings.type;} set optionType(x){ if( x!=this.settings.type ){ this.settings.type=x; this.settingsContainer.save();} };
 	set optionTypeString(x){ this.optionType=+x; } get optionTypeString(){ return this.optionType.toString(); }
 	lengthChange: Subject<number> = new Subject<number>();
 	startIndexChange: Subject<number> = new Subject<number>();

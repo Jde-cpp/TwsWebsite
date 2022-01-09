@@ -52,15 +52,6 @@ export class RequestPromise
 	{}
 }
 
-/*export class NoExceptPromise extends RequestPromise
-{
-	constructor( result:GetResult, resolve:Resolve, transformInput:TransformInput=null )
-	{
-		super( result, resolve, null, transformInput );
-	}
-}
-*/
-
 export class RequestObservable
 {
 	constructor( public result:GetResult, public next:Resolve, public complete:IsComplete, public reject:Reject, public transformInput:TransformInput=null )
@@ -154,11 +145,11 @@ class Connection
 					const isOrderStatus:boolean = message.orderStatus!=null;
 					const orderId = isOrderStatus ? message.orderStatus.id : message.openOrder.order.id;
 					let original:Order;
-					if( message.openOrder.requestId )//result from placeOrder.
+					if( message.openOrder.requestId && message.openOrder.requestId!=orderId )//result from placeOrder.
 					{
 						original = this.orders.get( message.openOrder.requestId );
 						this.orders.set( orderId, original );
-						this.orders.delete( orderId );
+						this.orders.delete( message.openOrder.requestId );
 					}
 					else
 						original = this.orders.get( orderId );

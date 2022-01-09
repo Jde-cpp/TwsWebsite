@@ -33,16 +33,13 @@ import {NavBarModule} from 'jde-material';
 import {ThemePickerModule} from 'jde-material';
 import {StyleManager} from 'jde-material';
 
-import{ UserComponent } from 'jde-framework';
-
+import{ Applications } from 'jde-framework';
 import{ LogsComponent } from 'jde-framework';
 import{ GraphQLComponent } from 'jde-framework';
 import{ GraphQLDetailComponent } from 'jde-framework';
 
-import{ UserEntryDialog } from 'jde-framework';
 import { AppComponent } from './app.component';
 
-import {TwsAuthService} from 'jde-tws';
 import {TwsService} from 'jde-tws';
 import {OrderComponent} from 'jde-tws';
 import {PortfolioComponent} from 'jde-tws';
@@ -98,6 +95,7 @@ const routes: Routes =
 		data: { name: "Settings" },
 		children :
 		[
+			{ path: 'applications', component: Applications, data: { name: "Applications", summary: "View Applications" } },
 			{ path: 'logs', component: LogsComponent, data: { name: "Logs", summary: "View Application Logs" } },
 			{ path: 'accounts/:id', component: GraphQLDetailComponent },
 			{ path: 'accounts', component: GraphQLComponent, data: { name: "Accounts", summary: "View/Modify IB Accounts", display:"description", showAdd: false } },

@@ -54,7 +54,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		this.tws.cancelMktData( this.subscriptions.values() );
 		this._pageSubscription?.unsubscribe();
 	}
-	onChangeOptionType():void
+	async onChangeOptionType()
 	{
 		console.log( `OptionTable::onChangeOptionType( ${DateUtilities.fromDays(this.startExpiration)} )` );
 		if( !this.contract )
@@ -64,8 +64,10 @@ export class OptionTableComponent implements OnInit, OnDestroy
 		this.options = new Array<OptionStrike>();
 		this.pageContent.length = 0;
 		const currentDay = MarketUtilities.currentTradingDay( new Date(), this.detail.liquidHours ? MarketUtilities.contractHours(this.detail.liquidHours) : null );
-		this.tws.optionSummary( this.contract.id, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike ).then( (values:Results.IOptionValues)=>
+		try
 		{
+			const values = await this.tws.optionSummary( this.contract.id, this.optionType, this.startExpiration, this.endExpiration, this.startStrike, this.endStrike );
+
 			this.setPrices = values.day==currentDay;
 			var calcMidOption = !this.sort || this.sort.active=="strike";
 			let midOption;
@@ -124,7 +126,12 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			else
 				this.setPageContent();
 			this.viewPromise = Promise.resolve( true );
-		}).catch( (e)=>{debugger;console.error(e); this.cnsl.error("Error occurred.", e);} );
+		}
+		catch( e )
+		{
+			debugger;
+			this.cnsl.error( "Error occurred.", e );
+		}
 	}
 
 	sortData( sort: Sort )

@@ -1,5 +1,5 @@
 <h2 mat-dialog-title [ngStyle]="{'background': backgroundColor}">{{description}}</h2>
-<mat-dialog-content>
+<mat-dialog-content style="overflow: hidden;">
 	<mat-form-field *ngIf="allAccounts.size>1" style="display:inline; margin-left: 100px;">
 		<mat-select [(ngModel)]="selectedAccount" name="accounts" ngDefaultControl>
 			<!-- (selectionChange)="accountChange($event.value)" -->

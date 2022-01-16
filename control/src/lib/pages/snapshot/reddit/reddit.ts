@@ -50,11 +50,12 @@ export class RedditComponent implements OnInit, AfterViewInit, OnDestroy
 	{
 		RedditComponent.settings.save();
 	}
-	block( article:Entry )
+	block( e:PointerEvent, article:Entry )
 	{
+		e.stopPropagation();
 		let txt = '<a href="https://www.reddit.com/user/';
 		let suffix = article.content.substring( article.content.indexOf(txt)+txt.length );
-		this.tws.redditBlock( suffix.substring(0, suffix.indexOf('"')) );
+	//	this.tws.redditBlock( suffix.substring(0, suffix.indexOf('"')) );
 	}
 
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;

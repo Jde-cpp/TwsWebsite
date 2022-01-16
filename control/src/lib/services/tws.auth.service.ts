@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { IAuth } from 'jde-material';
-import { Observable, Subject } from 'rxjs';
 import { TwsService } from './tws.service';
-declare const gapi: any;
+
 @Injectable()
 export class TwsAuthService implements IAuth
 {
@@ -10,12 +9,46 @@ export class TwsAuthService implements IAuth
 	{}
 
 	enabled():boolean{ return true; }
-	subscribe():Observable<void>{ return this.subject.asObservable(); };
-	login( token )
+
+	login( token?:string ):Promise<void>
 	{
-		this.tws.googleLogin( token ).then( ()=> {this._loggedIn=true; console.log("googleLogin returned success."); this.subject.next();} ).catch( (e)=>{this._loggedIn=false; this.subject.error(e);} );
+		let p:Promise<void>;
+		if( this.enabled && !this.loggedIn )
+		{
+			p = new Promise<void>( (resolve, reject)=>
+			{
+				this.#promises.push( [resolve,reject] );
+			} );
+			if( this.#promises.length==1 )
+			{
+				this.tws.googleLogin( token ).then( ()=>
+				{
+					for( var promise of this.#promises )
+						promise[0]();
+				}).catch( (e)=>
+				{
+					for( var promise of this.#promises )
+						promise[1]( e );
+				} );
+			}
+			return p ?? Promise.resolve();
+		}
+		return this.enabled || this.loggedIn  ? Promise.resolve() :  new Promise<void>( async (resolve, reject)=>
+		{
+			try
+			{
+				await this.tws.googleLogin( token );
+				this.#loggedIn=true;
+				console.log("googleLogin returned success.");
+				resolve();
+			}
+			catch( e )
+			{
+				reject( e );
+			}
+		} );
 	}
-	get loggedIn(){return this._loggedIn;} private _loggedIn=false;
+	get loggedIn(){return this.#loggedIn;} #loggedIn=false;
 	idToken:string;
-	private subject = new Subject<void>();
+	#promises:[()=>void,(x:any)=>void][]=[];
 }

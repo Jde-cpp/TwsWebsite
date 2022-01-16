@@ -22,7 +22,8 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngOnInit()
 	{
-		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Trades" : "Trades";
+		//this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Trades" : "Trades";
+		this.componentPageTitle.title = "Trades";
 	};
 
 	ngOnDestroy()
@@ -58,7 +59,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		if( this.start<currentTradingDay || today!=currentTradingDay )
 		{
 			const end = this.end ?? currentTradingDay;
-			const start = this.start ?? end-this.dayCount;
+			const start = this.start ?? this.dayCount===null ? 0 : end-this.dayCount;
 			++requests;
 			this.tws.flexExecutions( "act", DateUtilities.fromDays(start), DateUtilities.fromDays(end) ).subscribe(
 			{
@@ -77,6 +78,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		debugger;
 		this.settings.value.dateRange.assign( x );
+		this.settings.save();
 		this.load();
 	}
 	get dateRange():DateRangeSettings{ return this.settings.value.dateRange; }

@@ -49,17 +49,17 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 
 	run = async ():Promise<void> =>
 	{
-		console.log( 'CandlestickComponent::run' );
+		console.log( `CandlestickComponent::run( ${DateUtilities.displayDay(this.settingsContainer.value.dateRange.start)}, ${DateUtilities.displayDay(this.settingsContainer.value.dateRange.end)} )` );
 		const today = MarketUtilities.currentTradingDay()
 		let end = Math.min( this.end, today ) || today;
 		var days = this.start ? end-this.start+1 : 1;
 		if( days>5 )
 			days = Math.round( days*5/7 );
-		var bars: IBar[];
 		try
 		{
-		 bars = await this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(end)), days, this.settingsContainer.value.candleSticks.selected, Requests.Display.Trades, true, false );
-		 this.onHistoricalData( bars );
+			console.log( `reqHistoricalData( ${DateUtilities.displayDay(end)}, days=${days} )` );
+			const bars = await this.tws.reqHistoricalData( this.contract, DateUtilities.endOfDay(DateUtilities.fromDays(end)), days, this.settingsContainer.value.candleSticks.selected, Requests.Display.Trades, true, false );
+		 	this.onHistoricalData( bars );
 		}
 		catch( e )
 		{
@@ -121,8 +121,11 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 		this.settingsContainer.save();
 		this.run();
 	}
-	onDateRangeChange( value )
+	onDateRangeChange( value:DateRangeSettings )
 	{
+		debugger;
+		console.log( `onDateRangeChange( ${DateUtilities.displayDay(value.start)}, ${DateUtilities.displayDay(value.end)} )` );
+		this.settingsContainer.value.dateRange = value;
 		this.settingsContainer.save();
 		this.run();
 	}

@@ -157,6 +157,11 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 				else
 					console.log( `reqIds returned contract with ${!details ? 0 : details.length} records` );
 			}
+			this.tws.averageVolume( ids ).subscribe(
+			{
+				next: (x)=>this.findContract( x.contractId ).volumeAverage = x.value,
+				error:  e=>console.error( e )
+			});
 		}
 		this.addRow();
 		this.viewPromise = Promise.resolve( true );

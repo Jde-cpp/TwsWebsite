@@ -16,8 +16,6 @@ import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Pro
 import * as Edgar2 from 'jde-cpp/edgar'; import Edgar = Edgar2.Jde.Markets.Edgar.Proto;
 import { IAuth } from 'jde-material';
 
-type ResolveGeneric = (any) => void;
-type ClientId = number;
 type StringMap = { [k: string]: string };
 type Cik = number;
 export interface IBar
@@ -305,8 +303,11 @@ class Connection
 					}
 					else if( typeId==Results.EResults.Authentication )
 					{
-						this.callbacks.get( +message.message.stringValue ).reject( {requestId: +message.message.stringValue, code: -1, message: "Could not authenticate"} );
-						this.callbacks.delete( +message.message.stringValue );
+						if( message.message.stringValue )
+						{
+							this.callbacks.get( +message.message.stringValue ).reject( {requestId: +message.message.stringValue, code: -1, message: "Could not authenticate"} );
+							this.callbacks.delete( +message.message.stringValue );
+						}
 					}
 					else
 					{
@@ -373,9 +374,10 @@ class Connection
 							if( !found )
 								continue;
 
-							observer.next( observer.transformInput ? observer.transformInput(messageValue) : messageValue );
 							if( observer.complete(messageValue) )
 								this.observers.delete( id );
+							else
+								observer.next( observer.transformInput ? observer.transformInput(messageValue) : messageValue );
 							break;
 						}
 					}
@@ -677,11 +679,14 @@ class Connection
 		const variable = { id:id, providerCode:providerCode, articleId: articleId };
 		return this.sendPromise<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle;}, null );
 	}
-	reqContractDetails( contract:IB.IContract ):Promise<Results.IContractDetail[]>
+	reqContractDetails( c:IB.IContract ):Promise<Results.IContractDetail[]>
 	{
 		const id = this.getRequestId();
-		console.log( `(${id})reqContractDetails:  ${contract.symbol ? contract.symbol : contract.id}` );
-		const variable = { id: id, contracts: [contract] };
+		if( c.securityType==IB.SecurityType.Option )
+		console.log( `(${id})reqContractDetails:  ${c.symbol}[${IB.SecurityRight[c.right]}] - ${DateUtilities.displayDay(c.expiration)}` );
+		else
+			console.log( `(${id})reqContractDetails:  ${c.symbol ? c.symbol : c.id}` );
+		const variable = { id: id, contracts: [c] };
 		return this.sendPromise<Requests.IRequestContractDetails,Results.IContractDetail[]>( "contractDetails", variable, (x)=>{return x.contractDetails!=null;}, null );
 	}
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetail[]>
@@ -881,9 +886,11 @@ class Connection
 		console.log( `(${id})${Requests.ERequests[type]}(${ids.join()})` );
 		return this.sendPromise<Requests.IGenericRequests,TResult>( "genericRequests", {"id": id, "type": type, "ids": ids}, result, transform );
 	}
-	sendStringPromise<TResult>( name:string, type:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
+	sendStringPromise<TResult>( name:string, q:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
 	{
-		return this.sendPromise<Requests.IStringRequest,TResult>( "stringRequest", {id: this.getRequestId(), type: type, name: name}, result, transform );
+		const id = this.getRequestId()
+		console.log( `(${id})${Requests.ERequests[q]}( ${name} )` );
+		return this.sendPromise<Requests.IStringRequest,TResult>( "stringRequest", {id: id, type: q, name: name}, result, transform );
 	}
 	static transformStringList( result:Results.IStringList ){ return result.values; }
 	watchs():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
@@ -940,15 +947,16 @@ export class TwsService implements IGraphQL
 	{
 		if( !TwsService.accounts )
 		{
-			if( !this.authorizationService.loggedIn )
-			{
-				if( !this.authorizationService.enabled() )
-					await this.googleLogin( "" );
-				else
-					await this.authorizationService.subscribe().toPromise();
-			}
+			await this.authorizationService.login();
+			// if( !this.authorizationService.loggedIn )
+			// {
+			// 	if( !this.authorizationService.enabled() )
+			// 		await this.googleLogin( "" );
+			// 	else
+			// 		await this.authorizationService.subscribe().toPromise();
+			// }
 			const accounts = await this.connection.reqManagedAccts();
-			TwsService.accounts=accounts;
+			TwsService.accounts = accounts;
 		}
 		return TwsService.accounts;
 	}

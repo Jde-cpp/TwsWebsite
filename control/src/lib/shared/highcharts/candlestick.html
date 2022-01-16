@@ -1,6 +1,6 @@
 <div *ngIf="settingsContainer?.loadedPromise | async" style="display: flex;justify-content: center;align-items: center;">
 	<span>
-		<date-range [settings]="settings.dateRange" (settingsChange)="onDateRangeChange($event)"></date-range>
+		<date-range [settings]="settings.dateRange" (change)="onDateRangeChange($event)"></date-range>
 	</span>
 	<link-select placeholder="Zoom" (selectChange)="zoomChange($event)" [options]="this.settings.zoom"></link-select>
 	<link-select placeholder="Candle Stick Length" (selectChange)="candleStickChange($event)" [options]="candleSticks"></link-select>

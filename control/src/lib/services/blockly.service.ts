@@ -18,19 +18,21 @@ export class BlocklyService
 
 	private send<T>( msg:Proto.IRequestUnion, result?:(x:Proto.ResultUnion)=>T ):Promise<T>
 	{
-		return new Promise<T>( (resolve,reject)=>
+		return new Promise<T>( async (resolve,reject)=>
 		{
 			let bytes = Proto.RequestUnion.encode( msg ).finish();
-			this.tws.blockly( bytes ).then( (bytes:Uint8Array)=>
+			try
 			{
+				bytes = await this.tws.blockly( bytes );
 				var value = Proto.ResultUnion.decode( bytes );
 				if( value.error )
-					reject( value.error );
-				if( result )
-					resolve( result(value) );
-				else
-					resolve( null );
-			}).catch( (e)=>reject(e) );
+					throw value.error;
+				resolve( result ? result(value) : null );
+			}
+			catch( e )
+			{
+				reject( e );
+			}
 		});
 	}
 	loadEnabled():Promise<Proto.IFunction[]>
@@ -39,28 +41,25 @@ export class BlocklyService
 	}
 	loadAll():Promise<Proto.IFunctions>
 	{
-		return new Promise<Proto.IFunctions>( (resolve, reject)=>
+		return new Promise<Proto.IFunctions>( async (resolve, reject)=>
 		{
 			if( BlocklyService.functions )
-				resolve( BlocklyService.functions );
-			else
+				return resolve( BlocklyService.functions );
+			if( BlocklyService.loadAllRequests )
+				return BlocklyService.loadAllRequests.push( {resolve,reject} );
+			BlocklyService.loadAllRequests = [ {resolve,reject} ];
+			try
 			{
-				if( !BlocklyService.loadAllRequests )
-				{
-					BlocklyService.loadAllRequests = [];
-					this.send<Proto.IFunctions>( {}, (x)=>{return x.functions;} ).then( (functions)=>
-					{
-						BlocklyService.functions = functions;
-						BlocklyService.loadAllRequests.forEach( x => x.resolve(functions) );
-						BlocklyService.loadAllRequests = undefined;
-					}).catch( (e)=>reject(e) );
-				}
-				BlocklyService.loadAllRequests.push( {resolve,reject} );
+				BlocklyService.functions = await this.send<Proto.IFunctions>( {}, (x)=>{return x.functions;} );
+				BlocklyService.loadAllRequests.forEach( x => x.resolve(BlocklyService.functions) );
+				BlocklyService.loadAllRequests = undefined;
 			}
+			catch( e ){ reject( e ); }
 		});
 	}
 	load( id:string ):Promise<Proto.IFunction>
 	{
+		console.log( `blockly.load( '${id}' )` );
 		return this.send<Proto.IFunction>( {idRequest:{type:Proto.ERequestType.Load, id:id}}, (x)=>{return x.function;} );
 	}
 	copy( fromId:string, to:Proto.IFunction ):Promise<void>

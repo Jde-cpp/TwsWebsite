@@ -2,14 +2,17 @@
 	<mat-expansion-panel (opened)="openGroup(entry.id)" *ngFor="let entry of collection">
 		<mat-expansion-panel-header>
 			<mat-panel-title class="panel-title">
-				<!-- [ngClass]="expand" -->
-				<img class=profile_pic [src]=entry.imgSrc/>
-				<span class=tweet_text>{{entry.display}}</span>
-				<span class="separator">
-					<span title=block class="material-icons mdc-icon-button">highlight_off</span>
-					<span class="material-icons separator">favorite</span>
-					<span>{{entry.likes}}</span>
-				</span>
+				<mat-panel-description>
+					<img class=profile_pic [src]=entry.imgSrc/>
+					<div class="tweet-description">
+						<span class=tweet_text>{{entry.display}}</span>
+						<span class="separator">
+							<span title=block class="material-icons mdc-icon-button">highlight_off</span>
+							<span class="material-icons separator">favorite</span>
+							<span>{{entry.likes}}</span>
+						</span>
+					</div>
+				</mat-panel-description>
 			</mat-panel-title>
 		</mat-expansion-panel-header>
 		<ng-template matExpansionPanelContent>

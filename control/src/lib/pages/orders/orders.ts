@@ -37,7 +37,9 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngOnInit()
 	{
-		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Orders" : "Orders";
+		const t = this.componentPageTitle.title;
+		if( !t.startsWith("Orders") )
+			this.componentPageTitle.title = "Orders";
 	};
 
 	async ngAfterViewInit()

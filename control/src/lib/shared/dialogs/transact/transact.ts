@@ -48,7 +48,6 @@ export class TransactDialog implements AfterViewInit
 	constructor( public dialogRef:MatDialogRef<TransactDialog>, @Inject(MAT_DIALOG_DATA) public data:TransactDialogData, private tws : TwsService, private dialog : MatDialog )
 	{
 		this.quantity2 = data.quantity || 100;
-		//this._submitting = false;
 		this.isBuy = data.isBuy;
 		this.showStop = data.showStop!=false;
 		if( data.tick )
@@ -71,7 +70,20 @@ export class TransactDialog implements AfterViewInit
 	{
 	  this.dialogRef.close( null );
 	}
-
+	reqPosition():void
+	{
+		this.position = null;
+		let s = this.tws.reqPositions( this.selectedAccount );
+		s.subscribe({ next:value=>
+		{
+			if( !value || value.contract.id==this.detail.contract.id )
+			{
+				this.position = value ? value.position : 0;
+				this.tws.cancelPositions( s );
+				s = null;
+			}
+		} });
+	}
 	onSubmitClick():void
 	{
 		const subscription = this.tws.placeOrder( this.data.tick.contract, {isBuy:this.isBuy, quantity: this.quantity2, limit: this.limit, transmit: true, whatIf: true, account: this.selectedAccount, usePriceMngmntAlgrthm: 1, outsideRth: this.outsideRth}, this.stop, this.stopLimit );
@@ -107,7 +119,9 @@ export class TransactDialog implements AfterViewInit
 		const prefix = `rgba(${red},${green},0,`;
 		return `linear-gradient(to right, ${prefix}255),${prefix}0))`;
 	}
-	get description(){ return /*this.option ? this.option.description :*/ `${this.detail.contract.symbol} - ${this.detail.longName}`; }
+	get description(){ return `${this.detail.contract.symbol} - ${this.detail.longName}`; }
+	//get description(){ var pos = this.position==null ? "" : ` Position=${this.position}`;  return `${this.detail.contract.symbol} - ${this.detail.longName}${pos}`; }
+	get quantityDescription(){ return `Quantity${this.position==null ? "" : " "+this.position}`; }
 	detail:Results.IContractDetail;
 
 	get ask(){return this.tick.ask || 0;}
@@ -125,19 +139,25 @@ export class TransactDialog implements AfterViewInit
 		let account = this.settingsContainer.value.selectedAccount;
 		if( !account && this.allAccounts.size==1 )
 			account = this.allAccounts.keys().next().value;
+		if( account && this.position===undefined )
+			this.reqPosition();
 		return account;
 	} set selectedAccount(v)
 	{
 		if( this.selectedAccount!=v )
 		{
+			this.position = undefined;
 			this.settingsContainer.value.selectedAccount=v;
 			this.settingsContainer.save();
 		}
+		if( this.position===undefined )
+			this.reqPosition();
 	}
 	get settingsContainer(){ return this.data.settingsContainer;}
 	showStop:boolean;
 	get stop(){return this._stop;} set stop(value){this._stop = Math.round(value*100)/100;} private _stop:number;
 	get stopLimit(){return this._stopLimit;} set stopLimit(value){this._stopLimit = Math.round(value*100)/100;} private _stopLimit:number;
+	position:number;
 	tick:TickEx;
 	submitting=false;
 }

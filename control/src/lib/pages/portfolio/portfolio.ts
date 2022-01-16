@@ -34,25 +34,17 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 
 	async ngAfterViewInit()
 	{
-		this.profileService.get<Settings>( PortfolioComponent.profileKey ).then( (value)=>
+		this.settings = await this.profileService.get<Settings>( PortfolioComponent.profileKey );
+		try
 		{
-			this.settings = value;
-/*			if( ! )
-			{
-				//this.tws.googleLogin( "" ).then( ()=>this.onSettingsLoaded() ).catch( (e)=>{debugger; this.cnsl.error(e.message);} );
-			}
-			else*/ if( this.authorizationService.enabled() && !this.authorizationService.loggedIn )
-			{
-				console.log( "Portfolio.authorizationService.subscribe" );
-				this.authorizationSubscription = this.authorizationService.subscribe();
-				this.authorizationSubscription.subscribe({
-					next: ()=>this.onSettingsLoaded(),
-					error: (e)=>{debugger;this.cnsl.error( e.message, e );}
-				});
-			}
-			else
-				this.onSettingsLoaded();
-		});
+			await this.authorizationService.login();
+			this.onSettingsLoaded()
+		}
+		catch( e )
+		{
+			debugger;
+			this.cnsl.error( e["message"], e );
+		}
 	}
 
 	ngOnDestroy()
@@ -72,6 +64,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		try
 		{
 			numbers = await this.tws.reqManagedAccts();
+			if( !Object.keys(numbers).length )
+				throw "No Managed Accounts";
 		}
 		catch( e )
 		{
@@ -203,9 +197,9 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			{
 				this.tws.averageVolume( contractIds ).subscribe(
 				{
-					next: (x)=>this.holdings.find( (h)=>h.contractId==x.contractId ).volumeAverage = x.value
+					next: (x)=>this.holdings.find( (h)=>h.contractId==x.contractId ).volumeAverage = x.value,
+					error:  e=>console.error( e )
 				});
-
 			}
 		});
 		console.log( "this.viewPromise=true" );

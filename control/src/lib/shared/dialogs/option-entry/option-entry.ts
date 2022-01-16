@@ -12,7 +12,6 @@ import * as IbResults from 'jde-cpp/results';  import Results = IbResults.Jde.Ma
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as myBlockly2 from 'jde-cpp/blockly'; import Blockly = myBlockly2.Jde.Blockly.Proto;
-import { MatSelectChange } from '@angular/material/select';
 
 export class OptionEntryData
 {
@@ -138,7 +137,8 @@ export class OptionEntryDialog implements OnDestroy
 	}
 	updateTicker( expiration:number, strike:number )
 	{
-		this.subscription = this.tws.reqMktData( this.strikes[this.strike][this.isCall ? 0 : 1], [Requests.ETickList.PlPrice], false );
+		const strikeValues = this.strikes.get( this.strike );
+		this.subscription = this.tws.reqMktData( strikeValues[this.isCall ? 0 : 1], [Requests.ETickList.PlPrice], false );
 		this.subscription.subscribe2( this.option );
 	}
 	get ask(){return this.option.ask || 0;}

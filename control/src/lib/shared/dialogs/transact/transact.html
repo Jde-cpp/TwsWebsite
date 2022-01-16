@@ -36,7 +36,7 @@
 	</div>
 	<div style="display: flex;align-items: center; justify-content: center;">
 		<span>
-			<quantity [step]="100" [value]="quantity2" (valueChange)="quantity2=$event"></quantity>
+			<quantity [step]="100" [placeholder]="quantityDescription" [value]="quantity2" (valueChange)="quantity2=$event"></quantity>
 		</span>
 		<span>
 			<quantity [step]=".01" placeholder="limit" [value]="limit" (valueChange)="limit=$event"></quantity>

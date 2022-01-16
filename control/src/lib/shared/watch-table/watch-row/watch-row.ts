@@ -110,23 +110,28 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 		var display = null;
 		if( this.tick )
 		{
-			var volume = this.tick.volume*100;
-			let divisor = 1;  let fixedPlaces = 0; let suffix = "";
-			let calc = ( amount:number, sffx:string ):boolean=>
+			if( this.volumeAverage )
+				display = this.decimalPipe.transform( this.tick.volume*100*100*this.tick.volumeMultiplier/this.volumeAverage, '1.1-1' );
+			else
 			{
-				if( volume>amount )
-					divisor = amount;
-				if( divisor!=1 )
+				var volume = this.tick.volume*100;
+				let divisor = 1;  let fixedPlaces = 0; let suffix = "";
+				let calc = ( amount:number, sffx:string ):boolean=>
 				{
-					fixedPlaces =  volume>amount*10 ? volume>amount*100 ? 0 : 1 : 2;
-					suffix = sffx;
-				}
-				return divisor!=1;
-			};
+					if( volume>amount )
+						divisor = amount;
+					if( divisor!=1 )
+					{
+						fixedPlaces =  volume>amount*10 ? volume>amount*100 ? 0 : 1 : 2;
+						suffix = sffx;
+					}
+					return divisor!=1;
+				};
 
-			calc( 1_000_000, "M" ) || calc( 1_000, "K" );
-			volume/=divisor;
-			display = (fixedPlaces==0 ? volume.toString() : (volume).toFixed(fixedPlaces))+suffix;
+				calc( 1_000_000, "M" ) || calc( 1_000, "K" );
+				volume/=divisor;
+				display = (fixedPlaces==0 ? volume.toString() : (volume).toFixed(fixedPlaces))+suffix;
+			}
 		}
 		return display;
 	}
@@ -144,7 +149,7 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	showMenu=false;
 	get symbol():string|null{ return this.tick?.detail.contract.symbol; }
 	@ViewChild("symbolInput") symbolInput: ElementRef;
-	set tick( x ){ this._tick = x; /*console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );if( this._tick ) this.subscribe(); else this.unsubscribe();*/ } get tick(){ return this._tick; } private _tick:TickDetails;
+	set tick( x ){ this.#tick = x; /*console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );if( this.#tick ) this.subscribe(); else this.unsubscribe();*/ } get tick(){ return this.#tick; } #tick:TickDetails;
 	get selected(){ return this._selected;} set selected( x )
 	{
 		if( x )
@@ -155,4 +160,5 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	} _selected:boolean;
 	parent:WatchTableComponent;
 	viewPromise:Promise<boolean>=null;// = new Promise<void>( (resolve) => { this.resolve = resolve;} );
+	volumeAverage:number;
 }

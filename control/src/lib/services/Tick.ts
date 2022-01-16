@@ -161,6 +161,7 @@ export class Tick implements ITickObserver
 			this._volume = value>0 ? value : null;
 	} _volume:number|null;
 	volumeAverage:number;
+
 	object_id; static _id=0;
 }
 /*Tick + Contract Info*/
@@ -248,4 +249,18 @@ export class TickDetails extends TickEx
 			detail.contract.multiplier = 1;
 	}
 	override get contract():IB.IContract{ return this.detail.contract; }
+
+	get volumeMultiplier()
+	{
+		if( !this.isMarketOpen )
+			return 1;
+		const extendedTotal = this.detail.tradingHours[0].end - this.detail.tradingHours[0].start;
+		const liquidTotal = this.detail.liquidHours[0].end - this.detail.liquidHours[0].start;
+		const now = new Date().getTime()/1000;
+		const extendedStart = Math.min( this.detail.liquidHours[0].start, now ) - this.detail.tradingHours[0].start;
+		const liquid = Math.min( this.detail.liquidHours[0].end, now ) - Math.min( this.detail.liquidHours[0].start, now );
+		const extendedEnd = Math.min( this.detail.tradingHours[0].end, now ) - Math.min( this.detail.liquidHours[0].end, now );
+		const y = (extendedStart+extendedEnd)/(extendedTotal-liquidTotal)*.02	+liquid/liquidTotal*.98;
+		return Math.round( 1/y/10 )/10;
+	}
 }

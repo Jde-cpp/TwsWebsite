@@ -25,3 +25,29 @@
 {
 	align-items: center; /* align vertical */
 }
+
+.mat-expansion-panel-header-title,
+.mat-expansion-panel-header-description {
+  flex-basis: 0;
+}
+
+.tweet-description {
+	width: 100%;
+	display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.expansion-headers-align .mat-form-field + .mat-form-field {
+  margin-left: 8px;
+}
+
+// .mat-expansion-panel-content div table tbody tr td a
+// {
+// 	color: lightblue;
+// }
+
+// .mat-expansion-panel-body a
+// {
+// 	color: lightblue;
+// }

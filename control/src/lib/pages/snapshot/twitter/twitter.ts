@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy, AfterViewInit, ViewEncapsulation } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { IErrorService, IProfile } from 'jde-framework';
 import { TwsService } from '../../../services/tws.service';
@@ -29,7 +29,7 @@ class Tweet
 	get url(){ return "https://twitter.com/anyuser/status/"+this.id; }
 }
 
-@Component({ selector: 'twitter', styleUrls: ['twitter.scss'], templateUrl: './twitter.html' })
+@Component({ selector: 'twitter', styleUrls: ['twitter.scss'], templateUrl: './twitter.html', encapsulation: ViewEncapsulation.None })
 export class TwitterComponent implements OnInit, AfterViewInit, OnDestroy
 {
 	constructor( private tws:TwsService, @Inject('IProfile') private profileService:IProfile, @Inject('IErrorService') private cnsl: IErrorService )

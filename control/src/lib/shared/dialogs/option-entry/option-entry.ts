@@ -131,7 +131,7 @@ export class OptionEntryDialog implements OnDestroy
 				}
 			},
 			complete: ()=>{ debugger; console.log( `status=complete` ); },
-			error: (e)=>{ debugger; console.error( `error=${e.message}` ); }
+			error: (e)=>{ debugger; this.dialogRef.close( e ); console.error( `error=${e.message}` ); }
 		});
 
 	}

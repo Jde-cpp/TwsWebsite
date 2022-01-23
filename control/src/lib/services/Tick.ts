@@ -120,10 +120,10 @@ export class Tick implements ITickObserver
 	{
 		this._bidSize = value>0 ? value : null;} _bidSize:number|null; _bidSizeDelay:number|null;
 	completed:boolean=false;
-	get close(){return this._close;} set close(value)
+	get close(){return this.#close;} set close(value)
 	{
-		this._close = value;
-	} private _close:number;
+		this.#close = value;
+	} #close:number;
 	get delay():number{ return this.isMarketOpen ? null : null;} nextUpdate:number=Date.now();
 	get currentPrice():number
 	{

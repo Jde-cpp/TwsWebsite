@@ -130,6 +130,7 @@ class Connection
 				else if( message.orderUpdate )
 				{
 					let p = this.orders.get( message.orderUpdate.status.orderId );
+					console.log( `(${message.orderUpdate.status.orderId}) order update existing=${p ? true : false}` );
 					if( p )
 					{
 						p.setStatus( message.orderUpdate.status );
@@ -350,6 +351,7 @@ class Connection
 							continue;
 						if( message.orders )
 						{
+							console.log( `(${message.orders.requestId}) message.orders` );
 							for( const o of message.orders.orders )
 							{
 								const original = this.orders.get( o.order.id );
@@ -615,8 +617,16 @@ class Connection
 		console.log( `(${id})averageVolume( ${contractIds.join(",")} )` );
 		const msg = new Requests.RequestUnion( {genericRequests:{id: id, type: Requests.ERequests.AverageVolume, ids: contractIds}} );
 		const callback = new Subject<Results.ContractValue>();
-		let complete = contractIds.length==1 ? ()=>true : (v)=>!v.contractId;
-		var observable = new RequestObservable( (m)=>m.contractValue, (v:Results.ContractValue)=>callback.next(v), (v)=>{let c=complete(v); if(c)callback.complete(); return c;}, (e)=>callback.error(e) );
+//		let complete = contractIds.length==1 ? ()=>true : (v)=>!v.contractId;
+		var observable = new RequestObservable( (m)=>m.contractValue, (v:Results.ContractValue)=>callback.next(v), (v)=>
+		{
+			const c = contractIds.length==1 || !v.contractId;
+			if( c && v.contractId )
+				callback.next( v );
+			if( c )
+				callback.complete();
+			return c;
+		}, (e)=>callback.error(e) );
 		this.observers.set( id, observable );
 		this.send( msg );
 		return callback;

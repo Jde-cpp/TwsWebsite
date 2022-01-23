@@ -53,13 +53,10 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			this.tws.accountUpdatesUnsubscribe( this.requests );
 		if( this.mktDataSubscriptions.size )
 			this.tws.cancelMktData( this.mktDataSubscriptions.values() );//TickObservable[]=[];
-		//this.authorizationSubscription?.;
-
 	}
 
 	async onSettingsLoaded()
 	{
-		console.log( "PortfolioComponent::onSettingsLoaded" );
 		let numbers:StringMap;
 		try
 		{
@@ -88,7 +85,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		this.requests.set( accountId, callbacks );
 		callbacks[0].subscribe( {next:accountUpdate =>
 		{
-			//console.log( `${accountUpdate.account}[${accountUpdate.key}]=${accountUpdate.value}` );
 			this.onAccountUpdate(accountUpdate);}, error:  e=>{console.error(e);}
 		});
 		callbacks[1].subscribe(
@@ -140,8 +136,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	onPortfolioUpdate = ( value: Results.IPortfolioUpdate ):void =>
 	{
 		const contract = value.contract;
-		// if( contract.localSymbol!="BGGSQ.ESC" )
-		// 	return;
 		const contractId = contract.id;
 		if( !this.holdings.some( (holding) =>
 		{
@@ -174,10 +168,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 					subscription.subscribe2( holding );
 				}
 				if( this.viewPromise )
-				{
 					this.loadPreviousDay( contract, isMarketOpen, holding, MarketUtilities.previous(contract) );
-				}
-
 			}
 		}
 	}
@@ -189,8 +180,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			next: ( bar:Results.IDaySummary ) =>
 			{
 				var h = this.holdings.find( x=>x.contractId==bar.contractId );
-				//if( h.contract.symbol=="XOM" )
-				//	debugger;
 				h.setDaySummary( bar,  MarketUtilities.previousByType(h.contract.exchange, IB.SecurityType.Stock) );
 			},
 			complete: ()=>
@@ -356,7 +345,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	long:TermHoldingSummary=new TermHoldingSummary();
 	short:TermHoldingSummary=new TermHoldingSummary();
 	connected = false;
-	//get dailyReturn():number{ return this.pnl/this.valuePrevious; }
 	selectedAccounts: string[];
 	allAccounts=new Map<string,string>(); //{ [k: string]: string };
 	get totalCash():number{ let sum=0; for( let value of this.cash.values() ) sum+=value; return sum; }

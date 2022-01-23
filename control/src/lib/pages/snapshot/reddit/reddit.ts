@@ -30,7 +30,6 @@ export class RedditComponent implements OnInit, AfterViewInit, OnDestroy
 	ngOnInit()
 	{
 		console.log( "RedditComponent::ngOnInit" );
-		//this.tabSubscription = this.tabEvents.subscribe( {next: value=>{this.isActive = this.index==value;}} );
 	}
 	async ngAfterViewInit()
 	{
@@ -50,12 +49,13 @@ export class RedditComponent implements OnInit, AfterViewInit, OnDestroy
 	{
 		RedditComponent.settings.save();
 	}
-	block( e:PointerEvent, article:Entry )
+	async block( e:PointerEvent, article:Entry )
 	{
 		e.stopPropagation();
 		let txt = '<a href="https://www.reddit.com/user/';
 		let suffix = article.content.substring( article.content.indexOf(txt)+txt.length );
-	//	this.tws.redditBlock( suffix.substring(0, suffix.indexOf('"')) );
+		await this.tws.redditBlock( suffix.substring(0, suffix.indexOf('"')) );
+		this.values.splice( this.values.indexOf(article), 1 );
 	}
 
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;

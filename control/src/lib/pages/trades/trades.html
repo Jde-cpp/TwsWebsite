@@ -21,7 +21,7 @@
 			<!-- (matSortChange)="sortData($event)"  [matSortActive]="sort.active" [matSortDirection]="sort.direction" -->
 			<ng-container matColumnDef="symbol">
 				<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
-				<mat-cell class="symbolField" *matCellDef="let element"> {{element.symbol}} </mat-cell>
+				<mat-cell class="symbolField" *matCellDef="let element"> {{element.display}} </mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="shares">
 				<mat-header-cell mat-sort-header class="numberHeader" *matHeaderCellDef> Shares </mat-header-cell>

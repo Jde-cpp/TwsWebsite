@@ -220,7 +220,8 @@ export class MarketUtilities
 		const now = new Date();
 		var result:string;
 		const month = expiration.toLocaleString( 'default', {month: 'short'} );
-		if( expiration.getTime()-now.getTime()<6*24*60*60*1000 )
+		const prior = expiration.getTime()<now.getTime();
+		if( !prior && expiration.getTime()-now.getTime()<6*24*60*60*1000 )
 			result = DateUtilities.dayOfWeek( expiration );
 		else if( expiration.getDate()>14 && expiration.getDate()<22 && expiration.getUTCDay()==5 )
 		{
@@ -235,6 +236,11 @@ export class MarketUtilities
 	}
 
 	static optionDisplay( contract?:IB.IContract ):string{ return `${contract.symbol}(${MarketUtilities.optionDayDisplay(contract.expiration)})@${contract.strike}`; }
+	static symbolOptionDisplay( symbol:string ):string
+	{
+		let expiration = new Date( 2000+(+symbol.substring(6,8)), +symbol.substring(8,10)-1, +symbol.substring(10,12) );//	'TSLA  220121P00930000'
+		return `${symbol.substring(0,6).trimEnd()} ${symbol[12]=="C" ? "Call" : "Put"} (${MarketUtilities.optionDateDisplay(expiration)})@${+symbol.substring(13,21)/1000}`;
+	}
 //, '1.2-2'
 	static numberDisplay( value:number, decimalPipe: DecimalPipe ):string//TODO move to pipe
 	{

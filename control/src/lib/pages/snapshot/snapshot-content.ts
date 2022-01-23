@@ -29,11 +29,8 @@ export class SymbolSettings implements IAssignable<SymbolSettings>
 {
 	assign( value:SymbolSettings )
 	{
-	//	this.shortInterest = value.shortInterest;
-	//	this.shortInterestDate=value.shortInterestDate;
 		this.tabIndex = value.tabIndex;
 	}
-	//shortInterest:number;shortInterestDate:Date;
 	tabIndex:number;
 }
 
@@ -107,7 +104,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 					tick.low = bar.low;
 					tick.open = bar.open;
 				}
-				else if( tick.isMarketOpen || bar.day==previousDay )
+				else if( tick.isMarketOpen || bar.day==previousDay )//19012=thursday, close=996.27
 					tick.close = bar.close;
 				else if( bar.day>previousDay )
 				{
@@ -143,7 +140,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 
 		this.subscription = this.tws.reqMktData( this.contract.id, ticks, false );
 		this.subscription.subscribe2( this.tick );
-		tick.volumeAverage = ( await ObservableUtilities.toPromiseSingle<Results.ContractValue>(()=>this.tws.averageVolume([this.contract.id]), false) ).value;
+		tick.volumeAverage = ( await ObservableUtilities.toPromiseSingle<Results.ContractValue>(()=>this.tws.averageVolume([this.contract.id]), false, true) ).value;
 		console.log( `volume = ${tick.volume*100}, volumeAverage = ${tick.volumeAverage} ${Math.round(tick.volume*100/tick.volumeAverage*10)/10}` );
 	}
 	onTransactClick( buy:boolean )
@@ -223,7 +220,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 			minValue = Math.min( bar[1], minValue );
 			maxValue = Math.max( bar[1], maxValue );
 		}
-		//minValue = 1180;
 		const showLarge = false;
 		let tick = this.tick;
 		let series:Highcharts.SeriesLineOptions =
@@ -284,7 +280,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		};
 		window.Highcharts = Highcharts;
 		this._charts.push( Highcharts.stockChart(showLarge ? 'chart2' : 'chart', options) );
-		//console.log( `showChart2 finished` );
 	}
 	onError = ( error: Results.IError ):void =>
 	{
@@ -294,7 +289,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	};
 	onTabChange( e:MatTabChangeEvent )
 	{
-		//console.log( "SnapshotContentComponent::onTabChange" );
 		this.selectedTab.setValue( this.settings.value.tabIndex = e.index );
 		this.settings.save();
 	}
@@ -329,7 +323,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		const extendedStart = Math.min( this.detail.liquidHours[0].start, now ) - this.detail.tradingHours[0].start;
 		const liquid = Math.min( this.detail.liquidHours[0].end, now ) - Math.min( this.detail.liquidHours[0].start, now );
 		const extendedEnd = Math.min( this.detail.tradingHours[0].end, now ) - Math.min( this.detail.liquidHours[0].end, now );
-		const y = (extendedStart+extendedEnd)/(extendedTotal-liquidTotal)*.02	+liquid/liquidTotal*.98;
+		const y = (extendedStart+extendedEnd)/(extendedTotal-liquidTotal)*.0005	+liquid/liquidTotal*.98;
 		return Math.round( 1/y/10 )/10;
 	}
 }

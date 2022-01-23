@@ -4,7 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Subject, Observable, Subscription, forkJoin, CompletionObserver } from 'rxjs';
 import {SeriesCandlestickOptions,SeriesColumnOptions} from "highcharts";
 import * as Highstock from "highcharts/highstock";
-import { TickEx } from '../../services/Tick';
+import { TickDetails, TickEx } from '../../services/Tick';
 
 import {IErrorService} from 'jde-framework'
 import { IProfile } from 'jde-framework';
@@ -50,9 +50,10 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 	run = async ():Promise<void> =>
 	{
 		console.log( `CandlestickComponent::run( ${DateUtilities.displayDay(this.settingsContainer.value.dateRange.start)}, ${DateUtilities.displayDay(this.settingsContainer.value.dateRange.end)} )` );
-		const today = MarketUtilities.currentTradingDay()
-		let end = Math.min( this.end, today ) || today;
-		var days = this.start ? end-this.start+1 : 1;
+		let today = MarketUtilities.currentTradingDay( null, this.tick.detail.liquidHours[0] )
+		const end = Math.min( this.end, today ) || today;
+		const start = this.timeFrame ? end-this.timeFrame : this.start;
+		var days = start ? end-start+1 : 1;
 		if( days>5 )
 			days = Math.round( days*5/7 );
 		try
@@ -132,6 +133,7 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 	loaded:boolean;
 	get contract(){return this.tick.contract;}
 	chart:Highstock.StockChart;
+	get timeFrame():Day|null{ return this.settingsContainer.value.dateRange.timeFrame; }
 	get start():Day|null{ return this.settingsContainer.value.dateRange.start; }
 	get end():Day|null{ return this.settingsContainer.value.dateRange.end ?? this.settingsContainer.value.dateRange.max; }
 	set zoomHours(value:number){this._zoomHours=value;this.run();} get zoomHours(){return this._zoomHours;} private _zoomHours: number;
@@ -140,7 +142,7 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 	isActive:boolean;
 	get candleSticks(){ return this.settingsContainer.value.candleSticks; }
 	@Input() index:number; indexParentTab:number;
-	@Input() set tick(value){ this._tick=value; } get tick(){return this._tick;} _tick: TickEx;
+	@Input() set tick(value){ this.#tick=value; } get tick(){return this.#tick;} #tick: TickDetails;
 	@Input() tabEvents:Observable<number>; private tabSubscription:Subscription;
 }
 

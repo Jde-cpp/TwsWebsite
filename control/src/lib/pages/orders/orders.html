@@ -5,7 +5,7 @@
 		<mat-table style="display: inline-block;width:1200px" #mainTable matSort [dataSource]="data" class="mat-elevation-z8" (matSortChange)="sortData($any($event))"  matSortActive="sort.active" matSortDirection="sort.direction">
 			<ng-container matColumnDef="symbol">
 				<mat-header-cell mat-sort-header class="symbolCell" *matHeaderCellDef> Symbol </mat-header-cell>
-				<mat-cell class="symbolCell" *matCellDef="let element"> {{element.contract.symbol}} </mat-cell>
+				<mat-cell class="symbolCell" [class.strikeout]="element.statusString=='Canceled'" *matCellDef="let element"> {{element.contract.symbol}} </mat-cell>
 			</ng-container>
 			<ng-container matColumnDef="id">
 				<!-- <mat-header-cell mat-sort-header class="dateTimeHCell" *matHeaderCellDef></mat-header-cell> -->
@@ -18,7 +18,7 @@
 			<ng-container matColumnDef="shares">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> Shares </mat-header-cell>
 				<!-- <mat-cell class="numberBCell" *matCellDef="let element">{{ quantityDisplay | number:'1.0-0'}}</mat-cell> -->
-				<mat-cell class="numberBCell" *matCellDef="let element">
+				<mat-cell class="numberBCell" [class.strikeout]="element.statusString=='Canceled'" *matCellDef="let element">
 					<!-- <div class="cell-wrapper"> -->
 						<quantity style="display: flex;width: 100%;" *ngIf="isEditing( element, 'shares' )"
 							placeholder="{{element.quantityDisplay}}"
@@ -42,7 +42,7 @@
 			<ng-container matColumnDef="Limit">
 				<mat-header-cell mat-sort-header class="numberHCell" *matHeaderCellDef> limit </mat-header-cell>
 				<!-- <mat-cell class="numberBCell" *matCellDef="let element">{{element.limit | number:'1.2-2'}}</mat-cell> -->
-				<mat-cell class="numberBCell" *matCellDef="let element">
+				<mat-cell class="numberBCell" [class.strikeout]="element.statusString=='Canceled'" *matCellDef="let element">
 					<!-- <div> -->
 						<quantity style="display: flex;width: 100%;" *ngIf="isEditing( element, 'limit' )" placeholder="{{element.limit}}"
 						[step]=.01
@@ -89,7 +89,7 @@
 				</mat-cell>
 			</ng-container>
 			<mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></mat-header-row>
-			<mat-row mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+			<mat-row mat-row [class.strikeout]="row.statusString=='Canceled'" *matRowDef="let row; columns: displayedColumns;"></mat-row>
 		</mat-table>
 	</div>
 </ng-container>

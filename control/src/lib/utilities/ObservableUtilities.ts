@@ -11,12 +11,12 @@ export class ObservableUtilities
 			fnctn().subscribe(
 			{
 				next: value=>{ results.push(value); },
-				complete: ()=>{ if( !results.length && !expectEmpty) reject( {results: results, error:"no results"} ); else resolve(results); },
+				complete: ()=>{ if( !results.length && !expectEmpty) reject( {code: -1, message:"no results, expecting some."} ); else resolve(results); },
 				error: e=>{ reject( {results: results, error:e} ); }
 			});
 		});
 	}
-	static toPromiseSingle<T>( fnctn:()=>Observable<T>, expectNull:boolean=true ):Promise<T>
+	static toPromiseSingle<T>( fnctn:()=>Observable<T>, expectNull:boolean=true, swallowError=false ):Promise<T>
 	{
 		return new Promise<T>( async (resolve,reject)=>
 		{
@@ -27,7 +27,13 @@ export class ObservableUtilities
 					throw `not expecting multiple results... results.length=${results.length}`;
 				resolve( results[0] );
 			}
-			catch( e ){reject(e);}
+			catch( e )
+			{
+				if( swallowError )
+					console.log( `[${e["code"]}] ${e["message"]}` );
+				else
+					reject( e );
+			}
 		});
 	}
 }

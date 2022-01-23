@@ -6,6 +6,7 @@ import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Mar
 
 import {IData} from '../../shared/summary/summary'
 import { ITradeCommon } from '../../services/ExecutionObserver';
+import { MarketUtilities } from '../../utilities/marketUtilities';
 
 
 
@@ -60,20 +61,24 @@ export class TradeResult
 		return remainder;
 	}
 	symbol:string;
-	get openTime():Date{ return this.first.date; }
-	get gain():number{ return this.proceeds-this.cost; }
-	get closeTime():Date|null{ return this.last ? this.last.date : null; }
-	get openPrice():number{ return (this.isLong ? this.cost : this.proceeds)/Math.abs(this.shares); } //let sum=0; return this.openTrades.forEach( value=>sum+= ); }
-	get closePrice():number{ const value = this.isLong ? this.proceeds : this.cost; return value==null ? null : value/Math.abs(this.shares);}
+	get display():string{ return this.isOption ? MarketUtilities.symbolOptionDisplay( this.symbol ) : this.symbol; }
+
 	get shares():number{ return sum( this.openTrades, (value)=>value.quantity ); }
 	get offsetShares():number{ return this.offsetTrades ? sum( this.offsetTrades, a=>a.quantity ) : null; }
 	get AbsShares():number{ return Math.abs(this.shares); }
-	get isLong():boolean{ return this.shares>0; }
+
+	get openPrice():number{ return (this.isLong ? this.cost : this.proceeds)/Math.abs(this.shares); } //let sum=0; return this.openTrades.forEach( value=>sum+= ); }
+	get closePrice():number{ const value = this.isLong ? this.proceeds : this.cost; return value==null ? null : value/Math.abs(this.shares);}
 	get purchasePrice(){ return this.isLong ? this.openPrice : this.closePrice;}
 	get salesPrice(){ return this.isLong ? this.closePrice : this.openPrice; }
 
 	get cost():number{ let trades = this.isLong ? this.openTrades : this.offsetTrades; return trades ? sum(trades, (value)=>value.price* value.quantity+value.commission) : null; }
 	get proceeds(){    let trades = this.isLong ? this.offsetTrades : this.openTrades; return trades ? sum(trades, (value)=>value.price*-value.quantity+value.commission) : null; }
+	get gain():number{ return this.proceeds-this.cost; }
+	get isOption(){ return this.symbol.length==21; }
+	get isLong():boolean{ return this.shares>0; }
+	get openTime():Date{ return this.first.date; }
+	get closeTime():Date|null{ return this.last ? this.last.date : null; }
 
 	get salesCommissions(){    let trades = this.isLong ? this.offsetTrades : this.openTrades; return trades ? sum(trades, (a)=>a.commission) : null; }
 	get purchaseCommissions(){ let trades = this.isLong ? this.openTrades : this.offsetTrades; return trades ? sum(trades, (a)=>a.commission) : null; }

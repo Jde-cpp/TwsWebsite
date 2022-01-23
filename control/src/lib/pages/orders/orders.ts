@@ -47,7 +47,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 		await this.profile.load();
 		let data:OrderView[] = [];
 		let orders:Order[] = await this.tws.reqAllOpenOrders();
-		for( let o of orders )
+		for( let o of orders.filter(o=>o.state) )
 			data.push( new OrderView(o) );
 
 		this.data = new MyDataSource( this.settings.sort, data );

@@ -14,7 +14,7 @@ export class WatchComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngOnInit()
 	{
-		this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Watch" : "Watch";
+		this.componentPageTitle.title = "Watch";
 	};
 
 	ngOnDestroy()

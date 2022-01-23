@@ -120,13 +120,10 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 			width: '600px',
 			data: { option: this.selectedOption, isBuy: buy, expirations: this.expirations, underlying: this.tick.detail }
 		});
-		dialogRef.afterClosed().subscribe(result =>
+		dialogRef.afterClosed().subscribe( e =>
 		{
-			// if( result && this.settings.limit!=result.limit )
-			// {
-			// 	this.settings.limit = result.limit;
-			// 	this.subscribe( this.applicationId, this.level );
-			// }
+			if( e )
+				this.cnsl.show( e );
 		});
 	}
 	expirationIndexChange( index )

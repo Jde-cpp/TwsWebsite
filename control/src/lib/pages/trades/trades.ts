@@ -22,7 +22,6 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 
 	ngOnInit()
 	{
-		//this.componentPageTitle.title = this.componentPageTitle.title ? this.componentPageTitle.title+" | Trades" : "Trades";
 		this.componentPageTitle.title = "Trades";
 	};
 

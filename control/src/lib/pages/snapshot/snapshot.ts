@@ -2,24 +2,23 @@ import { Inject, Component, OnInit, AfterViewInit, ViewChild, ElementRef, HostBi
 import { FormControl } from '@angular/forms';
 import {MatSnackBar} from '@angular/material/snack-bar';
 
-//import { TwsService } from '../../services/tws.service';
 import { TwsService } from '../../services/tws.service';
-import { IProfile } from 'jde-framework';
-import {IErrorService} from 'jde-framework'
-import {Settings} from 'jde-framework'
+import { IProfile, IErrorService, Settings } from 'jde-framework';
+import { ComponentPageTitle } from 'jde-material';
+
 import {PageSettings} from './PageSettings'
 
-import * as IbResults from 'jde-cpp/results';
-import Results = IbResults.Jde.Markets.Proto.Results;
+import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 @Component( {selector: 'snapshot.main-content.mat-drawer-container', styleUrls: ['snapshot.css'], templateUrl: './snapshot.html'} )
 export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 {
-	constructor( private tws:TwsService, private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( private tws:TwsService, private componentPageTitle:ComponentPageTitle, private change: ChangeDetectorRef, private element : ElementRef, private snackBar: MatSnackBar, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
 	ngOnInit():void
-	{}
+	{
+	}
 	async ngAfterViewInit()
 	{
 		await this.profile.loadedPromise;
@@ -49,6 +48,7 @@ export class SnapshotComponent implements OnInit, AfterViewInit, OnDestroy
 			const index = this.settings.selectedContractId ? this.previousContractIds.indexOf(this.settings.selectedContractId) : 0;
 			console.log( `selected - index=${index}, contractId='${this.settings.selectedContractId}' ids=${this.previousContractIds}` );
 			this.selected.setValue( index );
+			this.componentPageTitle.title = this.details[index].contract.symbol;
 			this.viewPromise = Promise.resolve( true );
 		}
 		catch( e )

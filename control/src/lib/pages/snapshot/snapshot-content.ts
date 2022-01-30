@@ -76,12 +76,17 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	onConfigurationClick()
 	{
 		var data:ConfigurationData = { symbolSettings: this.settings, pageSettings: this.pageSettings }
-		this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
+		let d =this.dialog.open( ConfigurationDialog, {width: '600px', data: data} );
+		d.afterClosed().subscribe( result =>
+		{
+			this.tick.delay = this.pageSettings.value.delay;
+		} );
 	}
 	async settingsLoaded()
 	{
 		this.selectedTab.setValue( this.settings.value.tabIndex );
 		let tick = this.tick = new TickDetails( this.detail );
+		this.tick.delay = this.pageSettings.value.delay;
 		try
 		{
 			await this.tws.reqFundamentals( this.detail.contract.id ).then( value=>{this.fundamentals = new Fundamentals(value);} );
@@ -104,7 +109,7 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 					tick.low = bar.low;
 					tick.open = bar.open;
 				}
-				else if( tick.isMarketOpen || bar.day==previousDay )//19012=thursday, close=996.27
+				else if( tick.isMarketOpen || bar.day==previousDay )//19019=thursday, close=996.27
 					tick.close = bar.close;
 				else if( bar.day>previousDay )
 				{

@@ -245,7 +245,15 @@ class Connection
 				else if( message.options )
 					this.optionSummaryCallbacks.get( message.options.id )[0]( message.options );
 				else if( message.daySummary )
-					{ let x = this.previousDayCallbacks.get( message.daySummary.requestId ); if( x ) x.next( message.daySummary ); else console.error( `(${message.daySummary.requestId})Could not find previousDayCallbacks.` ); }
+				{
+					const x = message.daySummary;
+					console.log( `(${x.requestId}) ${DateUtilities.fromDays(x.day)} - ${x.open} ${x.low}-${x.high} ${x.close}`)
+					const c = this.previousDayCallbacks.get( x.requestId );
+					if( c )
+						c.next( x );
+					else
+						console.error( `(${x.requestId})Could not find previousDayCallbacks.` );
+				}
 				else if( message.fundamentals )
 					this.handleFundamentals( message.fundamentals );
 				else if( message.execution )
@@ -322,11 +330,14 @@ class Connection
 					this.handleReceive( message.flex, this.flexCallbacks, "flex", true );
 				else if( message.stringResult )
 				{
-					var id = message.stringResult.id;
+					const r = message.stringResult;
+					var id =r.id;
 					if( this.callbacks.has(id) )
 					{
+						//if( message.type==Results.EResults.Query )
+						console.log( `(${r.id})${Results.EResults[r.type]} c=${r.value.length}` );
 						let x =  this.callbacks.get( id );
-						x.resolve( x.transformInput(message.stringResult) );
+						x.resolve( x.transformInput(r) );
 						this.callbacks.delete( id );
 					}
 					else
@@ -911,7 +922,6 @@ class Connection
 	googleLogin( token:string ):Promise<void>{ console.log( `(${this.requestId+1})googleLogin( ${token.length} )` ); return this.sendStringPromise<void>( token, Requests.ERequests.GoogleLogin); };
 	query<T>( ql: string ):Promise<T>
 	{
-		console.log( `${ql}` );
 		return this.sendStringPromise<T>( ql, Requests.ERequests.Query, (result:Results.IMessageUnion)=>result.stringResult, (rslt:Results.IStringResult)=>rslt.value.length ? JSON.parse(rslt.value).data : null );
 	}
 	investors( id:ContractPK ):Promise<Edgar.IInvestors>

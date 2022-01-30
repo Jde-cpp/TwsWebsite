@@ -55,7 +55,7 @@ export class Tick implements ITickObserver
 		let now = Date.now();
 		if( this.delay && now>this.nextUpdate )
 		{
-			this.nextUpdate = now+this.delay;
+			this.nextUpdate = now+this.delay*1000;
 			this._askSizeDelay = this._askSize;
 			this._askDelay = this._ask;
 			this._bidSizeDelay = this._bidSize;
@@ -124,7 +124,7 @@ export class Tick implements ITickObserver
 	{
 		this.#close = value;
 	} #close:number;
-	get delay():number{ return this.isMarketOpen ? null : null;} nextUpdate:number=Date.now();
+	get delay(){ return this.isMarketOpen ? this.#delay : null;} set delay( x ){ this.#delay=x; } #delay:number; nextUpdate:number=Date.now();
 	get currentPrice():number
 	{
 		let price = this.markPrice;

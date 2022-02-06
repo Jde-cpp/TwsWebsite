@@ -13,7 +13,7 @@ export class OrderView extends TickEx //implements IOrderObserver
 		super( openOrder.contract, null );
 		//openOrder.callback.subscribe2( this );
 	}
-	get id(){ return this.openOrder.order.id; }
+	get id(){ return this.openOrder.order.id || this.openOrder.lastStatus?.orderId; }
 	get commission(){ return this.openOrder.state.commission; }
 	get quantity(){ return this.openOrder.order.quantity; }
 	get quantityDisplay(){ return (this.isBuy ? 1 : -1)*this.quantity; }

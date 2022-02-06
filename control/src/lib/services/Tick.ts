@@ -142,7 +142,7 @@ export class Tick implements ITickObserver
 	private _optionCalc = new Map<Results.ETickType,Results.IOptionCalculation>();
 	get last()
 	{
-		return this.delay ? this._lastDelay || this._last : this._last;
+		return this.delay ? this._lastDelay || this._last || this.close : this._last || this.close;
 	} set last(value)
 	{
 		this._last = value;

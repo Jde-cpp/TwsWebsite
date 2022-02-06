@@ -41,8 +41,10 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 		let requests = 0, executions:ITradeCommon[] = [], flexResult;
 		let setDataSource = ()=>
 		{
+			const set = this.data==null;
 			this.data = new DataSource( flexResult, executions, this.sort );
-			this.viewPromise = Promise.resolve( true );
+			if( set )
+				this.viewPromise = Promise.resolve( true );
 		};
 		if( today==currentTradingDay )
 		{
@@ -60,7 +62,7 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 			const end = this.end ?? currentTradingDay;
 			const start = this.start ?? this.dayCount===null ? 0 : end-this.dayCount;
 			++requests;
-			this.tws.flexExecutions( "act", DateUtilities.fromDays(start), DateUtilities.fromDays(end) ).subscribe(
+			this.tws.flexExecutions( "act", DateUtilities.fromDays(start+1), DateUtilities.fromDays(end) ).subscribe(
 			{
 				next:	flex =>{ flexResult = flex },
 				error:  e=>{ debugger;console.log(e); this.cnsle.error("Could not load executions.",e); },
@@ -68,15 +70,14 @@ export class TradeComponent implements AfterViewInit, OnInit, OnDestroy
 			});
 		}
 	}
-	sortData(sort:Sort)
+	sortData( sort:Sort )
 	{
 		this.data.sort( sort );
 		this.sort = sort;
 	}
 	dateRangeChange( x:DateRangeSettings )
 	{
-		debugger;
-		this.settings.value.dateRange.assign( x );
+		this.data.disconnect();
 		this.settings.save();
 		this.load();
 	}

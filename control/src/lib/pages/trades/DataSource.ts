@@ -198,7 +198,7 @@ export class DataSource implements IData
 	observable:Subject<TradeResult[]>;
 	get length():number{ return this.values ? this.values.length : 0; }
 	contracts = new Map<number,Results.IContractDetailsResult>();
-	get count():number{return this.values.length;}
+	get count():number{ return this.values ? this.values.length : 0; }
 	get tradeCount():number{return this.count;}
 	positiveCount:number=0;
 	negativeCount:number=0;

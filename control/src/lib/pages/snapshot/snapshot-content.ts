@@ -23,7 +23,6 @@ import {ObservableUtilities} from '../../utilities/ObservableUtilities';
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbRequests from 'jde-cpp/requests';  import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-//import { Str } from 'projects/jde-framework/src/lib/utilities/StringUtils';
 
 export class SymbolSettings implements IAssignable<SymbolSettings>
 {
@@ -166,12 +165,10 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		try
 		{
 			const dayBars = await tws.reqHistoricalData( contract, DateUtilities.endOfDay(DateUtilities.fromDays(MarketUtilities.previousTradingDay())), 100, Requests.BarSize.Day, Requests.Display.Trades, true, false );
-			console.log( `dayBars.size=${dayBars.length}` );
 			let returns = dayBars.map( (bar)=>{ return (bar.close-bar.open)/bar.open;} );
 			const beginningOfDay = DateUtilities.beginningOfDay(endTime);
 			const openTime = this.tick.open || MarketUtilities.isMarketOpen(this.detail) ? null : beginningOfDay.getTime()+9.5*60*60000+DateUtilities.easternTimezoneOffset()*60000;
 			const bars = await tws.reqHistoricalData( contract, endTime, 1, Requests.BarSize.Minute3, Requests.Display.Trades, false, false );
-			console.log( `bars.size=${dayBars.length}` );
 			if( !bars.length )
 				return;
 			const openBar = bars.find( bar=>bar.time.getTime()>=openTime );
@@ -185,7 +182,10 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		}
 		catch( e )
 		{
-			console.error(e); cnsle.error("Could not connect to Tws.", e);
+			if( e["code"]==162 )
+				console.log( `(${e["requestId"]})no trades. - ${e["message"]}` );
+			else
+				cnsle.error( "Could not connect to Tws.", e );
 		}
 	}
 	showChart2( bars, statResult:StatResult )
@@ -266,7 +266,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 									data[length-1].update( {x:(new Date()).getTime(), y:tick.currentPrice} );
 									let [min, max] = getMinMax();
 									series.addPoint( [max, null], true, false );
-									//series.addPoint( [x, y], true, true );
 								}
 							}, 5000);
 						}
@@ -317,18 +316,10 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 	tabEvents = new Subject<number>();
 	@ViewChild( 'tabs', {static: false} ) tabs;
 	tick: TickDetails;
-	get volumeDisplay(){ return MarketUtilities.numberDisplay( this.tick.volume, this.decimalPipe ); }
-	get volumeMultiplier()
+	get volumeDisplay()
 	{
-		if( !this.tick.isMarketOpen )
-			return 1;
-		const extendedTotal = this.detail.tradingHours[0].end - this.detail.tradingHours[0].start;
-		const liquidTotal = this.detail.liquidHours[0].end - this.detail.liquidHours[0].start;
-		const now = new Date().getTime()/1000;
-		const extendedStart = Math.min( this.detail.liquidHours[0].start, now ) - this.detail.tradingHours[0].start;
-		const liquid = Math.min( this.detail.liquidHours[0].end, now ) - Math.min( this.detail.liquidHours[0].start, now );
-		const extendedEnd = Math.min( this.detail.tradingHours[0].end, now ) - Math.min( this.detail.liquidHours[0].end, now );
-		const y = (extendedStart+extendedEnd)/(extendedTotal-liquidTotal)*.0005	+liquid/liquidTotal*.98;
-		return Math.round( 1/y/10 )/10;
+		return this.tick?.volumeAverage
+			? this.decimalPipe.transform( this.tick.volume*100*100*this.tick.volumeMultiplier/this.tick.volumeAverage, '1.1-1' )+"%"
+			: this.tick ? MarketUtilities.numberDisplay( this.tick.volume, this.decimalPipe ) : 0;
 	}
 }

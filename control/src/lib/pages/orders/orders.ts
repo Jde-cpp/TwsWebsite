@@ -48,7 +48,11 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 		let data:OrderView[] = [];
 		let orders:Order[] = await this.tws.reqAllOpenOrders();
 		for( let o of orders.filter(o=>o.state) )
+		{
 			data.push( new OrderView(o) );
+			if( data[data.length-1].id==0 )
+				debugger;
+		}
 
 		this.data = new MyDataSource( this.settings.sort, data );
 		this.viewPromise = Promise.resolve( true );
@@ -203,6 +207,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	cancel( id:number ):void
 	{
+		console.log( `cancel( '${id}' )` );
 		this.tws.cancelOrder( id );
 /*		var button = <Button>event.currentTarget;
 		if( button && button.innerText=="Help" )
@@ -211,7 +216,6 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 			var win = window.open("","","width=600,height=480,toolbar=no,menubar=no,resizable=yes");
 			win.document.write(iframe);
 		}*/
-		console.log( `cancel( '${id}' )` );
 	}
 	focusChange( $event, order, column )
 	{

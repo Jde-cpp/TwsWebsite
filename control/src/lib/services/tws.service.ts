@@ -373,6 +373,7 @@ class Connection
 							}
 							messageValue = [...this.orders.values()];
 						}
+						console.log( `(${id})Results=${messageValue.constructor.name}` );
 						requestPromise.resolve( requestPromise.transformInput ? requestPromise.transformInput(messageValue) : messageValue );
 						//complete?
 						this.callbacks.delete( id );
@@ -433,8 +434,8 @@ class Connection
 		const callback = this.fundamentalCallbacks.get( id );
 		if( callback )
 		{
+			console.log( `${id} fundamentals( length=${Object.keys(data.values).length} )`)
 			callback[0]( data.values );
-			//this.fundamentalCallbacks.delete( id );
 		}
 		else
 			console.error( `no callbacks for Fundamentals reqId='${id}'` );

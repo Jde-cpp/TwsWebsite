@@ -15,8 +15,6 @@ export class TermHoldingSummary
 		let current = new Holding( update );
 		this.basis = -previous.basis + current.basis;
 		this.marketValue -previous.marketValue+current.marketValue;
-		//this.allTimeIncome = this.marketValue-this.basis;
-		//this.allTimeReturn = this.marketValue/this.basis-1.0;
 	}
 	basis:number=0;
 	marketValue:number=0;
@@ -56,9 +54,6 @@ export class Holding extends TickDetails
 	}
 	set( update:Results.IPortfolioUpdate )
 	{
-		//this.contract = update.contract;
-		//if( this.contract.symbol=="ALGT" )
-		//	console.log( `${this.contract.Symbol} - marketValue=${update.marketValue}` );
 		this.position = update.position;
 		this.marketValue = update.marketValue;
 		this.averageCost = this.isOption ? Math.abs(Math.round(update.averageCost/(this.contract.multiplier)*100)/100) : update.averageCost;
@@ -74,9 +69,7 @@ export class Holding extends TickDetails
 		let v = super.last || this.previousDay?.last;
 		return v==-1 ? (this.bid+this.ask)/2 : v;
 	} override set last(value){ super.last = value; }
-	//current:Price = new Price();
 	previousDay:Price;// = new Price()
-	//contract:IB.IContract;
 	get marketValue():number
 	{
 		const primary = this.isOption ? this._marketValue : this.currentPrice*this.position;
@@ -84,21 +77,11 @@ export class Holding extends TickDetails
 		return primary || secondary;
 	} set marketValue( value )
 	{
-		//if( this.contract.symbol=="ALGT" )
-		//	console.log( `${this.contract.symbol} - marketValue=${value}` );
 	    this._marketValue = value;
 	} _marketValue:number|null=null;
 	position:number;
 	realizedPN: number;
 
-
-	//position:number;
-	//averageCost:number;
-
-	//accountNumber:string;
-	//shortInventory:number;
-	//volume:number=0;
-	//get last():number{ return this.current.last || this.previousDay.last; }
 	get isLong():boolean{ return this.position>0; }
 	override get isOption():boolean{ return this.contract.securityType==IB.SecurityType.Option; }
 	get pnl():number{ return this.change*this.position*this.contract.multiplier; }
@@ -107,7 +90,6 @@ export class Holding extends TickDetails
 		if( this.contract.symbol=="XOM" )
 			this.contract.multiplier = 1.0;
 
-		//return this.marketValue/(this.position*this.contract.multiplier)-this.last;
 		return this.last-(this.previousDay ? this.previousDay.last : this.close );
 	}
 	get pricePrevious(){ return this.previousDay?.last; }

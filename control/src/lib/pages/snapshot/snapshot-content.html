@@ -18,8 +18,7 @@
 					<td class="numberCell" title="{{tick?.currentPrice==tick?.last ? null : tick?.last}}" [class.positiveValue]="tick?.change>0">{{tick?.currentPrice | number:'1.2-2'}}</td>
 					<td class="numberCell" [class.negativeValue]="tick?.change<0" [class.positiveValue]="tick?.change>0">{{tick?.change | number:'1.2-2'}} ({{tick?.change/tick?.close*100 | number:'1.1-1'}}%)</td>
 					<td class="range">{{tick?.low | number:'1.2-2'}} - {{tick?.high | number:'1.2-2'}}</td>
-					<td class="numberCell" *ngIf="tick==null || !tick.volumeAverage">{{volumeDisplay}}</td>
-					<td class="numberCell" *ngIf="tick?.volumeAverage">{{tick.volume*100*100*volumeMultiplier/tick.volumeAverage | number:'1.1-1':'en-US'}}%</td>
+					<td class="numberCell">{{volumeDisplay}}</td>
 					<td class="numberCell">{{tick?.shortableAvailable/1000 | number:'1.0-0'}}K</td>
 				</tr></tbody>
 			</table>

@@ -9,6 +9,7 @@ import { TickDetails } from '../../services/Tick';
 import { MarketUtilities, ContractPK } from '../../utilities/marketUtilities';
 import {Holding, TermHoldingSummary} from './holding'
 import { RollDialog } from '../../shared/dialogs/roll/roll-dialog';
+import { ComponentPageTitle } from 'jde-material';
 
 import {OptionEntryDialog} from '../../shared/dialogs/option-entry/option-entry'
 import {TransactDoModal} from '../../shared/dialogs/transact/transact'
@@ -29,7 +30,7 @@ class Settings
 @Component({selector: 'portfolio.main-content.mat-drawer-container',styleUrls: ['portfolio.scss'],templateUrl: './portfolio.html'})
 export class PortfolioComponent implements AfterViewInit, OnDestroy
 {
-	constructor( private dialog : MatDialog, private tws : TwsService, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth, private cdr: ChangeDetectorRef, @Inject('IErrorService') private cnsl: IErrorService )
+	constructor( private dialog : MatDialog, private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IAuth') public authorizationService: IAuth, private cdr: ChangeDetectorRef, @Inject('IErrorService') private cnsl: IErrorService )
 	{}
 
 	async ngAfterViewInit()
@@ -38,7 +39,18 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 		try
 		{
 			await this.authorizationService.login();
-			this.onSettingsLoaded()
+			let numbers = await this.tws.reqManagedAccts();
+			if( !Object.keys(numbers).length )
+				throw { message: "No Managed Accounts" };
+			this.allAccounts.clear();
+			for( let account in numbers )
+				this.allAccounts.set( account, numbers[account] );
+			let selectedAccounts = this.settings.selectedAccounts.filter( accountId=>this.allAccounts.has(accountId) );
+			this.selectedAccounts = selectedAccounts.length ? selectedAccounts : [ ...this.allAccounts.keys() ];
+			console.log( `selectedAccounts=[${this.selectedAccounts.join()}]` );
+			for( var accountId of this.selectedAccounts )
+				this.subscribe( accountId );
+
 		}
 		catch( e )
 		{
@@ -55,29 +67,6 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			this.tws.cancelMktData( this.mktDataSubscriptions.values() );//TickObservable[]=[];
 	}
 
-	async onSettingsLoaded()
-	{
-		let numbers:StringMap;
-		try
-		{
-			numbers = await this.tws.reqManagedAccts();
-			if( !Object.keys(numbers).length )
-				throw "No Managed Accounts";
-		}
-		catch( e )
-		{
-			return this.cnsl.error( "Could not load accounts", e );
-		}
-		this.allAccounts.clear();
-		for( let account in numbers )
-			this.allAccounts.set( account, numbers[account] );
-		this.selectedAccounts = this.settings.selectedAccounts.filter( accountId=>this.allAccounts.has(accountId) );
-		if( !this.selectedAccounts.length )
-			this.selectedAccounts = [ ...this.allAccounts.keys() ];
-		console.log( `selectedAccounts=[${this.selectedAccounts.join()}]` );
-		for( var accountId of this.selectedAccounts )
-			this.subscribe( accountId );
-	}
 	subscribe( accountId:string )
 	{
 		console.log( `subscribe( ${accountId} )` );
@@ -345,12 +334,16 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	long:TermHoldingSummary=new TermHoldingSummary();
 	short:TermHoldingSummary=new TermHoldingSummary();
 	connected = false;
-	selectedAccounts: string[];
+	get selectedAccounts(){return this.#selectedAccounts;} set selectedAccounts(x)
+	{
+		this.#selectedAccounts=x;
+		this.componentPageTitle.title = this.selectedAccounts.length==1 ? this.allAccounts.get( this.selectedAccounts[0] ) : this.selectedAccounts.length==this.allAccounts.values.length ? "Portfolio[All]" : "Portfolio";
+	} #selectedAccounts: string[];
 	allAccounts=new Map<string,string>(); //{ [k: string]: string };
 	get totalCash():number{ let sum=0; for( let value of this.cash.values() ) sum+=value; return sum; }
 	cash=new Map<string,number>();
 	get pnl():number{ return this.holdings.map( holding=>holding.pnl ).reduce( (total,pnl)=>total+(pnl || 0), 0 ); }
-	get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 ); }
+	get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 )+this.totalCash; }
 	get value():number{ return this.holdings.map( holding=>holding.marketValue ).reduce( (total,mv)=>total+mv, 0 )+this.totalCash; }
 	private isSingleClick:boolean;
 	mktDataSubscriptions = new Map<number,TickObservable>();

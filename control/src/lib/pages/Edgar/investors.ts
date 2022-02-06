@@ -65,12 +65,14 @@ export class InvestorsComponent implements AfterViewInit, OnInit, OnDestroy
 		//var f = /*this.cik ? ()=>this.tws.investors( this.cik ) : ()=>;
 		const investors = await this.tws.investors( this.detail.contract.id );
 		console.log( `investors.values=${investors.values.length}` );
+		this.companies = investors.companies;
 		investors.values.forEach( (i)=>this.investors.push(new Investor(i, investors.companies)) );
 		this.sortData( this.settings.sort );
 	}
 
 	@Input() set detail(x){ this._detail=x; } get detail(){ return this._detail; } private _detail:Results.IContractDetail;
 	@Input() index:number;
+	companies:Edgar.ICompany[];
 	investors = new Array<Investor>();
 	isActive:boolean;
 	selection:Edgar.IInvestor|null|undefined;

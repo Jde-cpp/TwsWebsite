@@ -32,11 +32,12 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 			this.isActive = this.index==value;
 		}} );
 	}
-	ngAfterViewInit():void
+	async ngAfterViewInit()
 	{
 		console.log( 'CandlestickComponent::ngAfterViewInit' );
 		this.settingsContainer = new Settings<ChartSettings>( ChartSettings, `Candlestick.${this.contract.symbol}`, this.profile );
-		this.settingsContainer.loadedPromise.then( ()=>{this.run();} );
+		await this.settingsContainer.loadedPromise;
+		this.run();
 	}
 	ngOnDestroy()
 	{
@@ -79,6 +80,8 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 		});
 		let series:Highstock.SeriesOptionsType[] = [ <SeriesCandlestickOptions>{type: 'candlestick',name: this.contract.symbol, data: ohlc, color:"red", upColor:"green" } ];//, dataGrouping: { units: groupingUnits }
 		let yAxis:Highstock.YAxisOptions[] = [{ labels: {align: 'right', x: -3 }, title:{text: ''}, height: this.settings.showVolume ? '60%' : '100%', lineWidth: 2, resize: {enabled: true } } ];
+		let xAxis:Highstock.XAxisOptions[] = [ {max: 2200}  ];
+		//endOnTick: false, maxPadding: 2500,
 		if( this.settings.showVolume )
 		{
 			series.push( <SeriesColumnOptions>{type: 'column',name: 'Volume',data: volume,yAxis: 1} );//,dataGrouping: { units: groupingUnits }
@@ -93,9 +96,11 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 				plotBorderColor: '#606063'
         	},
 			rangeSelector: {enabled:false},
+			xAxis: xAxis,
 			yAxis: yAxis,
 			tooltip: {split: true },
 			series:  series,
+			//pane: { size: '3000px' },
 			time: {useUTC:false}
 		});
 	}
@@ -122,11 +127,13 @@ export class CandlestickComponent implements OnInit, AfterViewInit, OnDestroy
 		this.settingsContainer.save();
 		this.run();
 	}
-	onDateRangeChange( value:DateRangeSettings )
+	onDateRangeChange( x:DateRangeSettings )
 	{
-		debugger;
-		console.log( `onDateRangeChange( ${DateUtilities.displayDay(value.start)}, ${DateUtilities.displayDay(value.end)} )` );
-		this.settingsContainer.value.dateRange = value;
+		const j = x.toJSON(); const s = JSON.stringify( j );
+		if( s==JSON.stringify(this.settingsContainer.value.dateRange.toJSON()) )
+			return;
+		console.log( `onDateRangeChange( ${s} )` );
+		this.settingsContainer.value.dateRange = x;
 		this.settingsContainer.save();
 		this.run();
 	}

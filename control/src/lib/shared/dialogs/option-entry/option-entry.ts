@@ -1,4 +1,4 @@
-import {Component, Inject, OnDestroy} from '@angular/core';
+import {Component, Inject, OnDestroy, OnInit} from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TickObservable } from '../../../services/ITickObserver';
 import { TickEx } from '../../../services/Tick';
@@ -21,11 +21,10 @@ export class OptionEntryData
 	underlying:Results.IContractDetail;
 }
 @Component( { templateUrl: 'option-entry.html', styleUrls:["option-entry.css"]} )
-export class OptionEntryDialog implements OnDestroy
+export class OptionEntryDialog implements OnDestroy, OnInit
 {
 	constructor( public dialogRef:MatDialogRef<OptionEntryDialog>, @Inject(MAT_DIALOG_DATA) public data:OptionEntryData, private tws : TwsService, private dialog : MatDialog, private blockly: BlocklyService )
 	{
-		blockly.loadEnabled().then( (values)=>this.blocks=values ).catch( (e)=>console.error(e) );
 		this.option = data.option;
 		this.isBuy = data.isBuy;
 		for( let expiration of data.expirations )
@@ -34,13 +33,23 @@ export class OptionEntryDialog implements OnDestroy
 		this.underlying = data.underlying;
 		this.setStrikes( this.expiration, this.option.strike, this.option.isCall );
 	}
-
+	async ngOnInit()
+	{
+		try
+		{
+			this.blocks = await this.blockly.loadEnabled();
+		}
+		catch( e )
+		{
+			console.error( e );
+		}
+	}
 	ngOnDestroy()
 	{
 		this.subscription = null;
 	}
 
-	setStrikes( expiration:number, strike:number, isCall:boolean )
+	async setStrikes( expiration:number, strike:number, isCall:boolean )
 	{
 		this.strikes.clear();
 		if( this.option && (this.option.strike!=strike || this.option.expiration!=expiration) )
@@ -48,8 +57,9 @@ export class OptionEntryDialog implements OnDestroy
 		if( this.option )
 			this.strikes.set( this.strike, [this.option.isCall ? this.option.contractId : null, !this.option.isCall ? this.option.contractId : null ] );
 		let contract:IB.IContract = { exchange: IB.Exchanges.Smart, securityType: IB.SecurityType.Option, right: isCall ? IB.SecurityRight.Call : IB.SecurityRight.Put, expiration: expiration, symbol: this.underlying.contract.symbol };
-		this.tws.reqContract( contract ).then( (details:Results.IContractDetail[])=>
+		try
 		{
+			let details = await this.tws.reqContract( contract );
 			let tempStrikes = new Map<number,[number,number]>();
 			for( let detail of details )
 			{
@@ -73,7 +83,11 @@ export class OptionEntryDialog implements OnDestroy
 				}
 			}
 			this.setOption( strike, expiration, isCall );
-		}).catch( (e)=>console.log(e.Message) );
+		}
+		catch( e )
+		{
+			console.log( e["Message"] );
+		}
 	}
 	setOption( strike, expiration, isCall )
 	{

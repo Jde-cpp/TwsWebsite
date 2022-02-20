@@ -31,14 +31,14 @@
 	</mat-toolbar>
 	<div style="overflow: auto;">
 		<!-- <div style="display: flex; min-height: min-content;"> -->
-	<mat-table #mainTable [dataSource]="holdings" class="mat-elevation-z8" >
+	<mat-table #mainTable [dataSource]="holdings" class="mat-elevation-z8" matSort (matSortChange)="onSortChange($event)" [matSortActive]="sortValue.active" [matSortDirection]="sortValue.direction" matSortDisableClear >
 		<ng-container matColumnDef="profit">
-			<mat-header-cell class="numberField" *matHeaderCellDef> P&L </mat-header-cell>
+			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> P&L </mat-header-cell>
 			<mat-cell class="numberField numberFieldValue" [class.negativeValue]="element.pnl<0" [class.positiveValue]="element.pnl>0" *matCellDef="let element"> {{element.pnl | number:'1.0-0'}} </mat-cell>
 			<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
 		</ng-container>
 		<ng-container matColumnDef="symbol">
-			<mat-header-cell class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
+			<mat-header-cell mat-sort-header class="symbolField" *matHeaderCellDef> Symbol </mat-header-cell>
 			<mat-cell class="symbolField" [class.strikeout]="element.errorValue.code" *matCellDef="let element">{{element.display}}</mat-cell>
 			<mat-footer-cell class="symbolField" *matFooterCellDef>Cash</mat-footer-cell>
 		</ng-container>
@@ -48,7 +48,7 @@
 			<mat-footer-cell class="numberField" *matFooterCellDef></mat-footer-cell>
 		</ng-container>
 		<ng-container matColumnDef="marketValue">
-			<mat-header-cell class="numberField" *matHeaderCellDef> Market </mat-header-cell>
+			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> Market </mat-header-cell>
 			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.marketValue | number:'1.0-0'}} </mat-cell>
 			<mat-footer-cell class="numberField" [class.negativeValue]="totalCash<0" [class.positiveValue]="totalCash>0" *matFooterCellDef>{{totalCash | number:'1.0-0'}}</mat-footer-cell>
 		</ng-container>
@@ -88,7 +88,7 @@
 			<mat-footer-cell *matFooterCellDef></mat-footer-cell>
 		</ng-container>
 		<ng-container matColumnDef="volume">
-			<mat-header-cell class="numberField" *matHeaderCellDef> VLM </mat-header-cell>
+			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> VLM </mat-header-cell>
 			<mat-cell class="numberField numberFieldValue" *matCellDef="let element"> {{element.volumeAverage ? (element.volume*100*100/element.volumeAverage | number:'1.1-1':'en-US') : (element.volume | number:'1.0-0')}} </mat-cell>
 			<!-- <mat-cell *ngIf="element?.volumeAverage" class="numberField numberFieldValue" *matCellDef="let element"> {{element.volume*100*100/element.volumeAverage | number:'1.1-1':'en-US'}} </mat-cell> -->
 			<!-- <td class="numberCell" *ngIf="tick==null || !tick.volumeAverage">{{volumeDisplay}}</td>

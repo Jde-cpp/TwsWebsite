@@ -26,7 +26,7 @@
 		</mat-form-field>
 	</div>
 	<div style="display: flex; justify-content: center;">
-		<mat-form-field style="width:100px">
+		<!-- <mat-form-field style="width:100px">
 			<input matInput placeholder="Quantity" [matAutocomplete]="autox" class="number" type="number" step="1" [ngModel]="quantity | number:'1.0-0'" (ngModelChange)="quantity=$event">
 		</mat-form-field>
 		<mat-autocomplete #autox="matAutocomplete">
@@ -37,7 +37,13 @@
 		</mat-form-field>
 		<mat-autocomplete #limitx="matAutocomplete">
 			<mat-option *ngFor="let option of autoAmount(limit)" [value]="option">{{option}}</mat-option>
-		</mat-autocomplete>
+		</mat-autocomplete> -->
+		<span style="width:150px; margin-right:7px">
+			<quantity [step]="1" placeholder="Quantity" [value]="quantity" (valueChange)="quantity=$event"></quantity>
+		</span>
+		<span style="width:150px;margin-left:7px">
+			<quantity [step]=".01" placeholder="Limit" [value]="limit" (valueChange)="limit=$event"></quantity>
+		</span>
 	</div>
 	<div style="display: flex; justify-content: center;" *ngIf="blocks?.length">
 		<mat-form-field>

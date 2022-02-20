@@ -20,13 +20,15 @@ Make sure the following ports are secured:
 
 ## Windows Installation
 1. Run [Setup.msi](https://github.com/Jde-cpp/TwsWebsite/releases).
-2.  Requires 64-bit TwsSocketClient.dll
-    1. Install [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/#build-tools-for-visual-studio-2019).
+2. 64-bit TwsSocketClient.dll
+    1. Install [Build Tools for Visual Studio](https://visualstudio.microsoft.com/downloads/?q=build+tools#build-tools-for-visual-studio-2022).
 	 2. Install [Latest Tws API](https://interactivebrokers.github.io/).
-	 3. Run %ProgramFiles%\jde-cpp\JdeTwsWebSocket\build-tws.bat
-3. Requires node.js
+	 3. Run "%ProgramFiles%\jde-cpp\TwsWebSocket\build-tws.bat"
+3. [Sql Server Express](https://www.microsoft.com/en-us/sql-server/sql-server-downloads)
+4. node.js
     1. [Install](https://nodejs.org/en/)
 	 2.  From the start menu, open 'node.js command prompt' and run:  `npm install --global http-server`
+
 ## Running
 1.  Start Interactive Brokers TWS Gateway or Workstation.
 2.  Run TwsWeb.bat on Desktop.

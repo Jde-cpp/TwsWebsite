@@ -1,4 +1,4 @@
-import { Component, AfterViewInit, OnInit, ViewChild, Input, Inject, Output, EventEmitter, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, Input, Inject, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { MatTable } from '@angular/material/table';
 import {Sort} from '@angular/material/sort';
 import { Observable, Subscription } from 'rxjs';
@@ -40,9 +40,9 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	{
 		this._pageSubscription = this.pageEvents?.subscribe( {next: value=>
 		{
-			if( this.viewPromise && (this._startIndex!=value.startIndex || this.pageLength!=value.pageLength) )
+			if( this.viewPromise && (this.startIndex!=value.startIndex || this.pageLength!=value.pageLength) )
 			{
-				this._startIndex=value.startIndex;
+				this.startIndex=value.startIndex;
 				this.pageLength=value.pageLength;
 				this.setPageContent();
 			}
@@ -114,7 +114,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
 			});
 			if( midIndex )
 			{
-				this.midPrice = midPrice;
+				//this.midPrice = midPrice;
 				this.startIndex = Math.max( 0, midIndex-Math.round(this.pageLength/2) );
 			}
 
@@ -183,7 +183,7 @@ export class OptionTableComponent implements OnInit, OnDestroy
   	}
 	setPageContent()
 	{
-		console.log( `OptionTable::setPageContent( ${DateUtilities.fromDays(this.startExpiration)} )` );
+		console.log( `OptionTable::setPageContent( ${DateUtilities.fromDays(this.startExpiration)}, startIndex=${this.startIndex} )` );
 		this.pageContent.length = 0;
 		let foundSelected = !this.selectedOption;
 		const isSelectedCall = foundSelected || this.selectedOption.isCall;
@@ -352,7 +352,18 @@ export class OptionTableComponent implements OnInit, OnDestroy
 	pageContent: OptionStrike[]=[];
 	get price(){ return this.tick.currentPrice; }
 	selectedOption:Option|null=null;
-	get startIndex(){ return this._startIndex; } set startIndex(x){ if( this._startIndex!=x ){ this._startIndex=x; this.startIndexChange.emit( [this._startIndex,this.midPrice] );} } private _startIndex:number;
+	get startIndex(){ return this.#startIndex; }
+	set startIndex(x)
+	{
+		console.log( `startIndex=${x} old=${this.#startIndex}` )
+		if( this.#startIndex!=x )
+		{
+			 this.#startIndex=x;
+			 let midIndex = Math.min( x+Math.round(this.pageLength/2), this.options.length-1 );
+			 this.midPrice = this.options[midIndex].strike;
+			 this.startIndexChange.emit( [this.#startIndex,this.midPrice] );
+		}
+	} #startIndex:number;
 	setPrices = false;
 	get sort():Sort{ return this.pageSettings ? this.pageSettings.sort : {active: "expiration", direction: "asc"} } set sort(x){ let sort = this.sort; if(x.active!=(sort?.active || "strike") || x.direction!=(sort?.direction || "asc") ){this.pageSettings.sort=x; this.sortChange.emit(x);} }
 	subscriptions = new Map<number,TickObservable>();

@@ -1,5 +1,5 @@
 <div class="example-container mat-elevation-z8" style="max-height: 660px; align-content: center; margin: auto;  text-align: center;">
-	<mat-table #mainTable matSort [dataSource]="pageContent" class="mat-elevation-z8" matSortActive="sort?.active || 'strike'" matSortDirection="sort?.direction || 'asc'" (matSortChange)="sortData($event)">
+	<mat-table #mainTable matSort [dataSource]="pageContent" class="mat-elevation-z8" [matSortActive]="sort?.active || 'strike'" [matSortDirection]="sort?.direction || 'asc'" (matSortChange)="sortData($event)">
 		<ng-container matColumnDef="call-oi">
 			<mat-header-cell mat-sort-header class="numberField" *matHeaderCellDef> OI </mat-header-cell>
 			<mat-cell class="numberField" *matCellDef="let x" [class.highlightHorizontal]="selectedOption==x.call" [class.outOfMoney]="price>x.call.strike" (click)="cellClick(row, x.call)">{{x.call?.oi | number:'1.0-0'}}</mat-cell>

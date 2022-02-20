@@ -239,7 +239,7 @@ class Connection
 					else if( this.callbacks.has(id) )
 					{
 						this.callbacks.get( id ).resolve( message.contractDetails.details );
-						this.callbacks.delete( id );
+						//this.callbacks.delete( id );MultiEnd
 					}
 				}
 				else if( message.options )
@@ -247,7 +247,7 @@ class Connection
 				else if( message.daySummary )
 				{
 					const x = message.daySummary;
-					console.log( `(${x.requestId}) ${DateUtilities.fromDays(x.day)} - ${x.open} ${x.low}-${x.high} ${x.close}`)
+					if( this.log.results ) console.log( `(${x.requestId}) ${DateUtilities.displayDay(x.day)} - ${x.open} ${x.low}-${x.high} ${x.close}`)
 					const c = this.previousDayCallbacks.get( x.requestId );
 					if( c )
 						c.next( x );
@@ -287,11 +287,15 @@ class Connection
 					else if( typeId==Results.EResults.MultiEnd )
 					{
 						const id = message.message.intValue;
-						if( !this.complete(this.contractCallbacks, id)
-							&& !this.complete(this.previousDayCallbacks, message.message.intValue)
-							/*&& !this.complete(this.fundamentalCallbacks, message.message.intValue)*/ )
+						if( !this.complete( this.contractCallbacks, id, "contractCallbacks" )
+							&& !this.complete( this.previousDayCallbacks, message.message.intValue, "previousDayCallbacks") )
 						{
-							console.log( `(${message.message.intValue})no callbacks for MultiEnd` );
+							if( this.fundamentalCallbacks.has(id) )
+								this.fundamentalCallbacks.delete( id ); //MultiEnd
+							else if( this.callbacks.has(id) )
+								this.callbacks.delete( id );
+							else
+								console.log( `(${message.message.intValue})no callbacks for MultiEnd` );
 						}
 					}
 					else if( typeId==Results.EResults.AccountDownloadEnd )
@@ -373,7 +377,7 @@ class Connection
 							}
 							messageValue = [...this.orders.values()];
 						}
-						console.log( `(${id})Results=${messageValue.constructor.name}` );
+						if( this.log.results ) console.log( `(${id})Results=${messageValue.constructor.name}` );
 						requestPromise.resolve( requestPromise.transformInput ? requestPromise.transformInput(messageValue) : messageValue );
 						//complete?
 						this.callbacks.delete( id );
@@ -478,6 +482,7 @@ class Connection
 	{
 		//debugger;
 		const id = error.requestId;
+		console.log( `(${id})${error.code} - ${error.message}` );
 		if( Connection.errorIfPresent(id, this.contractCallbacks, error) )
 			()=>{};//noop
 		else if( this.orders.has(id) )
@@ -490,6 +495,7 @@ class Connection
 		else if( this.previousDayCallbacks.has(id) )
 		{
 			this.previousDayCallbacks.get( id )?.error( error );
+			console.log( `(${id}) - removing previousDayCallbacks` );
 			this.previousDayCallbacks.delete( id );
 		}
 		else if( this.generalCallbacks.has(id) )
@@ -500,7 +506,7 @@ class Connection
 		else if( this.fundamentalCallbacks.has(id) )
 		{
 			this.fundamentalCallbacks.get( id )[1]( error );
-			this.fundamentalCallbacks.delete( id );
+			//this.fundamentalCallbacks.delete( id ); MultiEnd
 		}
 		else if( this.observers.has(id) )
 		{
@@ -549,14 +555,14 @@ class Connection
 				console.error( "unknown PositionMultiEnd request:  "+reqId );
 		}
 	}
-	complete( map, reqId:number )
+	complete( map, id:number, what )
 	{
-		const haveValue = map.has( reqId );
+		const haveValue = map.has( id );
 		if( haveValue )
 		{
-			let x = map.get(reqId);
+			let x = map.get( id );
 			x.complete();
-			map.delete( reqId );
+			map.delete( id ); //console.log( `(${id}) deleted ${what}` );
 		}
 		return haveValue;
 	}
@@ -705,7 +711,7 @@ class Connection
 	{
 		const id = this.getRequestId();
 		if( c.securityType==IB.SecurityType.Option )
-		console.log( `(${id})reqContractDetails:  ${c.symbol}[${IB.SecurityRight[c.right]}] - ${DateUtilities.displayDay(c.expiration)}` );
+			console.log( `(${id})reqContractDetails:  ${c.symbol}[${IB.SecurityRight[c.right]}] - ${DateUtilities.displayDay(c.expiration)}` );
 		else
 			console.log( `(${id})reqContractDetails:  ${c.symbol ? c.symbol : c.id}` );
 		const variable = { id: id, contracts: [c] };
@@ -730,8 +736,8 @@ class Connection
 	optionSummary( contractId:number, optionType:number, startExpiration:number, endExpiration:number, startStrike:number, endStrike:number ):Promise<Results.IOptionValues>
 	{
 		const id = this.getRequestId();
-		console.log( `optionSummary( ${contractId}, ${optionType}, ${startExpiration}, ${endExpiration}, ${startStrike}, ${endStrike} )` );
-		this.send( {"options": {"id": id, "contractId": contractId, "securityType": optionType, "startExpiration": startExpiration, "endExpiration": endExpiration, "startSrike": startStrike, "endStrike": endStrike }} );
+		if( this.log.requests ) console.log( `(${id})optionSummary( ${contractId}, ${optionType}, ${startExpiration}, ${endExpiration}, ${startStrike}, ${endStrike} )` );
+		this.send( {options: {id: id, contractId: contractId, securityType: optionType, startExpiration: startExpiration, endExpiration: endExpiration, startSrike: startStrike, endStrike: endStrike }} );
 		return new Promise<Results.IOptionValues>( (resolve,reject)=>
 		{
 			this.optionSummaryCallbacks.set( id, [resolve, reject] );
@@ -875,10 +881,11 @@ class Connection
 	reqPreviousDay( ids:number[] ):Observable<Results.IDaySummary>
 	{
 		const requestId = this.getRequestId();
-		console.log( `(${requestId})reqPreviousDay( ${ids.join()} )` );
+		if( this.log.requests ) console.log( `(${requestId})reqPreviousDay( ${ids.join()} )` );
 		this.send( new Requests.RequestUnion({"genericRequests": {"id": requestId, "type": Requests.ERequests.RequsetPrevOptionValues, "ids": ids}}) );
 		const callback = new Subject<Results.IDaySummary>();
 		this.previousDayCallbacks.set( requestId, callback );
+		this.previousDayCallbacks.set( 9999, null );
 		return callback;
 	}
 
@@ -891,9 +898,11 @@ class Connection
 		});
 	}
 
-	blockly( bytes:Uint8Array ):Promise<Uint8Array>
+	blockly( bytes:Uint8Array, what:string ):Promise<Uint8Array>
 	{
-		return this.sendPromise<Requests.ICustom,Uint8Array>( "blockly", {"id": this.getRequestId(), "message": bytes}, (result:Results.IMessageUnion)=>{return result.custom;}, (x:Results.Custom)=>{return x.message;} );
+		const id = this.getRequestId();
+		console.log( `(${id})${what}` );
+		return this.sendPromise<Requests.ICustom,Uint8Array>( "blockly", {id: id, message: bytes}, (result:Results.IMessageUnion)=>{return result.custom;}, (x:Results.Custom)=>{return x.message;} );
 	}
 
 	sendGenericPromise<TResult>( type:Requests.ERequests, itemId:number, result:GetResult, transform:TransformInput ):Promise<TResult>
@@ -956,6 +965,7 @@ class Connection
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
+	private log = { requests:false, results:false };
 }
 
 @Injectable( {providedIn: 'root'} )
@@ -1013,7 +1023,7 @@ export class TwsService implements IGraphQL
 	accountUpdatesUnsubscribe( requests:Map<string,AccountUpdateType> ){ this.connection.accountUpdatesUnsubscribe(requests); };
 	accountUpdateUnsubscribe( accountId:string, request:AccountUpdateType ){ this.connection.accountUpdateUnsubscribe(accountId,request); };
 	averageVolume( contractIds:number[] ):Observable<Results.ContractValue>{ return this.connection.averageVolume(contractIds); };
-	blockly( bytes:Uint8Array ):Promise<Uint8Array>{ return this.connection.blockly(bytes); }
+	blockly( bytes:Uint8Array, what:string ):Promise<Uint8Array>{ return this.connection.blockly(bytes, what); }
 	reqMktData( contractId:number, ticks?:Requests.ETickList[], snapshot=true ):TickObservable{ return this.connection.reqMktData(contractId, ticks, snapshot); }
 	cancelMktData( subscriptions:IterableIterator<TickObservable> ):void{ this.connection.cancelMktData(subscriptions); }
 	cancelMktDataSingle( x:TickObservable ):void{ new Map<number,TickObservable>( [[0,x]]).values(); }

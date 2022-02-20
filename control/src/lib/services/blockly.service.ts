@@ -16,14 +16,14 @@ export class BlocklyService
 
 	subscribe():Observable<Proto.IFunctions>{ return this.change; }
 
-	private send<T>( msg:Proto.IRequestUnion, result?:(x:Proto.ResultUnion)=>T ):Promise<T>
+	private send<T>( msg:Proto.IRequestUnion, result:(x:Proto.ResultUnion)=>T, what:string ):Promise<T>
 	{
 		return new Promise<T>( async (resolve,reject)=>
 		{
 			let bytes = Proto.RequestUnion.encode( msg ).finish();
 			try
 			{
-				bytes = await this.tws.blockly( bytes );
+				bytes = await this.tws.blockly( bytes, what );
 				var value = Proto.ResultUnion.decode( bytes );
 				if( value.error )
 					throw value.error;
@@ -37,7 +37,18 @@ export class BlocklyService
 	}
 	loadEnabled():Promise<Proto.IFunction[]>
 	{
-		return new Promise<Proto.IFunction[]>( (resolve, reject)=>this.loadAll().then( (value)=>resolve(value.functions.filter(x=>x.enabled)) ).catch( (e)=>reject(e) ) );
+		return new Promise<Proto.IFunction[]>( async (resolve, reject)=>
+		{
+			try
+			{
+				let all = await this.loadAll();
+				resolve( all.functions.filter(x=>x.enabled) );
+			}
+			catch( e )
+			{
+				reject( e );
+			}
+		} );
 	}
 	loadAll():Promise<Proto.IFunctions>
 	{
@@ -50,7 +61,7 @@ export class BlocklyService
 			BlocklyService.loadAllRequests = [ {resolve,reject} ];
 			try
 			{
-				BlocklyService.functions = await this.send<Proto.IFunctions>( {}, (x)=>{return x.functions;} );
+				BlocklyService.functions = await this.send<Proto.IFunctions>( {}, (x)=>{return x.functions;}, "loadAll" );
 				BlocklyService.loadAllRequests.forEach( x => x.resolve(BlocklyService.functions) );
 				BlocklyService.loadAllRequests = undefined;
 			}
@@ -59,12 +70,10 @@ export class BlocklyService
 	}
 	load( id:string ):Promise<Proto.IFunction>
 	{
-		console.log( `blockly.load( '${id}' )` );
-		return this.send<Proto.IFunction>( {idRequest:{type:Proto.ERequestType.Load, id:id}}, (x)=>{return x.function;} );
+		return this.send<Proto.IFunction>( {idRequest:{type:Proto.ERequestType.Load, id:id}}, (x)=>{return x.function;}, "load" );
 	}
 	copy( fromId:string, to:Proto.IFunction ):Promise<void>
 	{
-		console.log( `BlocklyService.copy( '${fromId}'->'${to.id}' )` );
 		return this.send<void>( {copy:{fromId:fromId, to:to}}, (_)=>
 		{
 			if( BlocklyService.functions )//TODO find out what happened to it.
@@ -75,11 +84,10 @@ export class BlocklyService
 				else
 					BlocklyService.functions.functions.push( to );
 			}
-		});
+		}, `BlocklyService.copy( '${fromId}'->'${to.id}' )` );
 	}
 	save( fnctn:Proto.IFunction ):Promise<void>
 	{
-		console.log( `BlocklyService.save( '${fnctn.id}' )` );
 		return this.send<void>( {save:fnctn}, (_)=>
 		{
 			if( BlocklyService.functions )//TODO find out what happened to it.
@@ -88,15 +96,16 @@ export class BlocklyService
 				if( i!=-1 )
 					BlocklyService.functions.functions[i] = fnctn;
 			}
-		});
+		},  `save( '${fnctn.id}' )` );
 	};
 
-	private VoidReturn( id, type:Proto.ERequestType, innerResolve:(fnctn:Proto.IFunction, i?:number)=>void )
+	private VoidReturn( id, type:Proto.ERequestType, innerResolve:(fnctn:Proto.IFunction, i?:number)=>void, what:string )
 	{
-		return new Promise<void>( (resolve, reject)=>
+		return new Promise<void>( async (resolve, reject)=>
 		{
-			this.send<void>( {idRequest:{id:id, type:type}} ).then( ()=>
+			try
 			{
+				await this.send<void>( {idRequest:{id:id, type:type}}, null, what );
 				if( BlocklyService.functions )
 				{
 					let i = BlocklyService.functions.functions.findIndex( (x)=>x.id==id );
@@ -104,34 +113,38 @@ export class BlocklyService
 						innerResolve( BlocklyService.functions.functions[i], i );
 				}
 				resolve();
-			}).catch( (e)=>reject(e) );
+			}
+			catch( e )
+			{
+				reject( e );
+			}
 		});
 	}
 	build( id:string ):Promise<void>
 	{
 		console.log( `BlocklyService.build( '${id}' )` );
-		return this.VoidReturn( id, Proto.ERequestType.Build, (fnctn)=>fnctn.library=".dll" );
+		return this.VoidReturn( id, Proto.ERequestType.Build, (fnctn)=>fnctn.library=".dll", "build" );
 	}
 	deleteBuild( id:string ):Promise<void>
 	{
-		console.log( `BlocklyService.build( '${id}' )` );
-		return this.VoidReturn( id, Proto.ERequestType.DeleteBuild, (fnctn)=>fnctn.library=null );
+		console.log( `BlocklyService.deleteBuild( '${id}' )` );
+		return this.VoidReturn( id, Proto.ERequestType.DeleteBuild, (fnctn)=>fnctn.library=null, "deleteBuild" );
 	}
 	delete( id:string ):Promise<void>
 	{
 		console.log( `BlocklyService.delete( '${id}' )` );
-		return this.VoidReturn( id, Proto.ERequestType.Delete, (fnctn,i)=>BlocklyService.functions.functions.splice(i, 1) );
+		return this.VoidReturn( id, Proto.ERequestType.Delete, (fnctn,i)=>BlocklyService.functions.functions.splice(i, 1), "delete" );
 	}
 
 	enable = ( id:string ):Promise<void>=>
 	{
 		console.log( `BlocklyService.enable( '${id}' )` );
-		return this.VoidReturn( id, Proto.ERequestType.Enable, (fnctn)=>fnctn.enabled=true );
+		return this.VoidReturn( id, Proto.ERequestType.Enable, (fnctn)=>fnctn.enabled=true, "enable" );
 	}
 	disable = ( id:string ):Promise<void>=>
 	{
 		console.log( `BlocklyService.disable( '${id}' )` );
-		return this.VoidReturn( id, Proto.ERequestType.Disable, (fnctn)=>fnctn.enabled=false );
+		return this.VoidReturn( id, Proto.ERequestType.Disable, (fnctn)=>fnctn.enabled=false, "disable" );
 	}
 	change = new Subject<Proto.IFunctions>();
 	private static loadAllRequests?:{resolve: (value:Proto.IFunctions)=>void, reject:(reason: string)=>void}[]=null;

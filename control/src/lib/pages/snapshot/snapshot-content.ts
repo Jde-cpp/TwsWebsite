@@ -93,7 +93,6 @@ export class SnapshotContentComponent implements AfterViewInit, OnInit, OnDestro
 		catch( e )
 		{
 			this.cnsle.error( "Loading fundamental data failed.", e );
-			return;
 		}
 		this.loadedPromise = Promise.resolve( true );
 		const now = new Date();

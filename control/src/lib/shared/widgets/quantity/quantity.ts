@@ -1,7 +1,7 @@
 import {Component, Input, Output, EventEmitter} from '@angular/core';
 
 
-@Component( {selector: 'quantity',templateUrl: 'quantity.html'} )
+@Component( {selector: "quantity",templateUrl: "quantity.html"} )
 export class QuantityComponent
 {
 	autoValues( quantity:number )
@@ -10,6 +10,15 @@ export class QuantityComponent
 		for( let i=Math.max(this.min, quantity-5*this.step); values.length<10; ++i )
 			values.push( i*this.step );
 		return values;
+	}
+	onFocus( e )
+	{
+		this.focusChange.emit( true );
+		e.target.select();
+	}
+	onFocusout( e )
+	{
+		this.focusChange.emit( false );
 	}
 	initial:number|null=null;
 	@Input() min:number=0;

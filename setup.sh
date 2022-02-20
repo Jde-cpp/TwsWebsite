@@ -30,4 +30,6 @@ addHard deeppurple-amber.css ../../projects/jde-material/src/assets;
 addHard pink-bluegrey.css ../../projects/jde-material/src/assets;
 addHard purple-green.css ../../projects/jde-material/src/assets;
 
+echo "not ios_saf 15.2-15.3" >> .browserslistrc;
+echo "not safari 15.2-15.3" >> .browserslistrc;  #todo remove at some point.
 ng build --output-hashing=none --sourceMap=true;

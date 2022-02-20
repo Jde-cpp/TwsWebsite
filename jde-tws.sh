@@ -15,7 +15,7 @@ cd assets/img;
 addHard wall-street-bets.png ../../../projects/jde-tws/src/assets/img
 addHard twitter_social_icons_circle_blue.svg ../../../projects/jde-tws/src/assets/img
 addHard outline_emoji_people_black_24dp.png ../../../projects/jde-tws/src/assets/img
-C:\Users\duffyj\source\repos\jde\web\TwsWebsite\control\src
+
 cd ../../app;
 echo `pwd`;
 addHard app.module.ts $scriptDir;

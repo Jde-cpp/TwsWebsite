@@ -1,7 +1,9 @@
 import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ChangeDetectorRef } from '@angular/core';
-import { MatTable } from '@angular/material/table';
 import {MatDialog} from '@angular/material/dialog';
+import {MatSort,Sort} from '@angular/material/sort';
+import { MatTable } from '@angular/material/table';
 import { Observable } from 'rxjs';//,of
+
 import { IErrorService, IProfile } from 'jde-framework';
 import { TwsService } from '../../services/tws.service';
 import {TickObservable} from '../../services/ITickObserver';
@@ -10,10 +12,8 @@ import { MarketUtilities, ContractPK } from '../../utilities/marketUtilities';
 import {Holding, TermHoldingSummary} from './holding'
 import { RollDialog } from '../../shared/dialogs/roll/roll-dialog';
 import { ComponentPageTitle } from 'jde-material';
-
 import {OptionEntryDialog} from '../../shared/dialogs/option-entry/option-entry'
 import {TransactDoModal} from '../../shared/dialogs/transact/transact'
-
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
@@ -25,6 +25,7 @@ import { ObservableUtilities } from '../../utilities/ObservableUtilities';
 class Settings
 {
 	selectedAccounts:string[]=[];
+	sort:Sort = {active: "display", direction: "asc"};
 }
 
 @Component({selector: 'portfolio.main-content.mat-drawer-container',styleUrls: ['portfolio.scss'],templateUrl: './portfolio.html'})
@@ -81,7 +82,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			next:x =>
 			{
 				if(x)
-					this.onPortfolioUpdate(x);
+					this.onPortfolioUpdate( x );
 				else if( !this.viewPromise )
 					this.initialLoad();
 			}, error:  e=>{console.error(e);}} );
@@ -143,8 +144,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			const holding = new Holding( value );
 			(holding.isLong ? this.long : this.short).add( holding );
 			this.holdings.push( holding );
-			if( this._table!==undefined )
-				this._table.renderRows();
+			this.sort();
 			if( this.mktDataSubscriptions.has(contractId) )
 				console.error( `this.mktDataSubscriptions.has(${contractId})` );//should never be here, because not in holdings (option underlying?)
 			else
@@ -204,6 +204,10 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	{
 		console.log( `trade( '${event.toString()}' )` );
 	}
+	saveSettings():void
+	{
+		this.profileService.put<Settings>( PortfolioComponent.profileKey, this.settings );
+	}
 	selectedUnderlying():Promise<Results.IContractDetail>
 	{
 		let underlyingId:ContractPK = this.selected.contract.underlyingId;
@@ -219,6 +223,40 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 			this.selected.contract.underlyingId = detail.contract.id;
 			resolve( detail );
 		}).catch((e)=>reject(e)) );
+	}
+	get sortValue(){ return this.settings.sort; } set sortValue( x ){ this.settings.sort.active = x.active; this.settings.sort.direction = x.direction; this.saveSettings(); }
+	get sortTimeout(){ return this.#sortTimeout; } set sortTimeout(x){ if( this.#sortTimeout && x ) clearTimeout(this.#sortTimeout); this.#sortTimeout=x; } #sortTimeout;
+	sort( delay=250 )
+	{
+		this.sortTimeout = setTimeout( ()=>
+		{
+			this.sortTimeout = null;
+			const values = this.holdings.slice();
+			const multiplier = this.sortValue.direction === 'asc' ? 1 : -1;
+			let memberName = this.sortValue.active;
+			if( memberName=="symbol" )
+				memberName = "display";
+			else if( memberName=="profit" )
+				memberName = "pnl"
+			this.holdings = values.sort( (a,b)=>
+			{
+				let lessThan;
+				if( memberName=="volume" )
+					lessThan = (a.volumeAverage ? a.volume*100*100/a.volumeAverage : a.volume) < (b.volumeAverage ? b.volume*100*100/b.volumeAverage : b.volume);
+				else
+					lessThan = (a[memberName] ?? 0)<(b[memberName]  ?? 0);
+				return (lessThan ? -1 : 1)*multiplier;
+			} );
+			if( this._table!==undefined )
+				this._table.renderRows();
+		}, delay );
+	}
+	onSortChange( x:Sort )
+	{
+		if( x.direction=='' )
+			x.direction = this.sortValue.direction=='desc' ? 'asc' : 'desc';
+		this.sortValue = x;
+		this.sort( 0 );
 	}
 	roll()
 	{
@@ -269,6 +307,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	}
 	onTransactClick( buy:boolean )
 	{
+		for( let h of this.holdings )
+			console.log( `${h.contract.symbol}=${h.marketValuePrevious}` );
 		if( this.selectedIsOption )
 		{
 			this.selectedUnderlying().then( (detail)=>
@@ -346,6 +386,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	get valuePrevious():number{ return this.holdings.map( holding=>holding.marketValuePrevious ).reduce( (total,mv)=>total+(mv || 0), 0 )+this.totalCash; }
 	get value():number{ return this.holdings.map( holding=>holding.marketValue ).reduce( (total,mv)=>total+mv, 0 )+this.totalCash; }
 	private isSingleClick:boolean;
+	//@ViewChild(MatSort) sort2: MatSort;
 	mktDataSubscriptions = new Map<number,TickObservable>();
 	requests = new Map <string, [Observable<Results.IAccountUpdate>,Observable<Results.IPortfolioUpdate>]>();
 	selected:Holding|null=null;
@@ -355,7 +396,7 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 
 	@ViewChild('mainTable',{static: false}) _table:MatTable<Holding>;
 	@ViewChild('accountButtons',{static: false}) accountButtons;
-	get settings(){return this._settings || (this.settings=new Settings());} set settings(value){ this._settings = value;} private _settings:Settings;
+	get settings(){return this.#settings || (this.settings=new Settings());} set settings(value){ this.#settings = value;} #settings:Settings;
 	viewPromise:boolean;//:Promise<boolean>;// = Promise.resolve( true );
 	private static profileKey="PortfolioComponent";
 	foodForm = new FormControl( ["A", "B", "C"] );

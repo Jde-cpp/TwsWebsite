@@ -35,6 +35,7 @@ class SymbolSettings
 	{
 		this.type = value.type;
 		this.expiration = value.expiration;
+		this.midPrice = value.midPrice;
 	}
 	type:IB.SecurityRight=IB.SecurityRight.Put;
 	expiration:Day;
@@ -70,6 +71,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 			return;
 		this.settingsContainer.reset( contractId.toString() );
 		await JoinSettings( this.pageSettings, this.settingsContainer );
+		console.log( `midPrice=${this.midPrice}` );
 		try
 		{
 			const params = await this.tws.reqOptionParams( contractId );
@@ -101,7 +103,7 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	onOptionsStartIndexChange( indexMidPrice:[number,number] )
 	{
 		let [index,midPrice] = indexMidPrice;
-		this.midPrice=midPrice;
+		this.midPrice = midPrice;
 		this.startIndexChange.next( index );
 	}
 	onSelectionChange( option:Option )
@@ -150,7 +152,15 @@ export class OptionTabComponent implements OnInit, AfterViewInit, OnDestroy
 	expirations : Day[];
 	get expirationSelectedIndex(){ return this.settings.expiration && this.expirations ? Math.max(0, this.expirations.indexOf(this.settings.expiration)) : 0; }
 	set expirationSelectedIndex(value){ this.settings.expiration = value ? this.expirations[value] : undefined; }
-	get midPrice():number{ return this.settingsContainer.value.midPrice ?? this.tick.last; } set midPrice(x:number){ if( this.midPrice!=x ){this.settingsContainer.value.midPrice = x; this.settingsContainer.save();} }
+	get midPrice():number{ return this.settingsContainer.value.midPrice ?? this.tick.last; }
+	set midPrice(x:number)
+	{
+		if( this.midPrice!=x )
+		{
+			this.settingsContainer.value.midPrice = x;
+			this.settingsContainer.save();
+		}
+	}
 	selectedOption:Option=null;
 	settingsContainer:Settings<SymbolSettings> = new Settings<SymbolSettings>( SymbolSettings, 'OptnTabCmpnnt.', this.profile );
 	get settings(){ return /*this.settingsContainer ?*/ this.settingsContainer.value/* : null*/;}

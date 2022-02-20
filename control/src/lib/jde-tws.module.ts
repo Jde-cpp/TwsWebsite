@@ -14,6 +14,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import {MatNativeDateModule} from '@angular/material/core';
 import {MatRadioModule} from '@angular/material/radio';
 import {MatSelectModule} from '@angular/material/select';
+import {MatSortModule} from '@angular/material/sort';
 import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
@@ -56,7 +57,7 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent,
 		OptionTableComponent, WatchTableComponent, WatchRowComponent],
 	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
-		MatButtonModule, MatAutocompleteModule,MatCheckboxModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatRadioModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
+		MatButtonModule, MatAutocompleteModule,MatCheckboxModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatSortModule,MatRadioModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
 		DateRangeModule, LinkSelectModule, PaginatorModule],
 	entryComponents: [],
 	exports: [OrderComponent, PortfolioComponent, TradeComponent, WatchComponent, SnapshotComponent ],

@@ -179,10 +179,7 @@ class Connection
 						}
 					}
 					else if( !original )
-					{
-						debugger;//TODO add, could be from another session.
 						console.error( `(${orderId}) No callbacks for ${isOrderStatus ? 'order status' : 'open order'}.` );
-					}
 				}
 				else if( message.stringMap )
 				{
@@ -594,7 +591,7 @@ class Connection
 		if( !promises )
 			this.stringMapPromises.set( result, promises = new Array<[(x:StringMap)=>void,(x:Results.IError)=>void]>() );
 
-		this.send( new Requests.RequestUnion({"genericRequests": {"type": request}}) );
+		this.send( new Requests.RequestUnion({genericRequests: {type: request}}) );
 		return this.sessionId!==null ? new Promise<StringMap>( (resolve,reject)=>{ promises.push( [resolve,reject] ); }) : Promise.reject( "no longer connected" );
 	}
 
@@ -605,7 +602,7 @@ class Connection
 	{
 		const id = contractId; //this.getRequestId()
 		console.log( `(${id})reqMktData( [${tickList.join()}] )` );
-		const param = new Requests.RequestMrkDataSmart( {"id": id, "contractId": contractId, "tickList": tickList, "snapshot": snapshot} );
+		const param = new Requests.RequestMrkDataSmart( {id: id, contractId: contractId, tickList: tickList, snapshot: snapshot} );
 		const msg = new Requests.RequestUnion(); msg.marketDataSmart = param;
 		this.send( msg );
 		const callback = new TickSubject();
@@ -655,17 +652,17 @@ class Connection
 			console.error( error );
 		else
 			console.log( `cancelMktData( ${ids.join(",")} )` );
-		const msg = new Requests.RequestUnion( {genericRequests:{"type": Requests.ERequests.CancelMarketData, "ids": ids}} );
+		const msg = new Requests.RequestUnion( {genericRequests:{type: Requests.ERequests.CancelMarketData, ids: ids}} );
 		this.send( msg );
 	}
 	cancelOrder(id:number):void
 	{
-		this.send( {genericRequests:{"type": Requests.ERequests.CancelOrder, "ids": [id]}} );
+		this.send( {genericRequests:{type: Requests.ERequests.CancelOrder, ids: [id]}} );
 	}
 	reqExecutions( query:Requests.IRequestExecutions ):ExecutionObservable
 	{
 		query.id = this.getRequestId();
-		this.send( new Requests.RequestUnion({"requestExecutions": query}) );
+		this.send( new Requests.RequestUnion({requestExecutions: query}) );
 		const callback = new ExecutionSubject();
 		this.executionCallbacks.set( query.id, callback );
 		return callback;
@@ -673,7 +670,7 @@ class Connection
 	reqFundamentals( contractId:number ):Promise<{ [k: string]: number }>
 	{
 		const id = this.getRequestId();
-		this.send( new Requests.RequestUnion({"genericRequests": {"id": id,"type": Requests.ERequests.RequestFundamentalData, "ids":[contractId]}}) );
+		this.send( new Requests.RequestUnion({genericRequests: {id: id,type: Requests.ERequests.RequestFundamentalData, ids:[contractId]}}) );
 		console.log( `(${id})reqFundamentals( '${contractId}' )` );
 		return new Promise<{ [k: string]: number }>( (resolve,reject)=>
 		{
@@ -691,21 +688,21 @@ class Connection
 				myBars.push( { time:new Date(bar.time*1000), high:ProtoUtilities.toNumber(bar.high), low:ProtoUtilities.toNumber(bar.low), open:ProtoUtilities.toNumber(bar.open), close:ProtoUtilities.toNumber(bar.close), wap:ProtoUtilities.toNumber(bar.wap), volume:ProtoUtilities.toNumber(bar.volume), count:ProtoUtilities.toNumber(bar.count)} );
 			return myBars;
 		}
-		return this.sendPromise<Requests.IRequestHistoricalData,IBar[]>( "historicalData", {"id": id, "contract": contract, "days":days, "barSize":barSize, "display":display, "useRth":useRth, "keepUpToDate":keepUpToDate, "date": date.getTime() / 1000}, (result)=>{return result.historicalData}, toBars );
+		return this.sendPromise<Requests.IRequestHistoricalData,IBar[]>( "historicalData", {id: id, contract: contract, days:days, barSize:barSize, display:display, useRth:useRth, keepUpToDate:keepUpToDate, date: date.getTime() / 1000}, (result)=>result.historicalData, toBars );
 	}
 	news( contractId, providerCodes:string[], totalResults:number, start:Date, end:Date ):Promise<Results.NewsCollection>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})news( ${contractId}, [${providerCodes.join()}] )` );
 		const variable = { id:id, contractId:contractId, providerCodes:providerCodes, totalResults: totalResults, start: start ? start.getTime() : 0, end: end ? end.getTime() : 0 };
-		return this.sendPromise<Requests.IHistoricalNewsRequest,Results.NewsCollection>( "historicalNewsRequest", variable, (x)=>{return x.news;}, null );
+		return this.sendPromise<Requests.IHistoricalNewsRequest,Results.NewsCollection>( "historicalNewsRequest", variable, (x)=>x.news, null );
 	}
 	reqNewsArticle( providerCode:string, articleId:string ):Promise<Results.NewsArticle>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})reqNewsArticle( ${providerCode}, ${articleId} )` );
 		const variable = { id:id, providerCode:providerCode, articleId: articleId };
-		return this.sendPromise<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>{return x.newsArticle;}, null );
+		return this.sendPromise<Requests.INewsArticleRequest,Results.NewsArticle>( "newsArticleRequest", variable, (x)=>x.newsArticle, null );
 	}
 	reqContractDetails( c:IB.IContract ):Promise<Results.IContractDetail[]>
 	{
@@ -715,7 +712,7 @@ class Connection
 		else
 			console.log( `(${id})reqContractDetails:  ${c.symbol ? c.symbol : c.id}` );
 		const variable = { id: id, contracts: [c] };
-		return this.sendPromise<Requests.IRequestContractDetails,Results.IContractDetail[]>( "contractDetails", variable, (x)=>{return x.contractDetails!=null;}, null );
+		return this.sendPromise<Requests.IRequestContractDetails,Results.IContractDetail[]>( "contractDetails", variable, (x)=>x.contractDetails!=null, null );
 	}
 	reqContractDetailsMulti( contractIds:number[] ):Observable<Results.IContractDetail[]>
 	{
@@ -723,11 +720,11 @@ class Connection
 			return throwError( 'Not connected to Tws' );
 		const callback = new Subject<Results.IContractDetail[]>();
 		const id = this.getRequestId();
-		const param = new Requests.RequestContractDetails( {"id": id} );
+		const param = new Requests.RequestContractDetails( {id: id} );
 		for( const id of contractIds )
-			param.contracts.push( new IB.Contract({"id": id, "securityType": IB.SecurityType.Stock, "exchange": IB.Exchanges.Smart, "currency": IB.Currencies.UsDollar}) );
+			param.contracts.push( new IB.Contract({id: id, securityType: IB.SecurityType.Stock, exchange: IB.Exchanges.Smart, currency: IB.Currencies.UsDollar}) );
 
-		const msg = new Requests.RequestUnion( {"contractDetails":param} ); //msg.ContractDetails = param;
+		const msg = new Requests.RequestUnion( {contractDetails:param} ); //msg.ContractDetails = param;
 		this.contractCallbacks.set( id, callback );
 		console.log( `(${id})reqContractDetailsMulti( ${contractIds.join()} )` );
 		this.send( msg );
@@ -746,7 +743,7 @@ class Connection
 	reqAccountUpdatesMulti( number:string, callback: AccountUpdateMultiCallback, endCallback:  (accountNumber:number)=>any ):void
 	{
 		const id = this.getRequestId();
-		const param = new Requests.RequestAccountUpdatesMulti( {"accountNumber": number, "id": id} );
+		const param = new Requests.RequestAccountUpdatesMulti( {accountNumber: number, id: id} );
 		const msg = new Requests.RequestUnion(); msg.accountUpdatesMulti = param;
 		this.send( msg );
 		this.accountUpdateMultiCallbacks.set( id, [callback,endCallback] );
@@ -754,7 +751,7 @@ class Connection
 
 	reqAccountUpdates( number: string ):AccountUpdateType
 	{
-		const param = new Requests.RequestAccountUpdates( {"subscribe": true, "accountNumber": number} );
+		const param = new Requests.RequestAccountUpdates( {subscribe: true, accountNumber: number} );
 		const msg = new Requests.RequestUnion(); msg.accountUpdates = param;
 		const callback:[Subject<Results.IAccountUpdate>,Subject<Results.IPortfolioUpdate>] = [new Subject<Results.IAccountUpdate>(),new Subject<Results.IPortfolioUpdate>()];
 		let callbacks:Array<AccountUpdateType>;
@@ -772,7 +769,7 @@ class Connection
 		console.log( `(${id})reqPositions( '${accountNumber}' )` );
 		const callback = new Subject<Results.IPositionMulti>();
 		this.positionCallbacks.set( id, callback );
-		this.send( new Requests.RequestUnion({"requestPositions":{"id": id, "accountNumber": accountNumber}}) );
+		this.send( new Requests.RequestUnion({requestPositions:{id: id, accountNumber: accountNumber}}) );
 		return callback;
 	}
 	cancelPositions( subscription: Observable<Results.IPositionMulti> ):void
@@ -782,7 +779,7 @@ class Connection
 		{
 			const id = matched[0];
 			console.log( `(${id})cancelPositions()` );
-			this.send( new Requests.RequestUnion({genericRequests:{"type": Requests.ERequests.CancelPositionsMulti, "ids": [id]}}) );
+			this.send( new Requests.RequestUnion({genericRequests:{type: Requests.ERequests.CancelPositionsMulti, ids: [id]}}) );
 			this.positionCallbacks.set( id, null );
 		}
 		else
@@ -803,7 +800,7 @@ class Connection
 			if( callbacks.length==0 )
 			{
 				const transmission = new Requests.RequestTransmission();
-				const param = new Requests.RequestAccountUpdates( {"subscribe": false, "accountNumber": number} );
+				const param = new Requests.RequestAccountUpdates( {subscribe: false, accountNumber: number} );
 				const msg = new Requests.RequestUnion(); msg.accountUpdates = param;
 				transmission.messages.push( msg );
 				const writer = Requests.RequestTransmission.encode( transmission );
@@ -825,7 +822,7 @@ class Connection
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})flexExecutions( '${account}', '${DateUtilities.display(start)}', '${DateUtilities.display(end)}' )` );
-		const msg = new Requests.RequestUnion( {"flexExecutions": {"id":id, "accountNumber": account, "start": start.getTime() / 1000, "end": end.getTime() / 1000}} );
+		const msg = new Requests.RequestUnion( {flexExecutions: {id:id, accountNumber: account, start: start.getTime() / 1000, end: end.getTime() / 1000}} );
 		this.send( msg );
 
 		const callback = new Subject<Results.Flex>();
@@ -835,12 +832,18 @@ class Connection
 	tweets( symbol:string ):[Observable<Results.ITweets>,Promise<Results.ITweetAuthors>]
 	{
 		const id = this.getRequestId();
-		console.debug( `tweets( '${id}', '${symbol}' )` );
+		console.debug( `(${id})tweets( '${symbol}' )` );
 		const msg = new Requests.RequestUnion( {stringRequest: {id: id, name: symbol, type: Requests.ERequests.Tweets}} );
 		this.send( msg );
 
 		const callback = new Subject<Results.ITweets>();
-		var observable = new RequestObservable( (m)=>m.tweets, (t)=>callback.next(t), (t:Results.ITweets)=>t.earliestTime!=0, (e)=>callback.error(e) );
+		var observable = new RequestObservable( (m)=>m.tweets, (t)=>callback.next(t), (t:Results.ITweets)=>
+		{
+			const c = t.earliestTime!=0;
+			if( c )
+				callback.next( t );
+			return c;
+		}, (e)=>callback.error(e) );
 		this.observers.set( id, observable );
 		const promise = new Promise<Results.ITweetAuthors>( (resolve,reject)=>{this.callbacks.set( id, new RequestPromise((m)=>m.tweetAuthors, resolve, reject));} );
 		return [callback,promise];
@@ -849,7 +852,7 @@ class Connection
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})placeOrder( ${contract.symbol}x${(order.isBuy ? 1 : -1)*order.quantity}@${order.limit} )` );
-		this.send( new Requests.RequestUnion({placeOrder: {"id":id, "contract": contract, "order": order, stop:stop, stopLimit:stopLimit, blockId:blockId}}) );
+		this.send( new Requests.RequestUnion({placeOrder: {id:id, contract: contract, order: order, stop:stop, stopLimit:stopLimit, blockId:blockId}}) );
 
 		let o = new Order( contract, order );
 		this.orders.set( id, o );
@@ -860,9 +863,13 @@ class Connection
 	{
 		return this.sendStringPromise( user, Requests.ERequests.RedditBlock );
 	}
+	twitterBlock( id:Long ):Promise<void>
+	{
+		return this.sendGenericPromise<void>( Requests.ERequests.Tweets, id, (m)=>m.message, null );
+	}
 	reqOpenOrders():OrderObservable
 	{
-		this.send( new Requests.RequestUnion({"genericRequests": {"type": Requests.ERequests.RequestOpenOrders}}) );
+		this.send( new Requests.RequestUnion({genericRequests: {type: Requests.ERequests.RequestOpenOrders}}) );
 		const callback = new OrderSubject();
 		this.openOrders.push( callback );
 		return callback;
@@ -882,7 +889,7 @@ class Connection
 	{
 		const requestId = this.getRequestId();
 		if( this.log.requests ) console.log( `(${requestId})reqPreviousDay( ${ids.join()} )` );
-		this.send( new Requests.RequestUnion({"genericRequests": {"id": requestId, "type": Requests.ERequests.RequsetPrevOptionValues, "ids": ids}}) );
+		this.send( new Requests.RequestUnion({genericRequests: {id: requestId, type: Requests.ERequests.RequsetPrevOptionValues, ids: ids}}) );
 		const callback = new Subject<Results.IDaySummary>();
 		this.previousDayCallbacks.set( requestId, callback );
 		this.previousDayCallbacks.set( 9999, null );
@@ -902,20 +909,20 @@ class Connection
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})${what}` );
-		return this.sendPromise<Requests.ICustom,Uint8Array>( "blockly", {id: id, message: bytes}, (result:Results.IMessageUnion)=>{return result.custom;}, (x:Results.Custom)=>{return x.message;} );
+		return this.sendPromise<Requests.ICustom,Uint8Array>( "blockly", {id: id, message: bytes}, (result:Results.IMessageUnion)=>result.custom, (x:Results.Custom)=>x.message );
 	}
 
-	sendGenericPromise<TResult>( type:Requests.ERequests, itemId:number, result:GetResult, transform:TransformInput ):Promise<TResult>
+	sendGenericPromise<TResult>( type:Requests.ERequests, itemId:number|Long, result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})${Requests.ERequests[type]}( ${itemId} )` );
-		return this.sendPromise<Requests.IGenericRequest,TResult>( "genericRequest", {"id": id, "type": type, "itemId": itemId}, result, transform );
+		return this.sendPromise<Requests.IGenericRequest,TResult>( "genericRequest", {id: id, type: type, itemId: itemId}, result, transform );
 	}
 	sendGenericArrayPromise<TResult>( type:Requests.ERequests, ids:number[], result:GetResult, transform:TransformInput ):Promise<TResult>
 	{
 		const id = this.getRequestId();
 		console.log( `(${id})${Requests.ERequests[type]}(${ids.join()})` );
-		return this.sendPromise<Requests.IGenericRequests,TResult>( "genericRequests", {"id": id, "type": type, "ids": ids}, result, transform );
+		return this.sendPromise<Requests.IGenericRequests,TResult>( "genericRequests", {id: id, type: type, ids: ids}, result, transform );
 	}
 	sendStringPromise<TResult>( name:string, q:Requests.ERequests, result:GetResult=null, transform:TransformInput=null ):Promise<TResult>
 	{
@@ -924,11 +931,11 @@ class Connection
 		return this.sendPromise<Requests.IStringRequest,TResult>( "stringRequest", {id: id, type: q, name: name}, result, transform );
 	}
 	static transformStringList( result:Results.IStringList ){ return result.values; }
-	watchs():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>{return result.stringList}, Connection.transformStringList); };
-	portfolios():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>{return result.stringList}, Connection.transformStringList); };
-	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>{return result.watchList;}, (wl:Results.IWatchList)=>{return wl.file;} ); };
+	watchs():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>( Requests.ERequests.WatchLists, [], (result)=>result.stringList, Connection.transformStringList); };
+	portfolios():Promise<string[]>{ return this.sendGenericArrayPromise<string[]>(Requests.ERequests.Portfolios, [], (result)=>result.stringList, Connection.transformStringList); };
+	watch( name:string ):Promise<Watch.File>{ return this.sendStringPromise<Watch.File>(name, Requests.ERequests.WatchList, (result:Results.IMessageUnion)=>result.watchList, (wl:Results.IWatchList)=>wl.file ); };
 	deleteWatch( name:string ):Promise<void>{ return this.sendStringPromise<void>( name, Requests.ERequests.DeleteWatchList ); };
-	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise<Requests.IEditWatchListRequest,void>("editWatchList", {"id": this.getRequestId(), "file": file}, null, null); };
+	editWatch( file:Watch.File ):Promise<void>{ console.log( `editWatch( ${file.name} )` ); return this.sendPromise<Requests.IEditWatchListRequest,void>("editWatchList", {id: this.getRequestId(), file: file}, null, null); };
 	googleLogin( token:string ):Promise<void>{ console.log( `(${this.requestId+1})googleLogin( ${token.length} )` ); return this.sendStringPromise<void>( token, Requests.ERequests.GoogleLogin); };
 	query<T>( ql: string ):Promise<T>
 	{
@@ -936,11 +943,11 @@ class Connection
 	}
 	investors( id:ContractPK ):Promise<Edgar.IInvestors>
 	{
-		return this.sendGenericArrayPromise<Edgar.IInvestors>( Requests.ERequests.Investors, [id], (result)=>{return result.investors}, (x:Edgar.IInvestors)=>x );
+		return this.sendGenericArrayPromise<Edgar.IInvestors>( Requests.ERequests.Investors, [id], (result)=>result.investors, (x:Edgar.IInvestors)=>x );
 	}
 	filings( cik:Cik ):Promise<Edgar.Filing[]>
 	{
-		return this.sendGenericArrayPromise<Edgar.Filing[]>( Requests.ERequests.Filings, [cik], (result)=>{return result.filings}, (x:Edgar.IFilings)=>x.values );
+		return this.sendGenericArrayPromise<Edgar.Filing[]>( Requests.ERequests.Filings, [cik], (result)=>result.filings, (x:Edgar.IFilings)=>x.values );
 	}
 
 	getRequestId():number{ return ++this.requestId;} private requestId:number=0;
@@ -1046,6 +1053,7 @@ export class TwsService implements IGraphQL
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
 	tweets( symbol:string ):[Observable<Results.ITweets>,Promise<Results.ITweetAuthors>]{ return this.connection.tweets( symbol ); }
+	twitterBlock( id:Long ):Promise<void>{ return this.connection.twitterBlock( id ); }
 	watchs():Promise<string[]>{ return this.connection.watchs(); };
 	portfolios():Promise<string[]>{ return this.connection.portfolios(); };
 	watch( name:string ):Promise<Watch.File>{ return this.connection.watch(name); };

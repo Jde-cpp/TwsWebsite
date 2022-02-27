@@ -155,8 +155,8 @@ export class TransactDialog implements AfterViewInit
 	}
 	get settingsContainer(){ return this.data.settingsContainer;}
 	showStop:boolean;
-	get stop(){return this._stop;} set stop(value){this._stop = Math.round(value*100)/100;} private _stop:number;
-	get stopLimit(){return this._stopLimit;} set stopLimit(value){this._stopLimit = Math.round(value*100)/100;} private _stopLimit:number;
+	get stop(){ return this.showStop ? this.#stop : 0; } set stop(value){ this.#stop = Math.round(value*100)/100; } #stop:number;
+	get stopLimit(){ return this.showStop ? this.#stopLimit : 0; } set stopLimit(value){ this.#stopLimit = Math.round(value*100)/100; } #stopLimit:number;
 	position:number;
 	tick:TickEx;
 	submitting=false;

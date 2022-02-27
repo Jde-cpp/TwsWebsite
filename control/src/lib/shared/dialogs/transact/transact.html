@@ -44,10 +44,10 @@
 	</div>
 	<div *ngIf="showStop" style="display: flex;align-items: center; justify-content: center;">
 		<span>
-			<quantity [step]=".01" placeholder="Stop" [value]="limit" (valueChange)="stop=$event"></quantity>
+			<quantity [step]=".01" placeholder="Stop" [value]="stop" (valueChange)="stop=$event"></quantity>
 		</span>
 		<span>
-			<quantity [step]=".01" placeholder="Stop-Limit" [value]="limit" (valueChange)="stopLimit=$event"></quantity>
+			<quantity [step]=".01" placeholder="Stop-Limit" [value]="stopLimit" (valueChange)="stopLimit=$event"></quantity>
 		</span>
 	</div>
 	<div>

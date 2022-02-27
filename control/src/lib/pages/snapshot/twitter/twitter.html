@@ -6,8 +6,8 @@
 					<img class=profile_pic [src]=entry.imgSrc/>
 					<div class="tweet-description">
 						<span class=tweet_text>{{entry.display}}</span>
-						<span class="separator">
-							<span title=block class="material-icons mdc-icon-button">highlight_off</span>
+						<span class="attributes">
+							<mat-icon (click)=block($event,entry)>highlight_off</mat-icon>
 							<span class="material-icons separator">favorite</span>
 							<span>{{entry.likes}}</span>
 						</span>

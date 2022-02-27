@@ -307,8 +307,8 @@ export class PortfolioComponent implements AfterViewInit, OnDestroy
 	}
 	onTransactClick( buy:boolean )
 	{
-		for( let h of this.holdings )
-			console.log( `${h.contract.symbol}=${h.marketValuePrevious}` );
+//		for( let h of this.holdings )
+//			console.log( `${h.contract.symbol}=${h.marketValuePrevious}` );
 		if( this.selectedIsOption )
 		{
 			this.selectedUnderlying().then( (detail)=>

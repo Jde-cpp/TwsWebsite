@@ -25,7 +25,7 @@ class Tweet
 	get display():string{ return this.server.text; }
 	get id():string{ return this.server.id.toString(); }
 	get imgSrc(){ return this.author?.profileUrl; }
-	get likes(){ return this.server.like; }
+	get likes(){ return this.server.like>1000 ? `${Math.round(this.server.like/1000)}k` : `${this.server.like}`; }
 	get url(){ return "https://twitter.com/anyuser/status/"+this.id; }
 }
 
@@ -68,6 +68,15 @@ export class TwitterComponent implements OnInit, AfterViewInit, OnDestroy
 	ngOnDestroy()
 	{
 		TwitterComponent.settings.save();
+	}
+	async block( e:PointerEvent, x:Tweet )
+	{
+		e.stopPropagation();
+		debugger;
+	//	let txt = '<a href="https://www.reddit.com/user/';
+	//	let suffix = article.content.substring( article.content.indexOf(txt)+txt.length );
+		await this.tws.twitterBlock( x.authorId );
+	//	this.values.splice( this.values.indexOf(article), 1 );
 	}
 	openGroup( articleId )
 	{

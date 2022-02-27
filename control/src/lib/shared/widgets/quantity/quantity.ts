@@ -22,7 +22,7 @@ export class QuantityComponent
 	}
 	initial:number|null=null;
 	@Input() min:number=0;
-	@Input() set placeholder( value ){ this._placeholder = value; console.log(`placeholder=${value}`); } get placeholder(){return this._placeholder} private _placeholder:string="Quantity";
+	@Input() set placeholder( value ){ this._placeholder = value; } get placeholder(){return this._placeholder} private _placeholder:string="Quantity";
 	@Input() set step(value){if(typeof value=="string")this._step=+value; else this._step=value; } get step(){return this._step;} _step:number=1;
 	@Output() valueChange = new EventEmitter<number>();
 	@Output() focusChange = new EventEmitter<boolean>();

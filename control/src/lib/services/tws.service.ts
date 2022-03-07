@@ -865,7 +865,7 @@ class Connection
 	}
 	twitterBlock( id:Long ):Promise<void>
 	{
-		return this.sendGenericPromise<void>( Requests.ERequests.Tweets, id, (m)=>m.message, null );
+		return this.sendGenericPromise<void>( Requests.ERequests.TwitterBlock, id, (m)=>m.message, null );
 	}
 	reqOpenOrders():OrderObservable
 	{

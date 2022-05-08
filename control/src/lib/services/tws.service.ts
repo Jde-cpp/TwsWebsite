@@ -66,6 +66,11 @@ class Connection
 {
 	constructor( private cnsl: IErrorService )
 	{
+		this.connect();
+	}
+
+	connect():void
+	{
 		this.socket = webSocket<protobuf.Buffer>( {url: 'ws://localhost:6812', deserializer: msg => this.onMessage(msg), serializer: msg=>msg, binaryType:"arraybuffer"} );
 		this.socket.subscribe(
 			( msg ) => this.addMessage( msg ),
@@ -261,7 +266,11 @@ class Connection
 				{
 					const typeId = message.message.type;
 					if( typeId==Results.EResults.Accept )
+					{
 						this.sessionId = message.message.intValue;
+						for( var m of this.backlog )
+							this.sendTransmission( m );
+					}
 					else if( typeId==Results.EResults.ExecutionDataEnd )
 					{
 						var callback = this.executionCallbacks.get( message.message.intValue );
@@ -313,11 +322,13 @@ class Connection
 					}
 					else if( typeId==Results.EResults.Authentication )
 					{
-						if( message.message.stringValue )
+						if( +message.message.stringValue )
 						{
 							this.callbacks.get( +message.message.stringValue ).reject( {requestId: +message.message.stringValue, code: -1, message: "Could not authenticate"} );
 							this.callbacks.delete( +message.message.stringValue );
 						}
+						else
+							console.log( "TODO why is this being sent?" );
 					}
 					else
 					{
@@ -435,7 +446,7 @@ class Connection
 		const callback = this.fundamentalCallbacks.get( id );
 		if( callback )
 		{
-			console.log( `${id} fundamentals( length=${Object.keys(data.values).length} )`)
+			console.log( `(${id})fundamentals( length=${Object.keys(data.values).length} )`)
 			callback[0]( data.values );
 		}
 		else
@@ -578,11 +589,21 @@ class Connection
 	{
 		console.log( 'complete' );
 	}
+	sendTransmission( t:Requests.RequestTransmission )
+	{
+		const writer = Requests.RequestTransmission.encode( t );
+		this.socket.next( writer.finish() );
+	}
 	send<T>( request:T ):void
 	{
-		const transmission = new Requests.RequestTransmission(); transmission.messages.push( request );
-		const writer = Requests.RequestTransmission.encode( transmission );
-		this.socket.next( writer.finish() );//'17\0'+'1\0'
+		const t = new Requests.RequestTransmission(); t.messages.push( request );
+		if( this.sessionId===null )
+		{
+			this.backlog.push( t );
+			this.connect();
+		}
+		else
+			this.sendTransmission( t );
 	}
 	private stringMapPromise( request:Requests.ERequests, result:Results.EResults):Promise<StringMap>
 	{
@@ -598,11 +619,15 @@ class Connection
 	reqManagedAccts(): Promise<StringMap>{  return this.stringMapPromise(Requests.ERequests.ManagedAccounts, Results.EResults.ManagedAccounts); }
 	reqNewsProviders():Promise<StringMap>{ return this.stringMapPromise(Requests.ERequests.ReqNewsProviders, Results.EResults.NewsProviders); }
 
-	reqMktData( contractId:number, tickList:Requests.ETickList[], snapshot:boolean ):TickObservable
+	reqMktData( id/*=contractId*/:number, tickList:Requests.ETickList[], snapshot:boolean ):TickObservable
 	{
-		const id = contractId; //this.getRequestId()
 		console.log( `(${id})reqMktData( [${tickList.join()}] )` );
-		const param = new Requests.RequestMrkDataSmart( {id: id, contractId: contractId, tickList: tickList, snapshot: snapshot} );
+		{
+			var i = this.canceledMarketData.indexOf( id );
+			if( i!=-1 )
+				this.canceledMarketData.splice( i, 1 );
+		}
+		const param = new Requests.RequestMrkDataSmart( {id: id, contractId: id, tickList: tickList, snapshot: snapshot} );
 		const msg = new Requests.RequestUnion(); msg.marketDataSmart = param;
 		this.send( msg );
 		const callback = new TickSubject();
@@ -648,12 +673,21 @@ class Connection
 	}
 	private cancelMarketData( ids:number[], error:string=null )
 	{
-		if( error )
-			console.error( error );
-		else
-			console.log( `cancelMktData( ${ids.join(",")} )` );
-		const msg = new Requests.RequestUnion( {genericRequests:{type: Requests.ERequests.CancelMarketData, ids: ids}} );
-		this.send( msg );
+		for( var [i,id] of ids.entries() )
+		{
+			if( this.canceledMarketData.indexOf(id)==-1 )
+				this.canceledMarketData.push( id );
+			else
+				ids.splice( i );
+		}
+		if( ids.length )
+		{
+			if( error )
+				console.error( error );
+			else
+				console.log( `cancelMktData( ${ids.join(",")} )` );
+			this.send( new Requests.RequestUnion({genericRequests:{type: Requests.ERequests.CancelMarketData, ids: ids}}) );
+		}
 	}
 	cancelOrder(id:number):void
 	{
@@ -851,7 +885,7 @@ class Connection
 	placeOrder( contract:IB.IContract, order:IB.IOrder, stop:number, stopLimit:number, blockId:string ):OrderObservable
 	{
 		const id = this.getRequestId();
-		console.log( `(${id})placeOrder( ${contract.symbol}x${(order.isBuy ? 1 : -1)*order.quantity}@${order.limit} )` );
+		console.log( `(${id})placeOrder( ${contract.strike ? MarketUtilities.optionDisplay(contract) : contract.symbol}x${(order.isBuy ? 1 : -1)*order.quantity}@${order.limit} )` );
 		this.send( new Requests.RequestUnion({placeOrder: {id:id, contract: contract, order: order, stop:stop, stopLimit:stopLimit, blockId:blockId}}) );
 
 		let o = new Order( contract, order );
@@ -972,7 +1006,9 @@ class Connection
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
-	private log = { requests:false, results:false };
+	private backlog:Requests.RequestTransmission[] = [];
+	private log = { requests:true, results:false };
+	private canceledMarketData = new Array<number>();
 }
 
 @Injectable( {providedIn: 'root'} )

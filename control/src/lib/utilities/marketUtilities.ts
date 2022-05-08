@@ -15,17 +15,31 @@ export class MarketUtilities
 		let isHoliday = [0,6].includes( value.getUTCDay() );
 		if( !isHoliday )
 		{
-			if( value.getUTCFullYear()==2021 )
+			var month = value.getUTCMonth()+1
+			if( value.getUTCFullYear()==2022 )
 			{
-				isHoliday = (value.getUTCMonth()==0 && (value.getUTCDate()==1 || value.getUTCDate()==18) )
-					|| (value.getUTCMonth()==1 && value.getUTCDate()==15)
-					|| (value.getUTCMonth()==3 && value.getUTCDate()==2)
-					|| ( value.getUTCMonth()==4 && value.getUTCDate()==31 )
-					|| ( value.getUTCMonth()==6 && value.getUTCDate()==5 )
-					|| ( value.getUTCMonth()==8 && value.getUTCDate()==6 )
-					|| ( value.getUTCMonth()==10 && value.getUTCDate()==25 )
-					|| ( value.getUTCMonth()==11 && value.getUTCDate()==24 );
+				isHoliday = /* ( month==0 && value.getUTCDate()==17 )
+					|| (month==1 && value.getUTCDate()==15)
+					|| (month==3 && value.getUTCDate()==2)
+					||*/ ( month==4 && value.getUTCDate()==15 )
+					|| ( month==5 && value.getUTCDate()==30 )
+					|| ( month==6 && value.getUTCDate()==20 )
+					|| ( month==7 && value.getUTCDate()==5 )
+					|| ( month==9 && value.getUTCDate()==5 )
+					|| ( month==11 && value.getUTCDate()==24 )
+					|| ( month==12 && value.getUTCDate()==26 );
 			}
+			/*else if( value.getUTCFullYear()==2021 )
+			{
+				isHoliday = (month==1 && (value.getUTCDate()==1 || value.getUTCDate()==18) )
+					|| (month==2 && value.getUTCDate()==15)
+					|| (month==4 && value.getUTCDate()==2)
+					|| ( month==5 && value.getUTCDate()==31 )
+					|| ( month==7 && value.getUTCDate()==5 )
+					|| ( month==9 && value.getUTCDate()==6 )
+					|| ( month==11 && value.getUTCDate()==25 )
+					|| ( month==12 && value.getUTCDate()==24 );
+			}*/
 		}
 		return isHoliday;
 	}

@@ -11,47 +11,66 @@
 	flex-shrink: 0;
 	flex-basis:100px;
 	min-width: 100px;
-	min-height: 20px;
+	min-height: 30px;
+	display: flex;
+	align-items: center;
 }
-.amount
+.header
 {
-	@extend .base;
+	justify-content: center;
 }
-.change
+.baseHeader
 {
-	@extend .base;
-	flex-basis:120px;
-	min-width: 120px;
+	@extend .base, .header;
 }
+.sortedHeader{@extend .header; justify-content: center; cursor: pointer; }
+.sortedHeader:hover > .unsorted{ display: inline; }
+.sortedHeader > .unsorted{ display: none; }
 
-.range
+.amountCell
 {
 	@extend .base;
-	flex-basis:160px;
-	min-width: 160px;
+	justify-content: right;
 }
+.size{ @extend .base; flex-basis:70px; min-width: 70px; }
+.sizeHeader{ @extend .size; @extend .header; }
+
 .shares
 {
 	@extend .base;
 }
-.shareCount
-{
-	@extend .base;
-}
-.size
-{
-	@extend .base;
-	flex-basis:70px;
-	min-width: 70px;
-}
+
 .symbol
 {
 	@extend .base;
-	flex-basis: 80px;
-	min-width:  80px;
-	min-height: 20px;
+	flex-basis: 120px;
+	min-width:  120px;
 }
-.volume
+.symbol-h
 {
-	@extend .base;
+	@extend .symbol, .sortedHeader;
 }
+.symbol-h:hover
+{
+	@extend .symbol, .sortedHeader;
+}
+
+.last{ @extend .base; }
+.last-h{ @extend .base, .sortedHeader; }
+.last-h:hover{ @extend .base, .sortedHeader; }
+
+.change{ @extend .base; flex-basis:130px; min-width: 130px; }
+.changeAmount{ @extend .base; flex-basis:70px; min-width: 70px;justify-content: right;}
+.changePercent{ @extend .base; flex-basis:45px; min-width: 45px; justify-content: right;}
+.change-h{ @extend .change, .sortedHeader }
+.change-h:hover{ @extend .change-h }
+
+.range{@extend .base; flex-basis:145px; min-width: 145px; }
+.rangeLow{ @extend .base; flex-basis:75px; min-width: 75px;justify-content: right; }
+.rangeHigh{ @extend .base; flex-basis:50px; min-width: 50px;justify-content: right; }
+.range-h{ @extend .range, .sortedHeader }
+.range-h:hover{ @extend .range-h }
+
+.volume{@extend .base; }
+.volume-h{ @extend .volume, .sortedHeader }
+.volume-h:hover{ @extend .volume-h }

@@ -44,6 +44,7 @@ import {TwsService} from 'jde-tws';
 import {OrderComponent} from 'jde-tws';
 import {PortfolioComponent} from 'jde-tws';
 import { WatchComponent } from 'jde-tws';
+import { WatchSettings } from 'jde-tws';
 import {TradeComponent} from 'jde-tws'
 
 import {LocalStorageProfile} from 'jde-framework'
@@ -55,21 +56,7 @@ import { ComponentCategoryList } from 'jde-material';
 import { ComponentSidenav } from 'jde-material';
 import { DisabledAuthService } from 'jde-material';
 
-//import { SnapshotComponent } from './test/snapshot/snapshot';
 import { SnapshotComponent } from 'jde-tws';
-/*
-import { SnapshotContentComponent } from './test/snapshot/snapshot-content';
-import { ConfigurationDialog } from './test/snapshot/configuration';
-import { FundamentalsComponent } from './test/snapshot/fundamentals/fundamentals';
-import { NewsComponent } from './test/snapshot/news/news';
-import { TwitterComponent } from './test/snapshot/twitter/twitter';
-import { RedditComponent } from './test/snapshot/reddit/reddit';
-import { CandlestickComponent } from 'jde-tws';
-import { InvestorsComponent } from './pages/Edgar/investors';
-
-//Testing:
-import {MatExpansionModule} from '@angular/material/expansion';
-*/
 
 const routes: Routes =
 [
@@ -79,7 +66,14 @@ const routes: Routes =
 	{ path: 'trades', component: TradeComponent },
 	{ path: 'orders', component: OrderComponent },
 //	{ path: 'twitter', component: TwitterComponent },
-	{ path: 'watch', component: WatchComponent },
+	{
+		path: 'watch/:id/settings',
+		component: WatchSettings,
+	},
+	{
+		path: 'watch',
+		component: WatchComponent
+	},
 	{
 		path: 'blockly',
 		component: BlocklySidenav,

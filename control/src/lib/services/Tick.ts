@@ -75,14 +75,14 @@ export class Tick implements ITickObserver
 			this.lastSize = size;
 		else if( type==Results.ETickType.Volume )
 			this.volume = size;
-		else if( type!=Results.ETickType.LastTimestamp )
+		else if( type!=Results.ETickType.LastTimestamp && type!=Results.ETickType.AverageVolume_ )
 			console.log( `onSizeTick( '${Results.ETickType[type]}', '${size}')` );
 	}
 	string( type:Results.ETickType, value:string ):void
 	{
 		if( type==45 )
 			this.lastTime = new Date( parseInt(value)*1000 );
-		else if( type!=32 && type!=33 && type!=84 && type!=48 )//bid/ask/last exchange/RT_VOLUME
+		else if( type!=32 && type!=33 && type!=84 && type!=48 && type!=Results.ETickType.FUNDAMENTAL_RATIOS && type!=Results.ETickType.IB_DIVIDENDS )
 			console.log( `onStringTick( '${Results.ETickType[type]}', '${value.substr(0,120)}')` );
 	}
 	onEndTick():void

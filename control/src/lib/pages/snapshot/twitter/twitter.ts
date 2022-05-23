@@ -53,6 +53,11 @@ export class TwitterComponent implements OnInit, AfterViewInit, OnDestroy
 		{
 			next: ( tweets:Results.ITweets ) =>
 			{
+				if( tweets.values.length>300 )
+				{
+					debugger;
+					tweets.values.length = 300;
+				}
 				for( const t of tweets.values )
 					this.collection.push( new Tweet(t) );
 				this.viewPromise = Promise.resolve( true );

@@ -1,6 +1,6 @@
 import { OnDestroy, Component, AfterViewInit, ViewChild, Inject, ChangeDetectorRef } from '@angular/core';
 import {MatDialog} from '@angular/material/dialog';
-import {MatSort,Sort} from '@angular/material/sort';
+import {Sort} from '@angular/material/sort';
 import { MatTable } from '@angular/material/table';
 import { Observable } from 'rxjs';//,of
 
@@ -19,8 +19,6 @@ import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Mar
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { IAuth } from 'jde-material';
 import { FormControl } from '@angular/forms';
-import { StringMap } from '@angular/compiler/src/compiler_facade_interface';
-import { ObservableUtilities } from '../../utilities/ObservableUtilities';
 
 class Settings
 {

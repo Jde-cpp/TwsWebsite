@@ -1,10 +1,7 @@
 import { Subject,Observable,NextObserver,CompletionObserver,Subscription, PartialObserver, Subscriber } from 'rxjs';
 
-//import * as ib2 from 'dist/jde-tws-assets/src/assets/proto/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as ib2 from 'jde-cpp/ib';  import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
-// import * as ib2 from '../proto/ib';  import IB = ib2.Jde.Markets.Proto;
-// import * as IbResults from '../proto/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 
 export class Order
 {
@@ -15,7 +12,7 @@ export class Order
 		this.#state = state;
 		this.callback = new OrderSubject();
 	}
-	setStatus( status:Results.IOrderStatus ):string
+	setStatus( status:IB.IOrderStatus ):string
 	{
 		let msg:string = null;
 		if( !this.lastStatus || this.lastStatus.status!=status.status )
@@ -24,7 +21,7 @@ export class Order
 
 		return msg;
 	}
-	lastStatus:Results.IOrderStatus;
+	lastStatus:IB.IOrderStatus;
 	contract:IB.IContract;
 	order:IB.IOrder;
 	get state():Results.IOrderState{return this.#state;} set state(x:Results.IOrderState){ this.#state=x; this.callback?.state(x); } #state:Results.IOrderState;
@@ -33,7 +30,7 @@ export class Order
 
 export interface IOrderObserver extends CompletionObserver<number>
 {
-	status:( x:Results.IOrderStatus )=>void;
+	status:( x:IB.IOrderStatus )=>void;
 	open:( x:Results.IOpenOrder )=>void;
 	state:( x:Results.IOrderState )=>void;
 	//error:(msg:string)=>void;
@@ -56,7 +53,7 @@ export class OrderSubject extends Subject<number> implements IOrderObserver
 		this._observers.push( observer );
 		return this.subscribe( observer );
 	}
-	status( value:Results.IOrderStatus ):void{ this._observers.forEach(observer=>{observer.status(value);}); }
+	status( value:IB.IOrderStatus ):void{ this._observers.forEach(observer=>{observer.status(value);}); }
 	state( x:Results.IOrderState ):void{ this._observers.forEach(observer=>{observer.state(x);}); }
 	open( value:Results.IOpenOrder ):void{ this._observers.forEach(observer=>{observer.open(value);}); }
 	override complete():void{ this._observers.forEach( observer=>{observer.complete();} ); }

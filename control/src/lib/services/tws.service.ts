@@ -621,7 +621,7 @@ class Connection
 
 	reqMktData( id/*=contractId*/:number, tickList:Requests.ETickList[], snapshot:boolean ):TickObservable
 	{
-		console.log( `(${id})reqMktData( [${tickList.join()}] )` );
+		if( this.log.requests ) console.log( `(${id})reqMktData( [${tickList.join()}] )` );
 		{
 			var i = this.canceledMarketData.indexOf( id );
 			if( i!=-1 )
@@ -654,7 +654,7 @@ class Connection
 	averageVolume( contractIds:number[] ):Observable<Results.ContractValue>
 	{
 		const id = this.getRequestId();
-		console.log( `(${id})averageVolume( ${contractIds.join(",")} )` );
+		if( this.log.requests ) console.log( `(${id})reqAverageVolume( ${contractIds.join(",")} )` );
 		const msg = new Requests.RequestUnion( {genericRequests:{id: id, type: Requests.ERequests.AverageVolume, ids: contractIds}} );
 		const callback = new Subject<Results.ContractValue>();
 //		let complete = contractIds.length==1 ? ()=>true : (v)=>!v.contractId;
@@ -1007,7 +1007,7 @@ class Connection
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
 	private backlog:Requests.RequestTransmission[] = [];
-	private log = { requests:true, results:false };
+	private log = { requests:false, results:false };
 	private canceledMarketData = new Array<number>();
 }
 

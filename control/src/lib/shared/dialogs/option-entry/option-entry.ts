@@ -128,7 +128,7 @@ export class OptionEntryDialog implements OnDestroy, OnInit
 		let initial:Results.IOpenOrder;let shown = false;
 		subscription.subscribe2(
 		{
-			status: ( value:Results.IOrderStatus )=>{ debugger; console.log( `status='${value}'` ); },
+			status: ( value:IB.IOrderStatus )=>{ debugger; console.log( `status='${value}'` ); },
 			state: (x:Results.IOrderState )=>{ debugger; console.log( `status='${x}'` ); },
 			open: ( value:Results.IOpenOrder )=>
 			{

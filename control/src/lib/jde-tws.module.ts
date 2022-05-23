@@ -19,6 +19,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 
 import { DateRangeModule, LinkSelectModule, PaginatorModule } from 'jde-framework';
 
@@ -35,6 +36,7 @@ import { ConfigurationDialog } from './pages/snapshot/configuration';
 import { TradeComponent } from './pages/trades/trades';
 import { WatchComponent } from './pages/watch/watch';
 import { WatchContentComponent } from './pages/watch/watch-content';
+import { WatchSettings } from './pages/watch/watch-settings';
 
 import { CandlestickComponent } from './shared/highcharts/candlestick'
 import { OptionTabComponent } from './shared/options/option-tab/option-tab'
@@ -54,10 +56,11 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 	  declarations: [
 		InvestorsComponent,OrderComponent, PortfolioComponent, TradeComponent, SummaryComponent, WatchComponent,
 		SnapshotComponent, SnapshotContentComponent, ConfigurationDialog, FundamentalsComponent, NewsComponent,RedditComponent,TwitterComponent, CandlestickComponent, OptionTabComponent,
-		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent,
+		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent, WatchSettings,
 		OptionTableComponent, WatchTableComponent, WatchRowComponent],
 	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
 		MatButtonModule, MatAutocompleteModule,MatCheckboxModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatSortModule,MatRadioModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
+		DragDropModule,
 		DateRangeModule, LinkSelectModule, PaginatorModule],
 	entryComponents: [],
 	exports: [OrderComponent, PortfolioComponent, TradeComponent, WatchComponent, SnapshotComponent ],

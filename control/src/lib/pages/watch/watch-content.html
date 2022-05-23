@@ -17,11 +17,12 @@
 			<button mat-icon-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('copy')"><mat-icon>content_copy</mat-icon></button>
 			<button mat-icon-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('paste')"><mat-icon>content_paste</mat-icon></button> -->
 			<span></span>
+			<button mat-icon-button (click)="onConfigurationClick()"><mat-icon>settings</mat-icon></button>
 			<!-- <mat-checkbox [(ngModel)]="isPortfolio">Portfolio</mat-checkbox> -->
 		</span>
 	</mat-toolbar>
-	<watch-table [file]="file" (selectedChanged)=onSelectedChanged($event) [changeTable]="changeTable" [isPortfolio]="isPortfolio"></watch-table>
+	<watch-table [file]="file" [profile]="profile" (selectedChanged)=onSelectedChanged($event) [changeTable]="changeTable" [isPortfolio]="isPortfolio"></watch-table>
 	<!-- (selectedChanged)=onSelectedChanged($event) -->
 		<!-- style="display: flex; flex-direction: row;" -->
 		<!-- <watch-row style="display: flex; flex-direction: row; flex-wrap:wrap;justify-content: flex-start; align-items: flex-start;" *ngFor="let contract of details" [details]="contract" ></watch-row> -->
-	</ng-container>
+</ng-container>

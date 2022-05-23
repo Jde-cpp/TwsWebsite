@@ -91,7 +91,7 @@ export class TransactDialog implements AfterViewInit
 		let shown = false;
 		subscription.subscribe2(
 		{
-			status: ( value:Results.IOrderStatus )=>{ console.log( `status='${value}'` ); },
+			status: ( value:IB.IOrderStatus )=>{ console.log( `status='${value}'` ); },
 			state: (x:Results.IOrderState )=>{ console.log( `state='${x}'` ); },
 			open: ( value:Results.IOpenOrder )=>
 			{

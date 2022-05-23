@@ -1,20 +1,27 @@
-<div class="watchRow" style="text-align: center">
-	<mat-label class="symbol">Symbol</mat-label>
-	<span *ngIf="viewable( 'shares' )" class="shares">Shares</span>
-	<span class="chart"></span>
-	<span class="size">Bid Sz</span>
-	<mat-label class="amount">Bid</mat-label>
-	<mat-label class="amount">Ask</mat-label>
-	<mat-label class="size">Ask Sz</mat-label>
-	<mat-label class="amount">Last</mat-label>
-	<mat-label class="change">Change</mat-label>
-	<mat-label class="range">Range</mat-label>
-	<mat-label class="volume">Volume</mat-label>
-	<!-- <mat-label class="shareCount">Short</mat-label> -->
-	<mat-label *ngIf="viewable( 'inventory' )" class="shareCount">Inventory</mat-label>
-</div>
-<ng-template #container></ng-template>
-
-<!-- <div > -->
-	<!-- <watch-row *ngFor="let tick of ticks; let i = index" (symbolEmitter)="onChangeSymbol(i,$event)" (editEmitter)="onChangeEdit(i,$event)" class="watchRow" [id]="i" [tick]="tick" [editEvents]="editEvents" ></watch-row> -->
-<!-- </div> -->
+<ng-container *ngIf="viewPromise | async">
+	<div class="watchRow" style="text-align: center">
+		<mat-label class="symbol-h" (click)="sort(ColumnsType.Symbol)">Symbol
+			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Symbol ? '' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
+		</mat-label>
+		<span *ngIf="viewable( 'shares' )" class="shares">Shares</span>
+		<span class="chart"></span>
+		<span class="sizeHeader">Bid Sz</span>
+		<mat-label class="baseHeader">Bid</mat-label>
+		<mat-label class="baseHeader">Ask</mat-label>
+		<mat-label class="sizeHeader">Ask Sz</mat-label>
+		<mat-label class="last-h" (click)="sort(ColumnsType.Last)">Last
+			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Last ? '' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
+		</mat-label>
+		<mat-label class="change-h" (click)="sort(ColumnsType.Change)">Change
+			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Change ? '' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
+		</mat-label>
+		<mat-label class="range-h" (click)="sort(ColumnsType.Range)">Range
+			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Range ? '' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
+		</mat-label>
+		<mat-label class="volume-h" (click)="sort(ColumnsType.Volume)">Volume
+			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Volume ? 'unsorted' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
+		</mat-label>
+		<mat-label *ngIf="viewable( 'inventory' )" class="shareCount">Inventory</mat-label>
+	</div>
+	<ng-template #container></ng-template>
+</ng-container>

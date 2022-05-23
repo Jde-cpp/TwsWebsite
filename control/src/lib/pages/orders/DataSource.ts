@@ -2,6 +2,7 @@ import {Sort} from '@angular/material/sort';
 import {CollectionViewer, DataSource} from '@angular/cdk/collections';
 import { Observable, Subject } from 'rxjs';
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
+import * as ib from 'jde-cpp/ib'; import IB = ib.Jde.Markets.Proto;
 import {IOrderObserver, Order} from '../../services/IOrderObserver';
 import {IData} from '../../shared/summary/summary'
 import { TickEx } from '../../services/Tick';
@@ -26,10 +27,10 @@ export class OrderView extends TickEx //implements IOrderObserver
 	//get last(){ return this.tick ? this.tick.price : null; }
 	get limit(){ return this.openOrder.order.limit; }
 	set limitNew(value){ this.#limitNew = this.quantityDisplay==value ? null : value; } get limitNew(){return this.#limitNew;} #limitNew:number|null=null;
-	get statusString(){ return this.status?.status==Results.EOrderStatus.Cancelled ? "Canceled" : this.openOrder.state?.status; }
+	get statusString(){ return this.status?.status==IB.EOrderStatus.Cancelled ? "Canceled" : this.openOrder.state?.status; }
 	//get startTime(){ return this.openOrder.order.activeStartTime; }
 	//get stopTime(){ return this.openOrder.order.activeStopTime; }
-	get status():Results.IOrderStatus{ return this.openOrder.lastStatus; }
+	get status():IB.IOrderStatus{ return this.openOrder.lastStatus; }
 }
 
 export class MyDataSource implements IData, DataSource<OrderView>
@@ -41,7 +42,7 @@ export class MyDataSource implements IData, DataSource<OrderView>
 	{
 		this.values.push( new OrderView(order) );
 	}*/
-	nextStatus( status:Results.IOrderStatus)
+	nextStatus( status:IB.IOrderStatus)
 	{
 		//this.values.find( app=>app.id==status.ApplicationId );
 	}

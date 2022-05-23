@@ -1,5 +1,6 @@
-import { Component, AfterViewInit, OnInit, OnDestroy, Inject } from '@angular/core';
+import { Component, AfterViewInit, ViewChild, OnInit, OnDestroy, Inject } from '@angular/core';
 import {Sort} from '@angular/material/sort';
+import { FormControl } from '@angular/forms';
 import {IErrorService} from 'jde-framework'
 import { IProfile } from 'jde-framework';
 import { TwsService } from '../../services/tws.service';
@@ -24,11 +25,28 @@ export class WatchComponent implements AfterViewInit, OnInit, OnDestroy
 
 	async ngAfterViewInit()
 	{
+		this.selected.valueChanges.subscribe( index=>
+		{
+			const n = this.names[index];
+			if( this.settings.selectedName != n )
+			{
+				console.log( `SaveProfile - index=${index}, name=${n}, previous=${this.settings.selectedName}` );
+				this.settings.selectedName = n;
+				this.profile.save();
+			}
+		});
+
 		try
 		{
 			await this.profile.loadedPromise;
-			this.names = await this.tws.watchs();
+			console.log( `Profile - selected=${this.settings.selectedName}` );
+			let saved = await this.tws.watchs();
+			for( let name of this.settings.names.filter( (n)=>saved.includes(n)) )
+				this.names.push( name );
+			for( let name of saved.filter((n)=>!this.settings.names.includes(n)) )
+				this.names.push( name );
 			this.names.push( "" );
+			this.selected.setValue( Math.max(0, this.names.indexOf(this.settings.selectedName)) );
 			this.viewPromise = Promise.resolve( true );
 		}
 		catch( e )
@@ -36,13 +54,23 @@ export class WatchComponent implements AfterViewInit, OnInit, OnDestroy
 			this.cnsle.error( e["message"], e );
 		}
 	}
-	names:string[];
+	onTabChange( e )
+	{
+		this.selected.setValue( e );
+	}
+	names:string[]=[];
 	profile = new Settings<PageSettings>( PageSettings, "WatchComponent", this.profileService );
+	selected = new FormControl( 0 );
+	get settings():PageSettings{ return this.profile.value; }
+	@ViewChild( 'watchTabs', {static: false} ) watchTabs;
+	get selectedIndex(){ return this.selected.value; }
 	viewPromise:Promise<boolean>;
 }
 
 class PageSettings
 {
-	assign( value:PageSettings ){ this.sort = value.sort; }
+	assign( x:PageSettings ){ this.sort = x.sort; this.names=x.names; this.selectedName=x.selectedName; }
 	sort:Sort = {active: "id", direction: "asc"};
+	names:string[]=[];
+	selectedName:string;
 }

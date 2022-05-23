@@ -1,7 +1,10 @@
 import {Component,EventEmitter, OnInit,Input,Output, Inject, ViewContainerRef, ViewChild, ComponentFactoryResolver, ComponentRef, AfterViewInit} from '@angular/core';
+import {SortDirection} from '@angular/material/sort';
+import { Subject } from 'rxjs';
+
 import { TickDetails } from '../../services/Tick';
 import { TwsService } from '../../services/tws.service';
-import { IErrorService, UserEntryDialog } from 'jde-framework';
+import { IErrorService,Settings } from 'jde-framework';
 import { TickObservable } from '../../services/ITickObserver';
 import { MarketUtilities } from '../../utilities/marketUtilities';
 
@@ -9,8 +12,7 @@ import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { WatchRowComponent } from './watch-row/watch-row';
-import { Subject } from 'rxjs';
-
+import { Columns, PageSettings } from './../../pages/watch/watch-content'
 import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { IProfile } from 'jde-framework';
 
@@ -117,20 +119,31 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		this.remove( this.indexOf(this.selected.rowId) );
 	}
-	setRowDetail( row:WatchRowComponent, detail:Results.IContractDetail )
+	async setRowDetail( row:WatchRowComponent, detail:Results.IContractDetail )
 	{
 		row.tick = new TickDetails( detail );
+		this.rowSubscribe( row );
+	}
+	async rowSubscribe( row:WatchRowComponent )
+	{
+		const detail = row.detail;
 		const isMarketOpen = MarketUtilities.isMarketOpen( detail );
 		const previousDay = MarketUtilities.previousTradingDate( new Date(), detail.tradingHours[0] );
-		row.tick.reqPrevious( this.tws, previousDay ).then( ()=>
+		try
 		{
+			await row.tick.reqPrevious( this.tws, previousDay );
 			const subscription = this.tws.reqMktData( detail.contract.id, [Requests.ETickList.Inventory, (isMarketOpen ? Requests.ETickList.PlPrice : Requests.ETickList.MiscStats)], false );
 			subscription.subscribe2( row.tick );
 			this.subscriptions.set( detail.contract.id, subscription );
-		}).catch( (e)=>{ console.log(e); } );
+		}
+		catch( e )
+		{
+			console.log( e );
+		}
 	}
 	async load()
 	{
+		this.viewPromise = Promise.resolve( true );
 		const ids = this.file.securities.filter( (x)=>x.contractId ).map( (x)=>x.contractId );
 		let contracts:Array<Results.IContractDetail[]>=null;
 		if( ids.length )
@@ -147,31 +160,116 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		}
 		if( contracts && contracts.length )
 		{
-			for( const entry of this.file.securities )
-			{
-				const row = this.addRow();
-				row.shares = entry.shares;
-				const details = contracts.find( (x)=>x.length && x[0].contract.id==entry.contractId );
-				if( details && details.length==1 )
-					this.setRowDetail( row, details[0] );
-				else
-					console.log( `reqIds returned contract with ${!details ? 0 : details.length} records` );
-			}
+			let items = this.defaultLayout( contracts );
+			this.addItems( items, true );
+			// if( this.settings.hasDefaultLayout && !this.sortActive )
+			// {
+			// 	for( let item of items )
+			// 	{
+			// 		const row = this.addRow();
+			// 		if( !item )
+			// 			continue;
+			// 		row.shares = item.shares;
+			// 		row.tick = item.tick;
+			// 		this.rowSubscribe( row );
+			// 	}
+			// 	this.addRow();
+			// }
+			// else
+			//	this.addItems( items, true );
+
 			this.tws.averageVolume( ids ).subscribe(
 			{
 				next: (x)=>this.findContract( x.contractId ).volumeAverage = x.value,
 				error:  e=>console.error( e )
 			});
 		}
-		this.addRow();
-		this.viewPromise = Promise.resolve( true );
+		else
+			this.addRow();
 	}
+
+	defaultLayout( contracts?:Array<Results.IContractDetail[]> )
+	{
+		let items = new Array<Row>();
+		for( const entry of this.file.securities )
+		{
+			let r:Row;
+			if( entry.contractId )
+			{
+				let detail:Results.IContractDetail;
+				if( contracts )
+				{
+					const details = contracts.find( (x)=>x.length && x[0].contract.id==entry.contractId );
+					if( details && details.length==1 )
+						r = { shares: entry.shares, tick: new TickDetails(details[0]) };
+					else
+						console.log( `reqIds returned contract with ${!details ? 0 : details.length} records` );
+				}
+				else
+				{
+					let i = this.rows.find( (r)=>r.instance.contractId==entry.contractId ).instance;
+					r = { shares: i.shares, tick: i.tick };
+				}
+			}
+			items.push( r );
+		}
+		return items;
+	}
+	addItems( items:Row[], subscribe?:boolean )
+	{
+		if( this.sortActive )
+		{
+			const multiplier = this.sortActive.direction=='desc' ? -1 : 1;
+			items.sort( (a:Row,b:Row)=>
+			{
+				let lessThan;
+				if( this.sortActive.active==Columns.Symbol )
+					lessThan = a.tick.detail.contract.symbol<b.tick.detail.contract.symbol;
+				else if( this.sortActive.active==Columns.Change )
+					lessThan = a.tick.change/a.tick.last<b.tick.change/b.tick.last;
+				else if( this.sortActive.active==Columns.Last )
+					lessThan = a.tick.last<b.tick.last;
+				else if( this.sortActive.active==Columns.Volume )
+					lessThan = a.tick.volume<b.tick.volume;
+				else if( this.sortActive.active==Columns.Range )
+					lessThan = (a.tick.high-a.tick.low)/a.tick.last<(b.tick.high-b.tick.low)/b.tick.last;
+				return (lessThan ? -1 : 1)*multiplier;
+			} );
+		}
+		this.container.clear();
+		this.index = 0;
+		for( let item of items )
+		{
+			let instance = this.addRow();
+			if( !item )
+				continue;
+			instance.set( item.shares, item.tick );
+			if( subscribe )
+				this.rowSubscribe( instance );
+		}
+	}
+	sort( column:Columns )
+	{
+		const direction = this.sortActive?.active!=column || (!this.hasDefaultLayout && this.sortActive.direction=='desc')
+			? 'asc'
+			: 'desc';
+
+		this.sortActive = this.hasDefaultLayout && this.sortActive && this.sortActive.active==column && this.sortActive.direction=='desc'
+			? null
+			: { active:column, direction: direction };
+		let items:Row[] = this.sortActive
+			? this.rows.filter( (r)=>r.instance.symbol ).map( (r)=>{ return {shares: r.instance.shares, tick: r.instance.tick} } )
+			: this.defaultLayout();
+		this.rows.length = 0;
+		this.addItems( items );
+	}
+
 	viewable( columnId:string ):boolean
 	{
 		return columnId=="shares" ? this.isPortfolio : columnId!='inventory';
 	}
 
-	@Input() set file(x){ this._file=x; } get file(){return this._file;} _file:Watch.File;
+	@Input() set file(x){ this.#file=x; } get file(){return this.#file;} #file:Watch.File;
 	editEvents: Subject<number> = new Subject<number>();
 	get editRow(){ return this._editRow; } set editRow(x){this._editRow=x; if( x!=-1 ) this.editEvents.next(x); }	_editRow:number = -1;
 	@Input() set isPortfolio(x)
@@ -184,7 +282,6 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 //	private resolve: Function;
 	subscriptions = new Map<number,TickObservable>();
 	//ticks:TickDetails[] = [];
-	viewPromise:Promise<boolean>;
 	findContract( contractId:number ):WatchRowComponent
 	{
 		return this.rows.find( (ref)=>{return ref.instance.contractId==contractId;} )?.instance;
@@ -197,7 +294,6 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		// Create component dynamically inside the ng-template
 		const componentFactory = this.componentFactoryResolver.resolveComponentFactory( WatchRowComponent );
-		//this.container.clear();
 		const component:ComponentRef<WatchRowComponent> = this.container.createComponent( componentFactory );
 		const instance = component.instance;
 		//instance.onInitPassed = false;
@@ -215,15 +311,22 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		this.container.remove( index );
 		this.rows.splice( index, 1 );
 		//if( this.file.securities.length>index ) should always be true?
-			this.file.securities.splice( index, 1 );
-			this.tws.editWatch( this.file );
+		this.file.securities.splice( index, 1 );
+		this.tws.editWatch( this.file );
 		for( let i=index; i<this.rows.length; ++i )
 			this.rows[i].instance.oddRow = i%2==1;
 	}
 	@Input() changeTable:Subject<string>;
+	ColumnsType = Columns;
+	get hasDefaultLayout(){ return this.settings.hasDefaultLayout; }
 	index:number=0;
+	@Input() set profile(x){ this.#profile=x; } get profile(){return this.#profile;} #profile:Settings<PageSettings>;
 	rows = new Array<ComponentRef<WatchRowComponent>>();
+	get settings(){ return this.profile.value; }
+	get sortActive(){ return this.settings?.sort; } set sortActive(x){ this.settings.sort = x; this.profile.save(); }
 	set selected(x){ const previous = this._selected; this._selected=x; if( previous ) previous.selected = false; this.selectedChanged.emit( x ? x.detail || null : undefined);} get selected(){return this._selected;} private _selected:WatchRowComponent;
 	@Output() selectedChanged = new EventEmitter<Results.IContractDetail>();
 	@ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
+	viewPromise:Promise<boolean>;
 }
+class Row{shares: number; tick: TickDetails};

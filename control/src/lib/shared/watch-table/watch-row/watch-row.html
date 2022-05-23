@@ -18,15 +18,21 @@
 	<span *ngIf="viewable('shares')" class="shares">{{shares}}</span> -->
 
 	<span class="size">{{tick?.bidSize | number:'1.0-0'}}</span>
-	<div class="amount">{{tick?.bid | number:'1.2-2'}}</div>
-	<div class="amount">{{tick?.ask | number:'1.2-2'}}</div>
+	<div class="amountCell">{{tick?.bid | number:'1.2-2'}}</div>
+	<div class="amountCell">{{tick?.ask | number:'1.2-2'}}</div>
 	<div class="size">{{tick?.askSize | number:'1.0-0'}}</div>
-	<div class="amount" title="{{tick?.currentPrice==tick?.last ? null : tick?.last}}" [class.positiveValue]="tick?.change>0">{{tick?.currentPrice | number:'1.2-2'}}</div>
-	<div class="change" [class.negativeValue]="tick?.change<0" [class.positiveValue]="tick?.change>0">{{displayChange}}</div>
-	<div class="range">{{tick?.low| number:'1.2-2'}}{{tick ? ' - ' : ''}}{{tick?.high | number:'1.2-2'}}</div>
-	<div class="volume" *ngIf="tick==null || !tick.volumeAverage">{{displayVolume}}</div>
-	<div class="volume" *ngIf="tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</div>
-	<div *ngIf="viewable('inventory')" class="shareCount">{{displayInventory}}</div>
+	<div class="amountCell" title="{{tick?.currentPrice==tick?.last ? null : tick?.last}}" [class.positiveValue]="tick?.change>0">{{tick?.currentPrice | number:'1.2-2'}}</div>
+	<div class="change" [class.negativeValue]="tick?.change<0" [class.positiveValue]="tick?.change>0">
+		<span class="changeAmount">{{tick?.change | number: '1.2-2'}}</span>
+		<span class="changePercent">{{tick?.change/tick?.close*100 | number: '1.1-1'}}</span><span *ngIf="tick">%</span>
+	</div>
+	<div class="range">
+		<span class="rangeLow">{{tick?.low| number:'1.2-2'}}</span><span style="text-align: center;min-width: 20px; " *ngIf="tick">-</span>
+		<span class="rangeHigh">{{tick?.high | number:'1.2-2'}}</span>
+	</div>
+	<div class="amountCell" *ngIf="tick==null || !tick.volumeAverage">{{displayVolume}}</div>
+	<div class="amountCell" *ngIf="tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</div>
+	<div *ngIf="viewable('inventory')" class="amountCell">{{displayInventory}}</div>
 	<!-- <div class="shareCount">{{index}}</div> -->
 	<!-- <div class="shareCount" title="{{settingsSymbol?.shortInterestDate}}">shortDisplay</div> -->
 	<!---->

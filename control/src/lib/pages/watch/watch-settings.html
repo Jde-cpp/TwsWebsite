@@ -1,0 +1,18 @@
+<ng-container *ngIf="viewPromise | async">
+	<mat-checkbox style="display:block" [(ngModel)]="hasDefaultLayout">Has Default Layout</mat-checkbox>
+	<mat-checkbox style="display:block" [(ngModel)]="hasShares">Has Shares</mat-checkbox>
+	<div>
+		<section>
+			<h2>Hidden Columns</h2>
+			<div cdkDropList id="hiddenDiv" #HiddenDiv="cdkDropList" class="list" [cdkDropListData]="shown" [cdkDropListConnectedTo]="[shownDiv]" (cdkDropListDropped)="addToList($event)">
+				<div class="box" *ngFor="let item of hidden" cdkDrag>{{item}}</div>
+			</div>
+		</section>
+		<section>
+			<h2>Shown Columns</h2>
+			<div cdkDropList id="shownDiv" #shownDiv="cdkDropList" class="list" [cdkDropListData]="shown" [cdkDropListConnectedTo]="[hiddenDiv]" (cdkDropListDropped)="addToList($event)">
+				<div class="box" *ngFor="let item of shown" cdkDrag>{{item}}</div>
+			</div>
+		</section>
+	</div>
+</ng-container>

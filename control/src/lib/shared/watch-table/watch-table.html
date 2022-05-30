@@ -5,20 +5,20 @@
 		</mat-label>
 		<span *ngIf="viewable( 'shares' )" class="shares">Shares</span>
 		<span class="chart"></span>
-		<span class="sizeHeader">Bid Sz</span>
-		<mat-label class="baseHeader">Bid</mat-label>
-		<mat-label class="baseHeader">Ask</mat-label>
-		<mat-label class="sizeHeader">Ask Sz</mat-label>
-		<mat-label class="last-h" (click)="sort(ColumnsType.Last)">Last
+		<span *ngIf="viewable('BidSize')" class="sizeHeader">Bid Sz</span>
+		<mat-label *ngIf="viewable('Bid')" class="baseHeader">Bid</mat-label>
+		<mat-label *ngIf="viewable('Ask')" class="baseHeader">Ask</mat-label>
+		<mat-label *ngIf="viewable('AskSize')" class="sizeHeader">Ask Sz</mat-label>
+		<mat-label *ngIf="viewable('Last')" class="last-h" (click)="sort(ColumnsType.Last)">Last
 			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Last ? '' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
 		</mat-label>
-		<mat-label class="change-h" (click)="sort(ColumnsType.Change)">Change
+		<mat-label *ngIf="viewable('Change')" class="change-h" (click)="sort(ColumnsType.Change)">Change
 			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Change ? '' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
 		</mat-label>
-		<mat-label class="range-h" (click)="sort(ColumnsType.Range)">Range
+		<mat-label class="range-h" *ngIf="viewable('Range')" (click)="sort(ColumnsType.Range)">Range
 			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Range ? '' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
 		</mat-label>
-		<mat-label class="volume-h" (click)="sort(ColumnsType.Volume)">Volume
+		<mat-label class="volume-h" *ngIf="viewable('Volume')" (click)="sort(ColumnsType.Volume)">Volume
 			<mat-icon [ngClass]="sortActive?.active==ColumnsType.Volume ? 'unsorted' : 'unsorted'">{{sortActive?.direction=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
 		</mat-label>
 		<mat-label *ngIf="viewable( 'inventory' )" class="shareCount">Inventory</mat-label>

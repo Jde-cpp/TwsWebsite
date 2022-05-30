@@ -11,30 +11,32 @@ export class QuantityComponent
 			values.push( i*this.step );
 		return values;
 	}
-	onFocus( e )
+	onFocus( e/*:FocusEvent*/ )
 	{
-		this.focusChange.emit( true );
+		//EventTarget t;
+		this.focus.emit( this.value );
 		e.target.select();
 	}
-	onFocusout( e )
+	onFocusout( e:FocusEvent )
 	{
-		this.focusChange.emit( false );
+		this.focusOut.emit( this.value );
 	}
 	initial:number|null=null;
 	@Input() min:number=0;
 	@Input() set placeholder( value ){ this._placeholder = value; } get placeholder(){return this._placeholder} private _placeholder:string="Quantity";
 	@Input() set step(value){if(typeof value=="string")this._step=+value; else this._step=value; } get step(){return this._step;} _step:number=1;
 	@Output() valueChange = new EventEmitter<number>();
-	@Output() focusChange = new EventEmitter<boolean>();
+	@Output() focus = new EventEmitter<number>();
+	@Output() focusOut = new EventEmitter<number>();
 	@Input() set value(value)
 	{
-		if(this._value!=null && this._value!=value)
+		if(this.#value!=null && this.#value!=value)
 		{
 			this.valueChange.emit(value);
 			//console.log( `value=${value}` );
 		}
-		if( this.initial==null ) this.initial=value; this._value=value;
-	} get value(){ return this._value;} _value:number|null=null;
+		if( this.initial==null ) this.initial=value; this.#value=value;
+	} get value(){ return this.#value;} #value:number|null=null;
 	get options():number[]
 	{
 		let values:number[] = [];

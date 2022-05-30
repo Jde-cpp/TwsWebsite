@@ -64,10 +64,22 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 		this.parent.onChangeSymbol( this, symbol );
 	}
 
-	setShares( x:number )
+	sharesFocusOut( shares:number )
 	{
+		//debugger;
 		this.editItem = null;
-		this.shares = x;
+		if( this.shares != shares )
+		{
+			this.shares = shares;
+			this.parent.onChangeShares( this );
+		}
+	}
+	sharesFocus( shares:number )
+	{
+		this.editItem = 'shares'
+		// if( e.type=="focusout" )
+		// {
+		// }
 	}
 
 	//this.tick = null;
@@ -142,11 +154,12 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 
 	oddRow:boolean;
 	rowId:number;
-	get shares(){return this._shares;} set shares(x)
+	get shares(){return this.#shares;} set shares(x)
 	{
-		this._shares=x;
-	} _shares:number;
+		this.#shares=x;
+	} #shares:number;
 	showMenu=false;
+
 	get symbol():string|null{ return this.tick?.detail.contract.symbol; }
 	@ViewChild("symbolInput") symbolInput: ElementRef;
 	set tick( x ){ this.#tick = x; /*console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );if( this.#tick ) this.subscribe(); else this.unsubscribe();*/ } get tick(){ return this.#tick; } #tick:TickDetails;

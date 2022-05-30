@@ -9,6 +9,10 @@ $_theme: mat.define-light-theme($_primary, $_accent);
 @include mat.all-component-themes($_theme);
 @include app-theme.theme($_theme);
 
+// .accentBackground
+// {
+// 	background:mat-color($_accent,div);
+// }
 .my-content
 {
 	width: 100%;

@@ -26,7 +26,7 @@ export class InvestorsComponent implements AfterViewInit, OnInit, OnDestroy
 	}
 	async ngAfterViewInit()
 	{
-		await this.profile.load();
+		await this.profile.loadedPromise;
 		try
 		{
 			await this.load();

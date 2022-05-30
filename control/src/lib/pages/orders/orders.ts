@@ -44,7 +44,7 @@ export class OrderComponent implements AfterViewInit, OnInit, OnDestroy
 
 	async ngAfterViewInit()
 	{
-		await this.profile.load();
+		await this.profile.loadedPromise;
 		let data:OrderView[] = [];
 		let orders:Order[] = await this.tws.reqAllOpenOrders();
 		for( let o of orders.filter(o=>o.state) )

@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { NgModule } from '@angular/core';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { BrowserModule } from '@angular/platform-browser';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
@@ -19,8 +20,8 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { DragDropModule } from '@angular/cdk/drag-drop';
 
+import {ComponentHeaderModule} from 'jde-material';
 import { DateRangeModule, LinkSelectModule, PaginatorModule } from 'jde-framework';
 
 import {InvestorsComponent} from './pages/Edgar/investors';
@@ -58,9 +59,9 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 		SnapshotComponent, SnapshotContentComponent, ConfigurationDialog, FundamentalsComponent, NewsComponent,RedditComponent,TwitterComponent, CandlestickComponent, OptionTabComponent,
 		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent, WatchSettings,
 		OptionTableComponent, WatchTableComponent, WatchRowComponent],
-	imports: [CommonModule, BrowserModule, FormsModule, ReactiveFormsModule,
+	imports: [CommonModule, BrowserModule, DragDropModule, FormsModule, ReactiveFormsModule,
 		MatButtonModule, MatAutocompleteModule,MatCheckboxModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatSortModule,MatRadioModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
-		DragDropModule,
+		ComponentHeaderModule,
 		DateRangeModule, LinkSelectModule, PaginatorModule],
 	entryComponents: [],
 	exports: [OrderComponent, PortfolioComponent, TradeComponent, WatchComponent, SnapshotComponent ],

@@ -23,7 +23,7 @@ export class TransactDialogData
 export async function TransactDoModal( dialog : MatDialog, profile: IProfile, tws : TwsService, detail:Results.IContractDetail, tick:TickEx, isBuy:boolean, quantity: number=null, showStop:boolean=true )
 {
 	const settingsContainer = new Settings<DialogSettings>( DialogSettings, "TransactDialog", profile );
-	await settingsContainer.load();
+	await settingsContainer.loadedPromise;
 	const numbers = await tws.reqManagedAccts();
 	let allAccounts = new Map<string,string>();
 	for( const account in numbers )

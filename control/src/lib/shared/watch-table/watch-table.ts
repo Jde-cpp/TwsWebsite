@@ -34,6 +34,11 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		console.log( `onChangeEdit(${i},${event})` );
 	}
+	onChangeShares( row:WatchRowComponent )
+	{
+		this.file.securities.find( (x)=>x.contractId=row.contractId ).shares = row.shares;
+		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
+	}
 	onChangeSymbol( row:WatchRowComponent, symbol:string )
 	{
 		this.tws.reqSymbolSingle( symbol ).then( (result)=>
@@ -162,6 +167,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		{
 			let items = this.defaultLayout( contracts );
 			this.addItems( items, true );
+			//this.addRow();
 			// if( this.settings.hasDefaultLayout && !this.sortActive )
 			// {
 			// 	for( let item of items )
@@ -185,7 +191,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			});
 		}
 		else
-			this.addRow();
+			setTimeout( ()=>this.addRow(), 0 );
 	}
 
 	defaultLayout( contracts?:Array<Results.IContractDetail[]> )
@@ -247,6 +253,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			if( subscribe )
 				this.rowSubscribe( instance );
 		}
+		this.addRow();
 	}
 	sort( column:Columns )
 	{
@@ -266,19 +273,15 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 
 	viewable( columnId:string ):boolean
 	{
-		return columnId=="shares" ? this.isPortfolio : columnId!='inventory';
+		return columnId=="shares"
+			? this.isPortfolio
+			: this.settings.columns.includes( Columns[columnId] );
 	}
 
 	@Input() set file(x){ this.#file=x; } get file(){return this.#file;} #file:Watch.File;
 	editEvents: Subject<number> = new Subject<number>();
 	get editRow(){ return this._editRow; } set editRow(x){this._editRow=x; if( x!=-1 ) this.editEvents.next(x); }	_editRow:number = -1;
-	@Input() set isPortfolio(x)
-	{
-		this._isPortfolio=x;
-	} get isPortfolio()
-	{
-		return this._isPortfolio;
-	} _isPortfolio:boolean;
+	get isPortfolio(){ return this.settings.hasShares; }
 //	private resolve: Function;
 	subscriptions = new Map<number,TickObservable>();
 	//ticks:TickDetails[] = [];
@@ -310,7 +313,6 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		this.container.remove( index );
 		this.rows.splice( index, 1 );
-		//if( this.file.securities.length>index ) should always be true?
 		this.file.securities.splice( index, 1 );
 		this.tws.editWatch( this.file );
 		for( let i=index; i<this.rows.length; ++i )
@@ -326,7 +328,4 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	get sortActive(){ return this.settings?.sort; } set sortActive(x){ this.settings.sort = x; this.profile.save(); }
 	set selected(x){ const previous = this._selected; this._selected=x; if( previous ) previous.selected = false; this.selectedChanged.emit( x ? x.detail || null : undefined);} get selected(){return this._selected;} private _selected:WatchRowComponent;
 	@Output() selectedChanged = new EventEmitter<Results.IContractDetail>();
-	@ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
-	viewPromise:Promise<boolean>;
-}
-class Row{shares: number; tick: TickDetails};
+	@ViewChild('con

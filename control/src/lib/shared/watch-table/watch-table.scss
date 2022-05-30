@@ -27,12 +27,8 @@
 .sortedHeader:hover > .unsorted{ display: inline; }
 .sortedHeader > .unsorted{ display: none; }
 
-.amountCell
-{
-	@extend .base;
-	justify-content: right;
-}
-.size{ @extend .base; flex-basis:70px; min-width: 70px; }
+.amountCell{ @extend .base; justify-content: right; }
+.size{ @extend .base; justify-content: right; }
 .sizeHeader{ @extend .size; @extend .header; }
 
 .shares

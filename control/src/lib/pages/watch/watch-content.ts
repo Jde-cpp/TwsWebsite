@@ -1,4 +1,5 @@
 import { Component, AfterViewInit, Input, OnInit, OnDestroy, Inject } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import {SortDirection} from '@angular/material/sort';
 import {IErrorService,Settings} from 'jde-framework'
 import { IProfile } from 'jde-framework';
@@ -17,7 +18,7 @@ import { Subject } from 'rxjs';
 @Component( {selector: 'watch-content', styleUrls: ['watch.css'], templateUrl: './watch-content.html'} )
 export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 {
-	constructor( private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
+	constructor( private route: ActivatedRoute,  private router: Router, private tws : TwsService, private componentPageTitle:ComponentPageTitle, @Inject('IProfile') private profileService: IProfile, @Inject('IErrorService') private cnsle: IErrorService )
 	{}
 
 	ngOnInit()
@@ -30,7 +31,7 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 	{
 		let self = this;
 		this.profile = new Settings<PageSettings>( PageSettings, this.name ? WatchContentComponent.profileKey+"."+this.name : WatchContentComponent.profileKey, this.profileService );
-		await this.profile.load();
+		await this.profile.loadedPromise;
 		if( !self.name )
 			self.file = new Watch.File();
 		else
@@ -45,7 +46,7 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 		self.viewPromise = Promise.resolve(true);
 	}
 	onSelectedChanged( details:Results.IContractDetailsResult|null|undefined ){ this.selection = details; }
-	onConfigurationClick(){}
+	onConfigurationClick(){ this.router.navigate([`${this.route.snapshot.url[0].path}/${this.name}/settings/`] ); }
 	save():Promise<void>{ return this.tws.editWatch( this.file ); }
 	selection:Results.IContractDetailsResult|null|undefined;
 	get canAdd(){ return this.selection!==undefined; }
@@ -77,7 +78,11 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 
 export enum Columns
 {
+	Pnl,
 	Symbol,
+	Shares,
+	Market,
+	AvgPrice,
 	BidSize,
 	Bid,
 	Ask,
@@ -95,7 +100,7 @@ export enum Columns
 export class Sort{ active:Columns;direction:SortDirection };
 export class PageSettings
 {
-	assign( x:PageSettings ){ this.sort = x.sort; this.columns = x.columns; this.hasDefaultLayout=x.hasDefaultLayout; }
+	assign( x:PageSettings ){ this.sort = x.sort; this.columns = x.columns; this.hasDefaultLayout=x.hasDefaultLayout; this.hasShares=x.hasShares; }
 	sort:Sort=null;//{ active:null, direction:'' }
 	columns:Columns[]=[ Columns.Symbol, Columns.BidSize, Columns.Bid, Columns.Ask, Columns.AskSize, Columns.Last, Columns.Change, Columns.Range, Columns.Volume ];
 	hasDefaultLayout = true;

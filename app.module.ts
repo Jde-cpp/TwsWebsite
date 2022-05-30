@@ -4,9 +4,6 @@ import { BrowserModule } from '@angular/platform-browser';
 import {Routes, RouterModule} from '@angular/router';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import {BlocklyViewerComponent} from 'jde-blockly';
-import {BlocklyCategoryList} from 'jde-blockly';
-import {BlocklySidenav} from 'jde-blockly'
 
 import {MatAutocompleteModule} from '@angular/material/autocomplete';
 import {MatButtonModule} from '@angular/material/button';
@@ -29,6 +26,7 @@ import {MatTabsModule} from '@angular/material/tabs';
 import {MatTableModule} from '@angular/material/table';
 import {MatToolbarModule} from '@angular/material/toolbar';
 
+import {ComponentHeaderModule} from 'jde-material';
 import {NavBarModule} from 'jde-material';
 import {ThemePickerModule} from 'jde-material';
 import {StyleManager} from 'jde-material';
@@ -37,6 +35,10 @@ import{ Applications } from 'jde-framework';
 import{ LogsComponent } from 'jde-framework';
 import{ GraphQLComponent } from 'jde-framework';
 import{ GraphQLDetailComponent } from 'jde-framework';
+
+import {BlocklyViewerComponent} from 'jde-blockly';
+import {BlocklyCategoryList} from 'jde-blockly';
+import {BlocklySidenav} from 'jde-blockly'
 
 import { AppComponent } from './app.component';
 
@@ -110,8 +112,7 @@ const routes: Routes =
   	imports: [
 		CommonModule, BrowserModule, RouterModule.forRoot( routes, {enableTracing: false} ), BrowserAnimationsModule, FormsModule, ReactiveFormsModule,
 	 MatAutocompleteModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatMenuModule, MatIconModule, MatInputModule, MatNativeDateModule, MatRadioModule, MatCardModule, MatCheckboxModule, MatChipsModule, MatToolbarModule, MatPaginatorModule, MatDatepickerModule, MatSelectModule, MatSnackBarModule, MatSortModule, MatTableModule, MatTabsModule,
-	 NavBarModule,
-	 ThemePickerModule,
+	 ComponentHeaderModule, NavBarModule, ThemePickerModule
 	 //MatExpansionModule,
 	  /*SnapshotComponent, PortfolioComponent, SnapshotComponent, TradeComponent, OrderComponent, WatchComponent,*/
 	  //BlocklySidenav, BlocklyViewerComponent

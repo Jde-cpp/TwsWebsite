@@ -328,4 +328,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	get sortActive(){ return this.settings?.sort; } set sortActive(x){ this.settings.sort = x; this.profile.save(); }
 	set selected(x){ const previous = this._selected; this._selected=x; if( previous ) previous.selected = false; this.selectedChanged.emit( x ? x.detail || null : undefined);} get selected(){return this._selected;} private _selected:WatchRowComponent;
 	@Output() selectedChanged = new EventEmitter<Results.IContractDetail>();
-	@ViewChild('con
+	@ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
+	viewPromise:Promise<boolean>;
+}
+class Row{shares: number; tick: TickDetails};

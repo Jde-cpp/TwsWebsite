@@ -1,4 +1,4 @@
-#!/bin/bash
+b#!/bin/bash
 clean=${1:-0};
 shouldFetch=${2:-1};
 buildPrivate=${3:-0};
@@ -26,10 +26,11 @@ addHard twitter_social_icons_circle_blue.svg ../../../projects/jde-tws/src/asset
 addHard outline_emoji_people_black_24dp.png ../../../projects/jde-tws/src/assets/img;
 addHard theme-demo-icon.svg ../../../projects/jde-material/src/assets/img;
 cd ..;
-addHard deeppurple-amber.css ../../projects/jde-material/src/assets;
-addHard pink-bluegrey.css ../../projects/jde-material/src/assets;
-addHard purple-green.css ../../projects/jde-material/src/assets;
-echo add not safari
+#addHard deeppurple-amber.css ../../projects/jde-material/src/assets;
+#addHard pink-bluegrey.css ../../projects/jde-material/src/assets;
+#addHard purple-green.css ../../projects/jde-material/src/assets;
+cd ../..;
+echo add not safari `pwd`
 echo "not ios_saf 15.2-15.3" >> .browserslistrc;
 echo "not safari 15.2-15.3" >> .browserslistrc;  #todo remove at some point.
 echo add not safari done

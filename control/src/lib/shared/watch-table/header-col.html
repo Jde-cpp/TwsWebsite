@@ -1,0 +1,3 @@
+<mat-label [ngClass]=className (click)="sort()">{{name}}
+	<mat-icon [ngClass]="sortedDir ? '' : 'unsorted'">{{sortedDir=='desc' ? 'arrow_downward' : 'arrow_upward'}}</mat-icon>
+</mat-label>

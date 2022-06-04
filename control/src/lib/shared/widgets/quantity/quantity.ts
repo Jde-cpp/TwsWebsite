@@ -19,7 +19,8 @@ export class QuantityComponent
 	}
 	onFocusout( e:FocusEvent )
 	{
-		this.focusOut.emit( this.value );
+		if( !e.relatedTarget || e.relatedTarget["id"]!="option" )
+			this.focusOut.emit( this.value );
 	}
 	initial:number|null=null;
 	@Input() min:number=0;

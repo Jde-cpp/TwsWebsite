@@ -44,7 +44,9 @@ import { OptionTabComponent } from './shared/options/option-tab/option-tab'
 import { SummaryComponent } from './shared/summary/summary';
 import { OptionTableComponent } from './shared/options/option-table/option-table'
 import { WatchTableComponent } from './shared/watch-table/watch-table';
+import { HeaderCol } from './shared/watch-table/header-col';
 import { WatchRowComponent } from './shared/watch-table/watch-row/watch-row';
+import { WatchCol } from './shared/watch-table/watch-row/watch-col';
 import { RollDialog } from './shared/dialogs/roll/roll-dialog';
 import { ConfirmationDialog } from './shared/dialogs/transact/confirmation';
 import { OptionEntryDialog } from './shared/dialogs/option-entry/option-entry';
@@ -58,7 +60,7 @@ import {QuantityComponent} from './shared/widgets/quantity/quantity'
 		InvestorsComponent,OrderComponent, PortfolioComponent, TradeComponent, SummaryComponent, WatchComponent,
 		SnapshotComponent, SnapshotContentComponent, ConfigurationDialog, FundamentalsComponent, NewsComponent,RedditComponent,TwitterComponent, CandlestickComponent, OptionTabComponent,
 		RollDialog, ConfirmationDialog,OptionEntryDialog,TransactDialog,QuantityComponent, WatchContentComponent, WatchSettings,
-		OptionTableComponent, WatchTableComponent, WatchRowComponent],
+		OptionTableComponent, WatchTableComponent, HeaderCol, WatchRowComponent, WatchCol],
 	imports: [CommonModule, BrowserModule, DragDropModule, FormsModule, ReactiveFormsModule,
 		MatButtonModule, MatAutocompleteModule,MatCheckboxModule,MatDialogModule,MatIconModule,MatInputModule,MatExpansionModule,MatFormFieldModule,MatMenuModule,MatNativeDateModule,MatSelectModule,MatSortModule,MatRadioModule,MatTableModule,MatTabsModule,MatToolbarModule,BrowserAnimationsModule,
 		ComponentHeaderModule,

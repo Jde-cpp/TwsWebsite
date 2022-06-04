@@ -1,3 +1,7 @@
+//@use '@angular/material' as mat;
+//@use '../../../../../jde-material/src/app-theme' as theme;
+//@include mat.core();
+
 section
 {
 	width: 400px;
@@ -6,30 +10,40 @@ section
 	display: inline-block;
 	vertical-align: top;
  }
- .list
- {
-	border: solid 1px #ccc;
-	min-height: 60px;
-	background: white;
-	border-radius: 4px;
-	overflow: hidden;
-	display: block;
- }
-.box
-{
- padding: 20px 10px;
- border-bottom: solid 1px #ccc;
- color: rgba(0, 0, 0, 0.87);
- display: flex;
- flex-direction: row;
- align-items: center;
- justify-content: space-between;
- box-sizing: border-box;
- cursor: move;
- background: white;
- font-size: 14px;
-}
-
+//@mixin component-category-list-theme($theme)
+//{
+	// $primary: map-get($theme, primary);
+	// $accent: map-get($theme, accent);
+	// $is-dark-theme: map-get($theme, is-dark);
+	.list
+	{
+		border: solid 1px #ccc;
+		min-height: 60px;
+		background: white;
+		//background: $background;
+		//background: mat-color(theme.get-theme-color-property(background, primary));
+		//@include theme.get-theme-color-property(background, primary);
+		border-radius: 4px;
+		overflow: hidden;
+		display: block;
+	}
+	.box
+	{
+		padding: 20px 10px;
+		border-bottom: solid 1px #ccc;
+		//color: mat-color( $_primary, if($is-dark-theme, 200, default) );
+		color: rgba(0, 0, 0, 0.87);
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: space-between;
+		box-sizing: border-box;
+		cursor: move;
+		background: white;
+		/*background: mat-color($accent, card);*/
+		font-size: 14px;
+	}
+//}
 .box:last-child
 {
 	border: none;

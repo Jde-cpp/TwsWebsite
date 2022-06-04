@@ -1,22 +1,19 @@
-<span *ngIf="viewPromise | async" [class.highlight]="selected" class="watchRow" [class.stripe]="oddRow" (click)="selected=!selected">
-	<mat-form-field  *ngIf="isEditing( 'symbol' )" class="symbol">
-		<!-- <mat-label>Symbol</mat-label> -->
+<!-- *ngIf="viewPromise | async" -->
+<span [class.highlight]="selected" class="watchRow" [class.stripe]="oddRow" (click)="selected=!selected">
+	<ng-template #row>
+
+	</ng-template>
+	<!-- <mat-form-field  *ngIf="isEditing( 'symbol' )" class="symbol">
 		<input matInput #symbolInput onclick="this.select();" [ngModel]="symbol" (keyup.enter)="setSymbol($event.target.value)" (blur)="setSymbol($event.target.value)">
 	</mat-form-field>
 	<div *ngIf="!isEditing( 'symbol' )" style="text-align: left" (click)="editColumn('symbol')" class="symbol foobar">{{detail?.contract.symbol}}</div>
 
 	<small-chart class="chart" *ngFor() [tick]="tick"></small-chart>
 
-	<ng-container *ngIf="viewable('shares')">
-		<quantity class="shares" *ngIf="isEditing('shares')" [placeholder]="shares" step="100" [value]="shares" (valueChange)="sharesFocusOut( $event )" (focus)="sharesFocus($event)" (focusOut)="sharesFocusOut($event)"></quantity><!-- (valueChange)="setShares( $event )" (focusChange)="$event ? setShares()" -->
-		<span     class="shares" *ngIf="!isEditing('shares')" (click)="editColumn( 'shares' )" >{{ shares | number:'1.0-0'}}</span>
+	<ng-container *ngIf="viewable('Shares')">
+		<quantity class="size" *ngIf="isEditing('shares')" [placeholder]="shares" step="100" [value]="shares" (focus)="sharesFocus($event)" (focusOut)="sharesFocusOut($event)"></quantity><!-- (valueChange)="setShares( $event )" (focusChange)="$event ? setShares()"  (valueChange)="sharesFocusOut( $event )" ->
+		<span     class="size" *ngIf="!isEditing('shares')" (click)="editColumn( 'shares' )" >{{ shares | number:'1.0-0'}}</span>
 	</ng-container>
-	<!-- <mat-form-field  *ngIf="isEditing( 'shares' )" class="shares">
-		<quantity></quantity>
-		<input matInput #symbolInput type="number" onclick="this.select();" [ngModel]="shares" (keyup.enter)="setShares($event.target.value)" (blur)="setShares($event.target.value)">
-	</mat-form-field>
-	<span *ngIf="viewable('shares')" class="shares">{{shares}}</span> -->
-
 	<span *ngIf="viewable('BidSize')" class="size">{{tick?.bidSize | number:'1.0-0'}}</span>
 	<div *ngIf="viewable('Bid')" class="amountCell">{{tick?.bid | number:'1.2-2'}}</div>
 	<div *ngIf="viewable('Ask')" class="amountCell">{{tick?.ask | number:'1.2-2'}}</div>
@@ -32,14 +29,5 @@
 	</div>
 	<div class="amountCell" *ngIf="viewable('Volume') && (tick==null || !tick.volumeAverage)">{{displayVolume}}</div>
 	<div class="amountCell" *ngIf="viewable('Volume') && tick?.volumeAverage">{{tick.volume/tick.volumeAverage*100 | number:'1.1-1':'en-US'}}%</div>
-	<div *ngIf="viewable('inventory')" class="amountCell">{{displayInventory}}</div>
-	<!-- <div class="shareCount">{{index}}</div> -->
-	<!-- <div class="shareCount" title="{{settingsSymbol?.shortInterestDate}}">shortDisplay</div> -->
-	<!---->
-<!-- {{tick?.shortableAvailable/1000 | number:'1.0-0'}}{{ tick ? 'K' : ''}} -- >
-<span *ngIf="showMenu">
-	<button mat-raised-button color="primary" style="margin-right:10px" (click)="onTransactClick(true)">Buy</button>
-	<button mat-raised-button color="warn" (click)="onTransactClick(false)" >Sell</button>
-	<button mat-icon-button (click)="onConfigurationClick()"><mat-icon>settings</mat-icon></button>
-</span>-->
+	<div *ngIf="viewable('inventory')" class="amountCell">{{displayInventory}}</div> -->
 </span>

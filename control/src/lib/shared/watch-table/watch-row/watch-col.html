@@ -1,0 +1,8 @@
+<mat-form-field  *ngIf=isEditing [ngClass]=className>
+	<input matInput #symbolInput onclick=this.select() [ngModel]=value (keyup.enter)=enterClick($event.target.value) (blur)=blur($event.target.value)>
+</mat-form-field>
+<span *ngIf="!isEditing && isSimple" (click)=edit() [ngClass]=className>{{value}}</span>
+<div *ngIf="propertyName=='change'" class="change" [class.negativeValue]="parent.tick?.change<0" [class.positiveValue]="parent.tick?.change>0">
+	<span class="changeAmount">{{parent.tick?.change | number: '1.2-2'}}</span>
+	<span class="changePercent">{{parent.tick?.change/parent.tick?.close*100 | number: '1.1-1'}}</span><span *ngIf="tick">%</span>
+</div>

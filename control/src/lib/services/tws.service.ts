@@ -929,7 +929,15 @@ class Connection
 		this.previousDayCallbacks.set( 9999, null );
 		return callback;
 	}
-
+	reqStats( contractIds:ContractPK[], stats:Requests.Stats[] ):Observable<[Requests.Stats,number]>
+	{
+		const requestId = this.getRequestId();
+		if( this.log.requests ) console.log( `(${requestId})reqStats( ${stats.join()} )` );
+		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{requestStats: {id: requestId, contractIds: contractIds, stats: stats}}) );
+		const callback = new Subject<[Requests.Stats,number]>();
+		this.statCallbacks.set( requestId, callback );
+		return callback;
+	}
 	sendPromise<TInput,TResult>( param:string, value:TInput, result:GetResult, transformInput?:TransformInput ):Promise<TResult>
 	{
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{[param]: value}) );
@@ -1004,6 +1012,7 @@ class Connection
 	private observers = new Map<number,RequestObservable>();
 	private optionParamCallbacks = new Map<number, RequestPromise>();
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();
+	private statCallbacks = new Map<number, Subject<[Requests.Stats,number]>>();
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
 	private backlog:Requests.RequestTransmission[] = [];
@@ -1086,6 +1095,7 @@ export class TwsService implements IGraphQL
 	reqAllOpenOrders():Promise<Order[]>{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
+	reqStats( contractIds:ContractPK[], stats:Requests.Stats[] ):Observable<[Requests.Stats,number]>{ return this.connection.reqStats(contractIds, stats); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
 	tweets( symbol:string ):[Observable<Results.ITweets>,Promise<Results.ITweetAuthors>]{ return this.connection.tweets( symbol ); }

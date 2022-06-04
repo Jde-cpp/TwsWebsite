@@ -1,4 +1,4 @@
-import {Component,EventEmitter,Input,Output, Inject, OnDestroy, ViewChild, ElementRef, OnInit, AfterViewInit, HostBinding} from '@angular/core';
+import {Component,EventEmitter,Input,Output, Inject, OnDestroy, ViewChild, ElementRef, OnInit, AfterViewInit, HostBinding, ViewContainerRef, ComponentRef} from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { TickDetails } from '../../../services/Tick';
 import { TwsService } from '../../../services/tws.service';
@@ -7,8 +7,10 @@ import { IErrorService } from 'jde-framework';
 import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import { Subject } from 'rxjs';
+import { Subject, timeout } from 'rxjs';
 import { WatchTableComponent } from '../watch-table';
+import { WatchCol } from './watch-col';
+import { Columns } from '../../../pages/watch/watch-content';
 
 @Component({selector: 'watch-row', templateUrl: './watch-row.html', styleUrls:['./watch-row.scss', '../watch-table.scss']})
 export class WatchRowComponent implements OnInit, AfterViewInit
@@ -22,16 +24,40 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 		//console.log( `row( ${this.index} )` );
 	}
 	//class="watchRow"
-	ngOnInit(){}
-	ngAfterViewInit(){ this.viewPromise = Promise.resolve(true); }
+	ngOnInit(){ /* this.viewPromise = Promise.resolve(true);*/ }
+	ngAfterViewInit()
+	{
+
+		this.addColumns();
+	}
+
+	addColumns()
+	{
+		for( let c of this.parent.settings.columns )
+		{
+			const ref:ComponentRef<WatchCol> = this.row.createComponent<WatchCol>( WatchCol ); let instance = ref.instance;
+			instance.name = Columns[c];
+			if( [Columns.Ask,Columns.AskSize,Columns.Bid,Columns.BidSize,Columns.Change,Columns.Last].includes( c ) )
+				instance.parent = this;
+			else if( c==Columns.Symbol )
+				this.symbolCol = instance;
+			else if( c==Columns.Shares )
+				this.sharesCol = instance;
+			else if( c==Columns.AvgPrice )
+				this.avgPriceCol = instance;
+		}
+	}
 
 	clear()
 	{
 		this.shares = this.tick = undefined;
 	}
-	set( shares:number, tick:TickDetails )
+	set( shares:number, avgPrice:number, tick:TickDetails )
 	{
-		this.shares = shares;
+		if( this.sharesCol )
+			this.sharesCol.number = shares;
+		if( this.avgPriceCol )
+			this.avgPriceCol.number = avgPrice;
 		this.tick = tick;
 	}
 	viewable( columnId:string ):boolean
@@ -77,10 +103,22 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	sharesFocus( shares:number )
 	{
 		this.editItem = 'shares'
-		// if( e.type=="focusout" )
-		// {
-		// }
 	}
+	avgPriceFocusOut( price:number )
+	{
+		//debugger;
+		this.editItem = null;
+		if( this.avgPrice != price )
+		{
+			this.avgPrice = price;
+			this.parent.onChangeAvgPrice( this );
+		}
+	}
+	avgPriceFocus( shares:number )
+	{
+		this.editItem = 'avgPrice';
+	}
+
 
 	//this.tick = null;
 /*		this.unsubscribe();
@@ -154,15 +192,20 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 
 	oddRow:boolean;
 	rowId:number;
-	get shares(){return this.#shares;} set shares(x)
-	{
-		this.#shares=x;
-	} #shares:number;
+	get shares(){return this.#shares;} set shares(x){ this.#shares=x; } #shares:number;
+	avgPrice:number;
 	showMenu=false;
 
 	get symbol():string|null{ return this.tick?.detail.contract.symbol; }
 	@ViewChild("symbolInput") symbolInput: ElementRef;
-	set tick( x ){ this.#tick = x; /*console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );if( this.#tick ) this.subscribe(); else this.unsubscribe();*/ } get tick(){ return this.#tick; } #tick:TickDetails;
+	set tick( x )
+	{
+		this.#tick = x; /*console.log( `(${this.index})tick= ${x ? x.contract.symbol : 'null'}` );if( this.#tick ) this.subscribe(); else this.unsubscribe();*/
+		let ref = this.row.get(0);
+		let instance = ref["instance"];
+		if( this.symbolCol )
+			this.symbolCol.value = this.detail?.contract.symbol;
+	} get tick(){ return this.#tick; } #tick:TickDetails;
 	get selected(){ return this._selected;} set selected( x )
 	{
 		if( x )
@@ -172,6 +215,11 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 		this._selected = x;
 	} _selected:boolean;
 	parent:WatchTableComponent;
-	viewPromise:Promise<boolean>=null;// = new Promise<void>( (resolve) => { this.resolve = resolve;} );
+
+	avgPriceCol:WatchCol;
+	sharesCol:WatchCol;
+	symbolCol:WatchCol;
+	//viewPromise:Promise<boolean>=null;// = new Promise<void>( (resolve) => { this.resolve = resolve;} );
 	volumeAverage:number;
+	@ViewChild('row', {read: ViewContainerRef}) row: ViewContainerRef;
 }

@@ -1,0 +1,40 @@
+@import 'watch-table';
+
+.header
+{
+	justify-content: center;
+}
+.baseHeader
+{
+	@extend .base, .header;
+}
+.sortedHeader{@extend .header; justify-content: center; cursor: pointer; }
+//.sortedHeader:hover > .unsorted{ display: inline; }
+.unsorted{ display: none; }
+.sortedHeader > .unsorted{ display: none; }
+
+.sizeHeader{ @extend .size; @extend .header; }
+
+.symbol-h{ @extend .symbol, .sortedHeader; }
+.shares-h{ @extend .shares, .header; }
+.bidSize-h{ @extend .sizeHeader; }
+.bid-h{ @extend .baseHeader; }
+.ask-h{ @extend .baseHeader; }
+.askSize-h{ @extend .sizeHeader; }
+.avgPrice-h{ @extend .baseHeader; }
+.last-h{ @extend .base, .sortedHeader; }
+.aTH-h{ @extend .base, .sortedHeader; }
+.pWL-h{ @extend .base, .sortedHeader; }
+.market-h{ @extend .base, .sortedHeader; }
+.yearHigh-h{ @extend .base, .sortedHeader; }
+.yearLow-h{ @extend .base, .sortedHeader; }
+.mA100-h{ @extend .base, .sortedHeader; }
+.pnl-h{ @extend .base, .sortedHeader; }
+
+.change-h{ @extend .change, .sortedHeader }
+.change-h:hover{ @extend .change-h }
+
+.range-h{ @extend .range, .sortedHeader }
+
+.volume-h{ @extend .volume, .sortedHeader }
+.volume-h:hover{ @extend .volume-h }

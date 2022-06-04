@@ -15,6 +15,7 @@ import { WatchRowComponent } from './watch-row/watch-row';
 import { Columns, PageSettings } from './../../pages/watch/watch-content'
 import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { IProfile } from 'jde-framework';
+import { HeaderCol } from './header-col';
 
 @Component({selector: 'watch-table', templateUrl: './watch-table.html', styleUrls:['./watch-table.scss']})
 export class WatchTableComponent implements OnInit, AfterViewInit
@@ -37,6 +38,11 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	onChangeShares( row:WatchRowComponent )
 	{
 		this.file.securities.find( (x)=>x.contractId=row.contractId ).shares = row.shares;
+		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
+	}
+	onChangeAvgPrice( row:WatchRowComponent )
+	{
+		this.file.securities.find( (x)=>x.contractId=row.contractId ).avgPrice = row.avgPrice;
 		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
 	}
 	onChangeSymbol( row:WatchRowComponent, symbol:string )
@@ -92,17 +98,17 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		/*let newRow =*/ this.addRow();
 		this.file.securities.push( new Watch.Entry() );
-		let previous:[number,TickDetails];
+		let previous:[number,number,TickDetails];
 		let change = false;
 		for( let i=0; i<this.file.securities.length; ++i )
 		{
 			const instance = this.rows[i].instance;
-			const original:[number,TickDetails] = [instance?.shares, instance?.tick];
+			const original:[number,number,TickDetails] = [instance?.shares, instance?.avgPrice, instance?.tick];
 			const set = previous!==undefined;
 			if( set )
 			{
 				change = change || previous[1]!=null;
-				instance.set( previous[0], previous[1] );
+				instance.set( previous[0], previous[1], previous[2] );
 				this.file.securities[i].contractId = instance.contractId;
 				this.file.securities[i].shares = instance.shares;
 			}
@@ -192,6 +198,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		}
 		else
 			setTimeout( ()=>this.addRow(), 0 );
+		this.addColumns();
 	}
 
 	defaultLayout( contracts?:Array<Results.IContractDetail[]> )
@@ -207,14 +214,14 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 				{
 					const details = contracts.find( (x)=>x.length && x[0].contract.id==entry.contractId );
 					if( details && details.length==1 )
-						r = { shares: entry.shares, tick: new TickDetails(details[0]) };
+						r = { shares: entry.shares, avgPrice: entry.avgPrice, tick: new TickDetails(details[0]) };
 					else
 						console.log( `reqIds returned contract with ${!details ? 0 : details.length} records` );
 				}
 				else
 				{
 					let i = this.rows.find( (r)=>r.instance.contractId==entry.contractId ).instance;
-					r = { shares: i.shares, tick: i.tick };
+					r = { shares: i.shares, avgPrice: i.avgPrice, tick: i.tick };
 				}
 			}
 			items.push( r );
@@ -249,7 +256,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			let instance = this.addRow();
 			if( !item )
 				continue;
-			instance.set( item.shares, item.tick );
+			instance.set( item.shares, item.avgPrice, item.tick );
 			if( subscribe )
 				this.rowSubscribe( instance );
 		}
@@ -265,7 +272,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			? null
 			: { active:column, direction: direction };
 		let items:Row[] = this.sortActive
-			? this.rows.filter( (r)=>r.instance.symbol ).map( (r)=>{ return {shares: r.instance.shares, tick: r.instance.tick} } )
+			? this.rows.filter( (r)=>r.instance.symbol ).map( (r)=>{ return {shares: r.instance.shares, avgPrice: r.instance.avgPrice, tick: r.instance.tick} } )
 			: this.defaultLayout();
 		this.rows.length = 0;
 		this.addItems( items );
@@ -273,9 +280,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 
 	viewable( columnId:string ):boolean
 	{
-		return columnId=="shares"
-			? this.isPortfolio
-			: this.settings.columns.includes( Columns[columnId] );
+		return this.settings.columns.includes( Columns[columnId] );
 	}
 
 	@Input() set file(x){ this.#file=x; } get file(){return this.#file;} #file:Watch.File;
@@ -292,6 +297,24 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	indexOf( rowId:number ):number
 	{
 		return this.rows.findIndex( (ref)=>{return ref.instance.rowId==rowId;} );
+	}
+	addColumns()
+	{
+		for( let c of this.settings.columns )
+		{
+			const ref:ComponentRef<HeaderCol> = this.header.createComponent<HeaderCol>( HeaderCol ); let instance = ref.instance;
+			instance.name = Columns[c];
+			//instance.className = instance.name+"-h";
+			if( this.settings.sort.active==c )
+				instance.sortedDir = this.settings.sort.direction;
+
+			//label.
+
+			//let instance:HeaderCol = ref;
+
+		}
+		//instance["class"] = "symbol-h";
+		//instance["click"]=()=>this.sort(Columns.Symbol);
 	}
 	addRow():WatchRowComponent
 	{
@@ -329,6 +352,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	set selected(x){ const previous = this._selected; this._selected=x; if( previous ) previous.selected = false; this.selectedChanged.emit( x ? x.detail || null : undefined);} get selected(){return this._selected;} private _selected:WatchRowComponent;
 	@Output() selectedChanged = new EventEmitter<Results.IContractDetail>();
 	@ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
+	@ViewChild('header', {read: ViewContainerRef}) header: ViewContainerRef;
 	viewPromise:Promise<boolean>;
 }
-class Row{shares: number; tick: TickDetails};
+class Row{shares: number; avgPrice:number; tick: TickDetails};

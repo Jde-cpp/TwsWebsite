@@ -51,6 +51,7 @@
 // .last-h:hover{ @extend .base, .sortedHeader; }
 
 .change{ @extend .base; flex-basis:130px; min-width: 130px; }
+.ath{ @extend .change; }
 .changeAmount{ @extend .base; flex-basis:70px; min-width: 70px;justify-content: right;}
 .changePercent{ @extend .base; flex-basis:45px; min-width: 45px; justify-content: right;}
 // .change-h{ @extend .change, .sortedHeader }

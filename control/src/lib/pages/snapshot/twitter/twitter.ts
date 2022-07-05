@@ -64,7 +64,6 @@ export class TwitterComponent implements OnInit, AfterViewInit, OnDestroy
 			},
 			complete: ()=>this.collection.sort( (a, b)=>a.likesPerMinute-b.likesPerMinute ),
 			error: (e)=>this.cnsl.error( e.message )
-
 		} );
 		let authors = await authorPromise;
 

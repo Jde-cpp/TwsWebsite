@@ -23,8 +23,8 @@
 .askSize-h{ @extend .sizeHeader; }
 .avgPrice-h{ @extend .baseHeader; }
 .last-h{ @extend .base, .sortedHeader; }
-.aTH-h{ @extend .base, .sortedHeader; }
-.pWL-h{ @extend .base, .sortedHeader; }
+.ath-h{ @extend .ath, .sortedHeader; }
+.pwl-h{ @extend .base, .sortedHeader; }
 .market-h{ @extend .base, .sortedHeader; }
 .yearHigh-h{ @extend .base, .sortedHeader; }
 .yearLow-h{ @extend .base, .sortedHeader; }

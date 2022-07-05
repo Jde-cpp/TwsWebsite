@@ -2,25 +2,25 @@ import {Component,EventEmitter,Input,Output, Inject, OnDestroy, ViewChild, Eleme
 import { DecimalPipe } from '@angular/common';
 import { TickDetails } from '../../../services/Tick';
 import { TwsService } from '../../../services/tws.service';
-import { IErrorService } from 'jde-framework';
+import { Day, IErrorService } from 'jde-framework';
 
 import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { Subject, timeout } from 'rxjs';
 import { WatchTableComponent } from '../watch-table';
-import { WatchCol } from './watch-col';
+import { Column, WatchCol, WatchNumCol } from './columns/watch-col';
 import { Columns } from '../../../pages/watch/watch-content';
 
 @Component({selector: 'watch-row', templateUrl: './watch-row.html', styleUrls:['./watch-row.scss', '../watch-table.scss']})
-export class WatchRowComponent implements OnInit, AfterViewInit
+export class WatchRow implements OnInit, AfterViewInit
 {
 	@HostBinding('class.watchRow') public hostClass:boolean=true;
 	static i:number=0;
 	index:number;
 	constructor( private tws : TwsService, @Inject('IErrorService') private cnsle: IErrorService, private decimalPipe: DecimalPipe )
 	{
-		this.index = WatchRowComponent.i++;
+		this.index = WatchRow.i++;
 		//console.log( `row( ${this.index} )` );
 	}
 	//class="watchRow"
@@ -35,9 +35,14 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	{
 		for( let c of this.parent.settings.columns )
 		{
-			const ref:ComponentRef<WatchCol> = this.row.createComponent<WatchCol>( WatchCol ); let instance = ref.instance;
+			let ref//:ComponentRef<Column>;
+			if( [Columns.AvgPrice].includes(c) )
+				ref = this.row.createComponent<WatchNumCol>( WatchNumCol );
+			else
+				ref = this.row.createComponent<WatchCol>( WatchCol );
+			let instance = ref.instance;
 			instance.name = Columns[c];
-			if( [Columns.Ask,Columns.AskSize,Columns.Bid,Columns.BidSize,Columns.Change,Columns.Last].includes( c ) )
+			if( [Columns.Ask,Columns.AskSize,Columns.Bid,Columns.BidSize,Columns.Change,Columns.Last,Columns.Range,Columns.Volume, Columns.Ath, Columns.Market, Columns.YearHigh, Columns.YearLow, Columns.Pnl, Columns.MA100, Columns.Pwl].includes(c) )
 				instance.parent = this;
 			else if( c==Columns.Symbol )
 				this.symbolCol = instance;
@@ -79,7 +84,6 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 				this.symbolInput.nativeElement.select();
 			}
 		 },0);
-
 	}
 	isEditing( columnId:string ){ return this.editItem==columnId; }
 	setSymbol( symbol:string )
@@ -192,7 +196,7 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 
 	oddRow:boolean;
 	rowId:number;
-	get shares(){return this.#shares;} set shares(x){ this.#shares=x; } #shares:number;
+	get shares(){return this.sharesCol.number;} set shares(x){ this.sharesCol.number=x; } //#shares:number;
 	avgPrice:number;
 	showMenu=false;
 
@@ -216,9 +220,17 @@ export class WatchRowComponent implements OnInit, AfterViewInit
 	} _selected:boolean;
 	parent:WatchTableComponent;
 
-	avgPriceCol:WatchCol;
-	sharesCol:WatchCol;
-	symbolCol:WatchCol;
+	avgPriceCol:Column;
+	sharesCol:Column;
+	symbolCol:Column;
+
+	atl:number; atlDay:Day;
+	ath:number; athDay:Day;
+	ma100:number;
+	pwl:number;
+	yearLow:number; yearLowDay:Day;
+	yearHigh:number; yearHighDay:Day;
+
 	//viewPromise:Promise<boolean>=null;// = new Promise<void>( (resolve) => { this.resolve = resolve;} );
 	volumeAverage:number;
 	@ViewChild('row', {read: ViewContainerRef}) row: ViewContainerRef;

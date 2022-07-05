@@ -6,12 +6,12 @@ import { TickDetails } from '../../services/Tick';
 import { TwsService } from '../../services/tws.service';
 import { IErrorService,Settings } from 'jde-framework';
 import { TickObservable } from '../../services/ITickObserver';
-import { MarketUtilities } from '../../utilities/marketUtilities';
+import { ContractPK, MarketUtilities } from '../../utilities/marketUtilities';
 
 import * as ib2 from 'jde-cpp/ib'; import IB = ib2.Jde.Markets.Proto;
 import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Markets.Proto.Results;
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
-import { WatchRowComponent } from './watch-row/watch-row';
+import { WatchRow } from './watch-row/watch-row';
 import { Columns, PageSettings } from './../../pages/watch/watch-content'
 import * as IbWatch from 'jde-cpp/watch'; import Watch = IbWatch.Jde.Markets.Proto.Watch;
 import { IProfile } from 'jde-framework';
@@ -35,17 +35,17 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		console.log( `onChangeEdit(${i},${event})` );
 	}
-	onChangeShares( row:WatchRowComponent )
+	onChangeShares( row:WatchRow )
 	{
 		this.file.securities.find( (x)=>x.contractId=row.contractId ).shares = row.shares;
 		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
 	}
-	onChangeAvgPrice( row:WatchRowComponent )
+	onChangeAvgPrice( row:WatchRow )
 	{
 		this.file.securities.find( (x)=>x.contractId=row.contractId ).avgPrice = row.avgPrice;
 		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
 	}
-	onChangeSymbol( row:WatchRowComponent, symbol:string )
+	onChangeSymbol( row:WatchRow, symbol:string )
 	{
 		this.tws.reqSymbolSingle( symbol ).then( (result)=>
 		{
@@ -94,7 +94,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			});
 		}
 	}
-	lineAdd()/*:WatchRowComponent*/
+	lineAdd()/*:WatchRow*/
 	{
 		/*let newRow =*/ this.addRow();
 		this.file.securities.push( new Watch.Entry() );
@@ -130,12 +130,12 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		this.remove( this.indexOf(this.selected.rowId) );
 	}
-	async setRowDetail( row:WatchRowComponent, detail:Results.IContractDetail )
+	async setRowDetail( row:WatchRow, detail:Results.IContractDetail )
 	{
 		row.tick = new TickDetails( detail );
 		this.rowSubscribe( row );
 	}
-	async rowSubscribe( row:WatchRowComponent )
+	async rowSubscribe( row:WatchRow )
 	{
 		const detail = row.detail;
 		const isMarketOpen = MarketUtilities.isMarketOpen( detail );
@@ -251,6 +251,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		}
 		this.container.clear();
 		this.index = 0;
+		let contractIds = [];
 		for( let item of items )
 		{
 			let instance = this.addRow();
@@ -258,7 +259,49 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 				continue;
 			instance.set( item.shares, item.avgPrice, item.tick );
 			if( subscribe )
+			{
 				this.rowSubscribe( instance );
+				contractIds.push( item.tick.contract.id );
+			}
+		}
+		if( subscribe )
+		{
+			let stats:IB.Stats[]=[];
+			if( this.settings.columns.includes(Columns.Ath) )
+				stats.push( IB.Stats.Ath );
+			if( this.settings.columns.includes(Columns.MA100) )
+				stats.push( IB.Stats.MA100 );
+			if( this.settings.columns.includes(Columns.Pwl) )
+				stats.push( IB.Stats.Pwl );
+			if( this.settings.columns.includes(Columns.YearHigh) )
+				stats.push( IB.Stats.YearHigh );
+			if( this.settings.columns.includes(Columns.YearLow) )
+				stats.push( IB.Stats.YearLow );
+			if( stats.length && contractIds.length )
+			{
+				this.tws.reqStats( contractIds, stats ).subscribe(
+				{
+					next: ( stats:Results.IContractStat[] ) =>
+					{
+						for( var stat of stats )
+						{
+							let i = this.rows.find( (r)=>r.instance.contractId==stat.contractId ).instance;
+							if( stat.stat==IB.Stats.Atl ) i.atl = stat.value;
+							else if( stat.stat==IB.Stats.AtlDay ) i.atlDay = stat.value;
+							else if( stat.stat==IB.Stats.Ath ) i.ath = stat.value;
+							else if( stat.stat==IB.Stats.AthDay ) i.athDay = stat.value;
+							else if( stat.stat==IB.Stats.MA100 ) i.ma100 = stat.value;
+							else if( stat.stat==IB.Stats.YearLow ) i.yearLow = stat.value;
+							else if( stat.stat==IB.Stats.YearLowDay ) i.yearLowDay = stat.value;
+							else if( stat.stat==IB.Stats.YearHigh ) i.yearHigh = stat.value;
+							else if( stat.stat==IB.Stats.YearHighDay ) i.yearHighDay = stat.value;
+							else if( stat.stat==IB.Stats.Pwl ) i.pwl = stat.value;
+						}
+					},
+					//complete: ()=>,
+					error: (e)=>console.error( e.message )
+				});
+			}
 		}
 		this.addRow();
 	}
@@ -290,7 +333,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 //	private resolve: Function;
 	subscriptions = new Map<number,TickObservable>();
 	//ticks:TickDetails[] = [];
-	findContract( contractId:number ):WatchRowComponent
+	findContract( contractId:number ):WatchRow
 	{
 		return this.rows.find( (ref)=>{return ref.instance.contractId==contractId;} )?.instance;
 	}
@@ -305,7 +348,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			const ref:ComponentRef<HeaderCol> = this.header.createComponent<HeaderCol>( HeaderCol ); let instance = ref.instance;
 			instance.name = Columns[c];
 			//instance.className = instance.name+"-h";
-			if( this.settings.sort.active==c )
+			if( this.settings.sort?.active==c )
 				instance.sortedDir = this.settings.sort.direction;
 
 			//label.
@@ -316,11 +359,11 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		//instance["class"] = "symbol-h";
 		//instance["click"]=()=>this.sort(Columns.Symbol);
 	}
-	addRow():WatchRowComponent
+	addRow():WatchRow
 	{
 		// Create component dynamically inside the ng-template
-		const componentFactory = this.componentFactoryResolver.resolveComponentFactory( WatchRowComponent );
-		const component:ComponentRef<WatchRowComponent> = this.container.createComponent( componentFactory );
+		const componentFactory = this.componentFactoryResolver.resolveComponentFactory( WatchRow );
+		const component:ComponentRef<WatchRow> = this.container.createComponent( componentFactory );
 		const instance = component.instance;
 		//instance.onInitPassed = false;
 		//instance.selfRef = instance;
@@ -346,10 +389,10 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	get hasDefaultLayout(){ return this.settings.hasDefaultLayout; }
 	index:number=0;
 	@Input() set profile(x){ this.#profile=x; } get profile(){return this.#profile;} #profile:Settings<PageSettings>;
-	rows = new Array<ComponentRef<WatchRowComponent>>();
+	rows = new Array<ComponentRef<WatchRow>>();
 	get settings(){ return this.profile.value; }
 	get sortActive(){ return this.settings?.sort; } set sortActive(x){ this.settings.sort = x; this.profile.save(); }
-	set selected(x){ const previous = this._selected; this._selected=x; if( previous ) previous.selected = false; this.selectedChanged.emit( x ? x.detail || null : undefined);} get selected(){return this._selected;} private _selected:WatchRowComponent;
+	set selected(x){ const previous = this._selected; this._selected=x; if( previous ) previous.selected = false; this.selectedChanged.emit( x ? x.detail || null : undefined);} get selected(){return this._selected;} private _selected:WatchRow;
 	@Output() selectedChanged = new EventEmitter<Results.IContractDetail>();
 	@ViewChild('container', {read: ViewContainerRef}) container: ViewContainerRef;
 	@ViewChild('header', {read: ViewContainerRef}) header: ViewContainerRef;

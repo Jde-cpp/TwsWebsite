@@ -46,7 +46,7 @@ export class MarketUtilities
 	static isHoliday( day:Day, contract?:IB.IContract )
 	{
 		const mod = day%7;
-		return mod==2 || mod==3 || [18645,18673,18719,18778,18813,18876,18956,18985].indexOf(day)!=-1;
+		return mod==2 || mod==3 || [19163,19177,19240,19320,19352].indexOf(day)!=-1;
 	}
 	static isExchangeHoliday( day:Day, exchange:IB.Exchanges )
 	{

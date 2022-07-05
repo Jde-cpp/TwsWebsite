@@ -91,8 +91,8 @@ export enum Columns
 	Change,
 	Range,
 	Volume,
-	ATH,
-	PWL,
+	Ath,
+	Pwl,
 	YearHigh,
 	YearLow,
 	MA100

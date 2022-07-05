@@ -363,6 +363,16 @@ class Connection
 							callback.complete();
 					}
 				}
+				else if( message.contractStats )
+				{
+					if( !message.contractStats.stats.length )
+					{
+						this.statCallbacks.get( message.contractStats.requestId ).complete();
+						this.statCallbacks.delete( message.contractStats.requestId );
+					}
+					else
+						this.statCallbacks.get( message.contractStats.requestId ).next( message.contractStats.stats );
+				}
 				else
 				{
 					let found = false;
@@ -929,12 +939,12 @@ class Connection
 		this.previousDayCallbacks.set( 9999, null );
 		return callback;
 	}
-	reqStats( contractIds:ContractPK[], stats:Requests.Stats[] ):Observable<[Requests.Stats,number]>
+	reqStats( contractIds:ContractPK[], stats:IB.Stats[] ):Observable<Results.IContractStat[]>
 	{
 		const requestId = this.getRequestId();
 		if( this.log.requests ) console.log( `(${requestId})reqStats( ${stats.join()} )` );
 		this.send( new Requests.RequestUnion( <Requests.IRequestUnion>{requestStats: {id: requestId, contractIds: contractIds, stats: stats}}) );
-		const callback = new Subject<[Requests.Stats,number]>();
+		const callback = new Subject<Results.IContractStat[]>();
 		this.statCallbacks.set( requestId, callback );
 		return callback;
 	}
@@ -1012,11 +1022,11 @@ class Connection
 	private observers = new Map<number,RequestObservable>();
 	private optionParamCallbacks = new Map<number, RequestPromise>();
 	private previousDayCallbacks = new Map<number, Subject<Results.IDaySummary>>();
-	private statCallbacks = new Map<number, Subject<[Requests.Stats,number]>>();
+	private statCallbacks = new Map<number, Subject<Results.IContractStat[]>>();
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
 	private backlog:Requests.RequestTransmission[] = [];
-	private log = { requests:false, results:false };
+	private log = { requests:true, results:false };
 	private canceledMarketData = new Array<number>();
 }
 
@@ -1095,7 +1105,7 @@ export class TwsService implements IGraphQL
 	reqAllOpenOrders():Promise<Order[]>{ return this.connection.reqAllOpenOrders(); }
 	reqOptionParams(underlyingId:number):Promise<Results.IExchangeContracts>{ return this.connection.reqOptionParams(underlyingId); }
 	reqPreviousDay(ids:number[]):Observable<Results.IDaySummary>{ return this.connection.reqPreviousDay(ids); }
-	reqStats( contractIds:ContractPK[], stats:Requests.Stats[] ):Observable<[Requests.Stats,number]>{ return this.connection.reqStats(contractIds, stats); }
+	reqStats( contractIds:ContractPK[], stats:IB.Stats[] ):Observable<Results.IContractStat[]>{ return this.connection.reqStats(contractIds, stats); }
 	cancelOrder(id:number):void{ this.connection.cancelOrder( id ); }
 
 	tweets( symbol:string ):[Observable<Results.ITweets>,Promise<Results.ITweetAuthors>]{ return this.connection.tweets( symbol ); }

@@ -1,0 +1,4 @@
+<mat-form-field  *ngIf=isEditing [ngClass]=className class=base>
+	<input #editElement matInput type=number onclick=this.select() [ngModel]=value (keyup.enter)=enterClick($event.target.value) (blur)=blur($event.target.value)>
+</mat-form-field>
+<span *ngIf="!isEditing" (click)=edit($event) class=base [ngClass]=className>{{value}}</span>

@@ -1,6 +1,7 @@
 import { Injectable, Inject } from '@angular/core';
 import { webSocket, WebSocketSubject } from 'rxjs/webSocket';
 import { Subject,Observable, of, throwError } from 'rxjs';
+import Long from "long";
 import{ TickSubject, TickObservable } from './ITickObserver'
 import {Order,OrderSubject,OrderObservable} from './IOrderObserver'
 import {ExecutionObservable, ExecutionSubject} from './ExecutionObserver'

@@ -1,4 +1,4 @@
-b#!/bin/bash
+#!/bin/bash
 clean=${1:-0};
 shouldFetch=${2:-1};
 buildPrivate=${3:-0};
@@ -34,4 +34,4 @@ echo add not safari `pwd`
 echo "not ios_saf 15.2-15.3" >> .browserslistrc;
 echo "not safari 15.2-15.3" >> .browserslistrc;  #todo remove at some point.
 echo add not safari done
-ng build --output-hashing=none --sourceMap=true;
+ng build --output-hashing=none --source-map=true;

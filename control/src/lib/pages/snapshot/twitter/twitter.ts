@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, Inject, OnInit, OnDestroy, AfterViewInit, ViewEncapsulation } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
+import Long from "long";
 import { IErrorService, IProfile } from 'jde-framework';
 import { TwsService } from '../../../services/tws.service';
 import { TickDetails } from '../../../services/Tick';

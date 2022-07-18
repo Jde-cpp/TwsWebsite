@@ -1,0 +1,13 @@
+<!-- <mat-form-field  *ngIf=isEditing [ngClass]=className class=base>
+	<input matInput #editElement onclick=this.select() [ngModel]=value (keyup.enter)=enterClick($event.target.value) (blur)=blur($event.target.value)>
+</mat-form-field> -->
+<span *ngIf="isSimple" (click)=edit($event) class=base [ngClass]=className>{{value}}</span>
+<div *ngIf="propertyName=='change' || propertyName=='ath'" class=change [class.negativeValue]="propertyName=='change' && parent.tick?.change<0" [class.positiveValue]="propertyName=='change' && parent.tick?.change>0">
+	<span [ngClass]=className class=changeAmount>{{value}}</span>
+	<!-- parent.tick?.change | number: '1.2-2' -->
+	<span [ngClass]=className class=changePercent>{{percent}}</span><span *ngIf="tick">%</span>
+</div>
+<div *ngIf="propertyName=='range'" class="range">
+	<span class="rangeLow">{{tick?.low| number:'1.2-2'}}</span><span style="text-align: center;min-width: 20px; " *ngIf="tick">-</span>
+	<span class="rangeHigh">{{tick?.high | number:'1.2-2'}}</span>
+</div>

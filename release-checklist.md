@@ -57,12 +57,14 @@ Update binary versions.   If necessary. 
 	 	  *  `mkdir build && cd build; cmake .. && make -j`
 	 * MySql 8.0.26
 	     *  https://dev.mysql.com/downloads/connector/cpp/
-		  * https://github.com/mysql/mysql-connector-cpp
-			   * mkdir build;cd build;mkdir release;cd release;
-            * export CXX='clang++';export CXXFLAGS='-std=c++20 -stdlib=libc++';export LDFLAGS='-stdlib=libc++';export CC='clang';
-            * cmake ../..
-            * cmake --build . --config release
-            * source=`pwd`;cd $JDE_DIR/bin/asan;ln -s $source/libmysqlcppconn8.so .;cd ../release;ln -s $source/libmysqlcppconn8.so .
+	     * https://github.com/mysql/mysql-connector-cpp
+             ```
+             mkdir build;cd build;mkdir release;cd release;cd ..;mkdir debug;cd debug;
+             export CXX='clang++';export CXXFLAGS='-std=c++20 -Wno-deprecated-declarations -stdlib=libc++';export LDFLAGS='-stdlib=libc++';export CC='clang';
+             cmake ../..;cd ../release;cmake ../..;
+             cmake --build . --config release;cd ../debug;cmake --build . --config debug; cd ..;
+             source=`pwd`;cd $JDE_DIR/bin/asan;ln -s $source/debug/libmysqlcppconn8.so .;cd ../RelWithDebInfo;ln -s $source/release/libmysqlcppconn8.so .
+             ```
 	 *  tws-api - 9.80.03
 	     * copy Makefile to /source/cppclient/client
 		  * `mkdir .release;mkdir .debug;mkdir .obj;cd .obj;mkdir debug;mkdir release;cd ..`

@@ -67,7 +67,6 @@ const routes: Routes =
 	{ path: 'snapshot', component: SnapshotComponent },
 	{ path: 'trades', component: TradeComponent },
 	{ path: 'orders', component: OrderComponent },
-//	{ path: 'twitter', component: TwitterComponent },
 	{
 		path: 'watch/:id/settings',
 		component: WatchSettings,
@@ -76,7 +75,7 @@ const routes: Routes =
 		path: 'watch',
 		component: WatchComponent
 	},
-	{
+/*	{
 		path: 'blockly',
 		component: BlocklySidenav,
 		children :
@@ -84,18 +83,17 @@ const routes: Routes =
 			{ path: ':id', component: BlocklyViewerComponent },
 			{ path: '', component: BlocklyCategoryList }
 		]
-	},
+	},*/
 	{
 		path: 'settings',
 		component: ComponentSidenav,
 		data: { name: "Settings" },
 		children :
 		[
-			{ path: 'applications', component: Applications, data: { name: "Applications", summary: "View Applications" } },
-			{ path: 'logs', component: LogsComponent, data: { name: "Logs", summary: "View Application Logs" } },
+			//{ path: 'applications', component: Applications, data: { name: "Applications", summary: "View Applications" } },
+			//{ path: 'logs', component: LogsComponent, data: { name: "Logs", summary: "View Application Logs" } },
 			{ path: 'accounts/:id', component: GraphQLDetailComponent },
 			{ path: 'accounts', component: GraphQLComponent, data: { name: "Accounts", summary: "View/Modify IB Accounts", display:"description", showAdd: false } },
-			//  { path: 'usersOld', component: UserComponent, data: { name: "UsersOld", summary: "View/Modify Users" } },
 			{ path: 'users/:id', component: GraphQLDetailComponent },
 			{ path: 'users', component: GraphQLComponent, data: { name: "Users", summary: "View/Modify Users" } },
 			{ path: 'roles/:id', component: GraphQLDetailComponent },

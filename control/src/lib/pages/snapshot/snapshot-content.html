@@ -51,23 +51,23 @@
 			<ng-template mat-tab-label><img style="width:24px; height: 24px;" src="assets/img/wall-street-bets.png"/>Reddit</ng-template>
 			<ng-template matTabContent><reddit [tick]="tick" [index]="3"></reddit></ng-template>
 		</mat-tab>
-		<mat-tab>
+		<!-- <mat-tab>
 			<ng-template mat-tab-label><mat-icon>bar_chart</mat-icon>Chart</ng-template>
 			<ng-template matTabContent>
 				<candlestick style="display: flex; flex-direction: column; justify-content: center;" [tick]="tick" [index]="4" [tabEvents]="tabEvents.asObservable()"></candlestick>
 			</ng-template>
-		</mat-tab>
+		</mat-tab> -->
 		<mat-tab>
 			<ng-template mat-tab-label><mat-icon>swap_vert</mat-icon>Options</ng-template>
 			<ng-template matTabContent>
 				<option-tab [tick]="tick" [index]="5" [tabEvents]="tabEvents.asObservable()"></option-tab>
 			</ng-template>
 		</mat-tab>
-		<mat-tab>
+		<!-- <mat-tab>
 			<ng-template mat-tab-label><mat-icon>shopping_bag</mat-icon>Investors</ng-template>
 			<ng-template matTabContent>
 				<investors [index]="6" [detail]="detail" [tabEvents]="tabEvents.asObservable()"></investors>
 			</ng-template>
-		</mat-tab>
+		</mat-tab> -->
 	</mat-tab-group>
 </div>

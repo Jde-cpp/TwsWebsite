@@ -100,5 +100,5 @@ source/ClientApp/src/angular.json
 baseline2/*
 source/ClientApp/*
 backup/*
-my-workspace/*
+my-workspace*/*
 jde-cpp/*

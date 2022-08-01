@@ -544,6 +544,11 @@ class Connection
 			callback.error( error );
 			this.flexCallbacks.delete( id );
 		}
+		else if( this.statCallbacks.has(id) )
+		{
+			this.statCallbacks.get( id ).error( error );
+			this.statCallbacks.delete( id );
+		}
 		else
 		{
 			var requestsTypes:Map<number, RequestPromise>[] = [ this.callbacks, this.optionParamCallbacks ];
@@ -1027,7 +1032,7 @@ class Connection
 	private orders = new Map<number,Order>();
 	private openOrders:OrderSubject[] = [];
 	private backlog:Requests.RequestTransmission[] = [];
-	private log = { requests:true, results:false };
+	private log = { requests:false, results:false };
 	private canceledMarketData = new Array<number>();
 }
 

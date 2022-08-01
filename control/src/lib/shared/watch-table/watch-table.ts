@@ -37,23 +37,43 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	}
 	onChangeShares( row:WatchRow )
 	{
-		this.file.securities.find( (x)=>x.contractId=row.contractId ).shares = row.shares;
-		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
+		var i = this.file.securities.findIndex( (x)=>x.contractId==row.contractId );
+		this.file.securities[i].shares = row.shares;
+		this.editWatch();//172522644 -12
 	}
-	onChangeAvgPrice( row:WatchRow )
+	editWatch()
 	{
-		this.file.securities.find( (x)=>x.contractId=row.contractId ).avgPrice = row.avgPrice;
-		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
-	}
-	onChangeSymbol( row:WatchRow, symbol:string )
-	{
-		this.tws.reqSymbolSingle( symbol ).then( (result)=>
+		var symbols = [];
+		for( var s of this.file.securities )
 		{
-			const detail = result;
-			const constractId = detail.contract.id;
-			const existing = this.findContract( constractId );
-			if( !existing )
+			let i = this.rows.find( (x)=>x.instance.contractId==s.contractId ).instance.tick.contract.symbol;
+			if( !symbols.includes(i) )
 			{
+				symbols.push( i );
+				console.log( i );
+			}
+			else
+				debugger;
+		}
+		debugger;
+		this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
+	}
+	onChangeAvgPrice( row:WatchRow, x:number )
+	{
+		this.file.securities.find( (x)=>x.contractId==row.contractId ).avgPrice = x;
+		this.editWatch();
+	}
+	async onChangeSymbol( row:WatchRow, symbol:string )
+	{
+//		return new Promise<boolean>( (resolve)=>
+//		{
+			let success = false;
+			try
+			{
+				const detail = await this.tws.reqSymbolSingle( symbol );
+				const constractId = detail.contract.id;
+				const existing = this.findContract( constractId ); if( existing ) throw { error:{message:`'${symbol}' already exists`} };
+				success = true;
 				this.setRowDetail( row, detail );
 				const index = this.indexOf( row.rowId );
 				while( this.file.securities.length<index )
@@ -62,11 +82,17 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 					this.file.securities.push( {contractId: constractId} );
 				else
 					this.file.securities[index].contractId = constractId;
-				this.tws.editWatch( this.file ).catch( (e)=>this.cnsle.error(e.message) );
+				this.editWatch();
 				if( index==this.rows.length-1 )
 					this.addRow();
 			}
-		}).catch( (e)=> console.log(e.error?.message) );//`${symbol} return ${e.details.length} records.`)
+			catch( e )
+			{
+				this.cnsle.show( e["error"] );
+			}
+			return success;
+//			resolve( !success );
+//		} );
 	}
 	onChangeTable = ( x:string )=>
 	{
@@ -123,7 +149,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 		}
 		this.selected.clear();
 		if( change )
-			this.tws.editWatch( this.file );
+			this.editWatch();
 		//return newRow;
 	}
 	lineDelete()
@@ -257,6 +283,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 			let instance = this.addRow();
 			if( !item )
 				continue;
+			//console.log( `${item.tick.contract.symbol}` );
 			instance.set( item.shares, item.avgPrice, item.tick );
 			if( subscribe )
 			{
@@ -298,8 +325,7 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 							else if( stat.stat==IB.Stats.Pwl ) i.pwl = stat.value;
 						}
 					},
-					//complete: ()=>,
-					error: (e)=>console.error( e.message )
+					error: (e)=>this.cnsle.error( `(${e.code})Request stats failed - ${e.message}` )
 				});
 			}
 		}
@@ -345,19 +371,10 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	{
 		for( let c of this.settings.columns )
 		{
-			const ref:ComponentRef<HeaderCol> = this.header.createComponent<HeaderCol>( HeaderCol ); let instance = ref.instance;
-			instance.name = Columns[c];
-			//instance.className = instance.name+"-h";
-			if( this.settings.sort?.active==c )
-				instance.sortedDir = this.settings.sort.direction;
-
-			//label.
-
-			//let instance:HeaderCol = ref;
-
+			const r:ComponentRef<HeaderCol> = this.header.createComponent<HeaderCol>( HeaderCol );
+			r.instance.column = c;
+			r.instance.parent = this;
 		}
-		//instance["class"] = "symbol-h";
-		//instance["click"]=()=>this.sort(Columns.Symbol);
 	}
 	addRow():WatchRow
 	{
@@ -378,11 +395,14 @@ export class WatchTableComponent implements OnInit, AfterViewInit
 	remove( index: number )
 	{
 		this.container.remove( index );
+		const contract = this.rows[index].instance.tick.contract;
 		this.rows.splice( index, 1 );
-		this.file.securities.splice( index, 1 );
-		this.tws.editWatch( this.file );
+		var fileIndex = this.file.securities.findIndex( (x)=>x.contractId==contract.id ); if( fileIndex==-1 ){ debugger; throw "fileIndex==-1"; }
+		this.file.securities.splice( fileIndex, 1 );
+		this.editWatch();
 		for( let i=index; i<this.rows.length; ++i )
 			this.rows[i].instance.oddRow = i%2==1;
+
 	}
 	@Input() changeTable:Subject<string>;
 	ColumnsType = Columns;

@@ -29,7 +29,7 @@
 .changeAmount{ @extend .base; flex-basis:70px; min-width: 70px;justify-content: right;}
 .changePercent{ @extend .base; flex-basis:45px; min-width: 45px; justify-content: right;}
 
-.range{@extend .base; flex-basis:145px; min-width: 145px; }
+.range{@extend .base; flex-basis:125px; min-width: 125px; }
 .rangeLow{ @extend .base; flex-basis:75px; min-width: 75px;justify-content: right; }
 .rangeHigh{ @extend .base; flex-basis:50px; min-width: 50px;justify-content: right; }
 

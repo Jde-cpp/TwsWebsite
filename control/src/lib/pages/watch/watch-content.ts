@@ -49,7 +49,8 @@ export class WatchContentComponent implements AfterViewInit, OnInit, OnDestroy
 	onConfigurationClick(){ this.router.navigate([`${this.route.snapshot.url[0].path}/${this.name}/settings/`] ); }
 	save():Promise<void>{ return this.tws.editWatch( this.file ); }
 	selection:Results.IContractDetailsResult|null|undefined;
-	get canAdd(){ return this.selection!==undefined; }
+	get canAdd(){ return this.selection!==undefined && this.settings.hasDefaultLayout; }
+	get canRemove(){ return this.selection!==undefined;  }
 	file:Watch.File;
 	@Input() set name(x)
 	{

@@ -11,7 +11,7 @@
 			<button mat-raised-button color="warn" [disabled]="!selection" (click)="onTransactClick(false)" >Sell</button> -->
 			<span></span>
 			<button mat-icon-button color="primary" [disabled]="!canAdd" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('insert')"><mat-icon>add</mat-icon></button>
-			<button mat-icon-button color="primary" [disabled]="!canAdd" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('delete')"><mat-icon>remove</mat-icon></button>
+			<button mat-icon-button color="primary" [disabled]="!canRemove" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('delete')"><mat-icon>remove</mat-icon></button>
 			<span></span>
 			<!-- <button mat-icon-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('cut')"><mat-icon>content_cut</mat-icon></button>
 			<button mat-icon-button color="primary" [disabled]="!selection" style="margin-left :20px; margin-right:10px" (click)="changeTable.next('copy')"><mat-icon>content_copy</mat-icon></button>

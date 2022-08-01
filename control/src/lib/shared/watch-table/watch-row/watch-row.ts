@@ -9,22 +9,18 @@ import * as IbResults from 'jde-cpp/results'; import Results = IbResults.Jde.Mar
 import * as IbRequests from 'jde-cpp/requests'; import Requests = IbRequests.Jde.Markets.Proto.Requests;
 import { Subject, timeout } from 'rxjs';
 import { WatchTableComponent } from '../watch-table';
-import { Column, WatchCol, WatchNumCol } from './columns/watch-col';
+import { Column, WatchCol, WatchNumCol, WatchStringCol } from './columns/watch-col';
 import { Columns } from '../../../pages/watch/watch-content';
 
 @Component({selector: 'watch-row', templateUrl: './watch-row.html', styleUrls:['./watch-row.scss', '../watch-table.scss']})
 export class WatchRow implements OnInit, AfterViewInit
 {
 	@HostBinding('class.watchRow') public hostClass:boolean=true;
-	static i:number=0;
-	index:number;
 	constructor( private tws : TwsService, @Inject('IErrorService') private cnsle: IErrorService, private decimalPipe: DecimalPipe )
 	{
 		this.index = WatchRow.i++;
-		//console.log( `row( ${this.index} )` );
 	}
-	//class="watchRow"
-	ngOnInit(){ /* this.viewPromise = Promise.resolve(true);*/ }
+	ngOnInit(){}
 	ngAfterViewInit()
 	{
 
@@ -36,20 +32,23 @@ export class WatchRow implements OnInit, AfterViewInit
 		for( let c of this.parent.settings.columns )
 		{
 			let ref//:ComponentRef<Column>;
-			if( [Columns.AvgPrice].includes(c) )
+			if( [Columns.AvgPrice, Columns.Shares].includes(c) )
 				ref = this.row.createComponent<WatchNumCol>( WatchNumCol );
+			else if( [Columns.Symbol].includes(c) )
+				ref = this.row.createComponent<WatchStringCol>( WatchStringCol );
 			else
 				ref = this.row.createComponent<WatchCol>( WatchCol );
 			let instance = ref.instance;
 			instance.name = Columns[c];
-			if( [Columns.Ask,Columns.AskSize,Columns.Bid,Columns.BidSize,Columns.Change,Columns.Last,Columns.Range,Columns.Volume, Columns.Ath, Columns.Market, Columns.YearHigh, Columns.YearLow, Columns.Pnl, Columns.MA100, Columns.Pwl].includes(c) )
-				instance.parent = this;
+			instance.parent = this;
+			if( c==Columns.Shares )
+				this.sharesCol = instance;
 			else if( c==Columns.Symbol )
 				this.symbolCol = instance;
-			else if( c==Columns.Shares )
-				this.sharesCol = instance;
 			else if( c==Columns.AvgPrice )
 				this.avgPriceCol = instance;
+			else if( c==Columns.MA100 )
+				instance.propertyName = "ma100";
 		}
 	}
 
@@ -86,42 +85,6 @@ export class WatchRow implements OnInit, AfterViewInit
 		 },0);
 	}
 	isEditing( columnId:string ){ return this.editItem==columnId; }
-	setSymbol( symbol:string )
-	{
-		this.editItem = null;
-		if( (!symbol && !this.tick) || symbol==this.tick?.detail.contract.symbol )
-			return;
-		this.parent.onChangeSymbol( this, symbol );
-	}
-
-	sharesFocusOut( shares:number )
-	{
-		//debugger;
-		this.editItem = null;
-		if( this.shares != shares )
-		{
-			this.shares = shares;
-			this.parent.onChangeShares( this );
-		}
-	}
-	sharesFocus( shares:number )
-	{
-		this.editItem = 'shares'
-	}
-	avgPriceFocusOut( price:number )
-	{
-		//debugger;
-		this.editItem = null;
-		if( this.avgPrice != price )
-		{
-			this.avgPrice = price;
-			this.parent.onChangeAvgPrice( this );
-		}
-	}
-	avgPriceFocus( shares:number )
-	{
-		this.editItem = 'avgPrice';
-	}
 
 
 	//this.tick = null;
@@ -196,11 +159,10 @@ export class WatchRow implements OnInit, AfterViewInit
 
 	oddRow:boolean;
 	rowId:number;
-	get shares(){return this.sharesCol.number;} set shares(x){ this.sharesCol.number=x; } //#shares:number;
-	avgPrice:number;
+	get shares(){ return this.sharesCol.number; } set shares(x){ if( this.shares!=+x ){ debugger;this.sharesCol.number = x; this.parent.onChangeShares( this ); } }
+	get avgPrice(){ return this.avgPriceCol.number; } set avgPrice(x){ if( this.shares!=+x ){ this.parent.onChangeAvgPrice( this, x ); this.avgPriceCol.number = x; } }
+	get symbol():string|null{ return this.detail?.contract.symbol; } set symbol(x){ if( this.symbol!=x ){ this.parent.onChangeSymbol(this, x).then( (x)=>{if(x) this.sharesCol.value = x;})  } }
 	showMenu=false;
-
-	get symbol():string|null{ return this.tick?.detail.contract.symbol; }
 	@ViewChild("symbolInput") symbolInput: ElementRef;
 	set tick( x )
 	{
@@ -221,6 +183,9 @@ export class WatchRow implements OnInit, AfterViewInit
 	parent:WatchTableComponent;
 
 	avgPriceCol:Column;
+	static i:number=0;
+	index:number;
+
 	sharesCol:Column;
 	symbolCol:Column;
 

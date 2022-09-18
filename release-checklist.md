@@ -30,7 +30,7 @@ Update binary versions.   If necessary. 
 		sudo make install;
 		cd lib/linux;
 		source=`pwd`
-		cd /usr/local/lib/clang/14.0.6
+		cd /usr/local/lib/clang/15.0.0
 		sudo mkdir lib;cd lib;
 		sudo mkdir linux;cd linux
 		sudo ln -s $REPO_DIR/llvm-project/build-compiler-rt/lib/linux/libclang_rt.asan_static-x86_64.a .
